@@ -1,4 +1,4 @@
-from typing import TypeVar
+from typing import Generic, TypeVar
 
 from .base_model import BaseModel
 from .data_index import DataIndex, DataIndexType
@@ -8,7 +8,7 @@ from .user_mapping import UserMapping, UserMappingType
 NodeType = TypeVar('NodeType', bound='Node')
 
 
-class Node(BaseModel):
+class Node(BaseModel, Generic[DataIndexType, UserMappingType]):
     DATA_INDEX_CLASS = DataIndex
     USER_MAPPING_CLASS = UserMapping
 

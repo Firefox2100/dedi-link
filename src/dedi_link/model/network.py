@@ -9,7 +9,7 @@ from .node import Node, NodeType
 NetworkType = TypeVar('NetworkType', bound='Network')
 
 
-class Network(BaseModel, Generic[NodeType]):
+class Network(BaseModel, Generic[DataIndexType, NodeType]):
     DATA_INDEX_CLASS = DataIndex
     NODE_CLASS = Node
 
