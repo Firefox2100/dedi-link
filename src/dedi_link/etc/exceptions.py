@@ -18,5 +18,9 @@ class NetworkNotFoundException(DeDiLinkNotFoundException):
     pass
 
 
+class NetworkNotImplementedException(DeDiLinkNotImplementedException):
+    pass
+
+
 class NodeNotFoundException(DeDiLinkNotFoundException):
     pass

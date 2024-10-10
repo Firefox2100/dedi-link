@@ -1,6 +1,7 @@
 import uuid
 from typing import Generic, TypeVar
 
+from dedi_link.etc.exceptions import NetworkNotImplementedException
 from .base_model import BaseModel
 from .data_index import DataIndex, DataIndexType
 from .node import Node, NodeType
@@ -93,23 +94,19 @@ class Network(BaseModel, Generic[DataIndexType, NodeType]):
 
     @property
     def nodes(self) -> list[NodeType]:
-        # TODO: Custom exception type
-        raise NotImplementedError
+        raise NetworkNotImplementedException('nodes property not implemented')
 
     @property
     def nodes_pending(self) -> list[NodeType]:
-        # TODO: Custom exception type
-        raise NotImplementedError
+        raise NetworkNotImplementedException('nodes_pending property not implemented')
 
     @property
     def nodes_approved(self) -> list[NodeType]:
-        # TODO: Custom exception type
-        raise NotImplementedError
+        raise NetworkNotImplementedException('nodes_approved property not implemented')
 
     @property
     def self_data_index(self) -> DataIndexType:
-        # TODO: Custom exception type
-        raise NotImplementedError
+        raise NetworkNotImplementedException('self_data_index property not implemented')
 
     @property
     def network_data_index(self) -> DataIndexType:
