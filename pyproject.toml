@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dedi_link"
+authors = [
+  { name="Firefox2100", email="wangyunze16@gmail.com" },
+]
+description = "Decentralised Discovery Link"
+readme = "README.md"
+requires-python = ">=3.11"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    "Operating System :: OS Independent",
+]
+license = {file = "LICENSE"}
+dependencies = [
+]
+dynamic = [
+    "version"
+]
+
+[project.urls]
+Homepage = "https://github.com/Firefox2100/dedi-link"
+Issues = "https://github.com/Firefox2100/dedi-link/issues"
+
+[tool.setuptools.dynamic]
+version = {attr = "dedi_link.__version__"}
