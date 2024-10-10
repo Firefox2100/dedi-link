@@ -37,7 +37,7 @@ class Node(BaseModel, Generic[DataIndexType, UserMappingType]):
         self.score = score
 
     def __eq__(self, other: 'Node') -> bool:
-        if not isinstance(other, self.__class__):
+        if not isinstance(other, Node):
             return NotImplemented
 
         return all([

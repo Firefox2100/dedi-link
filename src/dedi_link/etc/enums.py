@@ -15,3 +15,10 @@ class AuthMessageType(Enum):
     JOIN = 'join'
     LEAVE = 'leave'
     STATUS = 'status'
+
+
+class AuthMessageStatus(Enum):
+    SENT = 'sent'
+    PENDING = 'pending'
+    ACCEPTED = 'accepted'
+    REJECTED = 'rejected'

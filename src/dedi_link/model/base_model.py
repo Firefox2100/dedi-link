@@ -1,4 +1,5 @@
-from typing import Type, TypeVar
+from enum import Enum
+from typing import Type, TypeVar, Callable
 
 from dedi_link.etc.exceptions import BaseModelNotImplementedException
 
@@ -12,6 +13,18 @@ class BaseModel:
 
     This class defines a uniform interface for all models to implement
     """
+    @classmethod
+    def _child_mapping(cls) -> dict[Enum, tuple[Type[BaseModelType], Callable[[dict], Enum] | None]]:
+        """
+        Mapping of the child classes to the enum values
+
+        This is used to facilitate the factory method, and also allows for lazy
+        importing within a method to avoid circular imports
+        :return: A dictionary mapping the enum values to the child classes, and potentially a
+        function to further identify the child class
+        """
+        return {}
+
     @classmethod
     def load(cls: Type[BaseModelType], *args, **kwargs) -> BaseModelType:
         """
@@ -78,3 +91,29 @@ class BaseModel:
         :return: An instance of the model
         """
         raise BaseModelNotImplementedException('from_dict method has to be implemented by the child class')
+
+    @classmethod
+    def factory(cls: Type[BaseModelType], payload: dict, id_var: Enum):
+        """
+        Create an instance of (usually) a child class from a dictionary,
+        by following the mapping defined as a class attribute
+        :param payload:
+        :param id_var:
+        :return:
+        """
+        if not cls._child_mapping():
+            # No known mapping, just create the class itself
+            return cls.from_dict(payload)
+
+        if id_var not in cls._child_mapping():
+            raise ValueError(f'{id_var} not found in the defined mapping')
+
+        mapping_target = cls._child_mapping()[id_var]
+
+        if mapping_target[1] is None:
+            # Basic mapping, create the object by calling the from_dict method
+            return mapping_target[0].from_dict(payload)
+        else:
+            # A deeper mapping function provided, get the new id_var and call factory again
+            new_id_var = mapping_target[1](payload)
+            return mapping_target[0].factory(payload, new_id_var)

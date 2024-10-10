@@ -1,9 +1,10 @@
 import uuid
-from typing import Type, TypeVar
+from enum import Enum
+from typing import Type, TypeVar, Callable
 
+from dedi_link.etc.consts import MESSAGE_ATTRIBUTES
 from dedi_link.etc.enums import MessageType, AuthMessageType
 from ..network_message import NetworkMessage
-
 
 NetworkAuthMessageType = TypeVar('NetworkAuthMessageType', bound='NetworkAuthMessage')
 
@@ -37,6 +38,23 @@ class NetworkAuthMessage(NetworkMessage):
     def __hash__(self):
         return hash((super().__hash__(), self.network_id, self.auth_type))
 
+    @classmethod
+    def _child_mapping(cls) -> dict[Enum, tuple[Type[NetworkAuthMessageType], Callable[[dict], Enum] | None]]:
+        from .auth_request_invite import AuthRequestInvite
+        from .auth_response import AuthResponse
+        from .auth_join import AuthJoin
+        from .auth_leave import AuthLeave
+        from .auth_status import AuthStatus
+
+        return {
+            AuthMessageType.REQUEST: (AuthRequestInvite, None),
+            AuthMessageType.INVITE: (AuthRequestInvite, None),
+            AuthMessageType.RESPONSE: (AuthResponse, None),
+            AuthMessageType.JOIN: (AuthJoin, None),
+            AuthMessageType.LEAVE: (AuthLeave, None),
+            AuthMessageType.STATUS: (AuthStatus, None),
+        }
+
     def to_dict(self) -> dict:
         payload = super().to_dict()
 
@@ -46,30 +64,3 @@ class NetworkAuthMessage(NetworkMessage):
         })
 
         return payload
-
-    @classmethod
-    def from_dict(cls: Type[NetworkAuthMessageType], payload: dict) -> NetworkAuthMessageType:
-        raise BaseModelMethodNotImplemented('NetworkAuthMessage', 'from_dict')
-
-    @classmethod
-    def factory(cls: Type[NetworkAuthMessageType], payload: dict) -> NetworkAuthMessageType:
-        from .auth_request_invite import AuthRequestInvite
-        from .auth_response import AuthResponse
-        from .auth_join import AuthJoin
-        from .auth_leave import AuthLeave
-        from .auth_status import AuthStatus
-
-        auth_type = AuthMessageType(payload[MESSAGE_ATTRIBUTES]['authType'])
-
-        if auth_type == AuthMessageType.REQUEST or auth_type == AuthMessageType.INVITE:
-            return AuthRequestInvite.factory(payload)
-        if auth_type == AuthMessageType.RESPONSE:
-            return AuthResponse.factory(payload)
-        if auth_type == AuthMessageType.JOIN:
-            return AuthJoin.factory(payload)
-        if auth_type == AuthMessageType.LEAVE:
-            return AuthLeave.factory(payload)
-        if auth_type == AuthMessageType.STATUS:
-            return AuthStatus.factory(payload)
-
-        raise ValueError(f'Unknown auth type: {payload[MESSAGE_ATTRIBUTES]["authType"]}')

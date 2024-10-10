@@ -1,9 +1,11 @@
 import uuid
 import time
-from typing import TypeVar, Type
+from enum import Enum
+from typing import TypeVar, Type, Callable
 
 from dedi_link.etc.consts import MESSAGE_ATTRIBUTES
-from dedi_link.etc.enums import MessageType
+from dedi_link.etc.enums import MessageType, AuthMessageType
+from dedi_link.etc.exceptions import NetworkMessageNotImplementedException
 from ..base_model import BaseModel
 
 
@@ -21,7 +23,7 @@ class NetworkMessage(BaseModel):
         self.timestamp = timestamp or int(time.time())
 
     def __eq__(self, other: 'NetworkMessage'):
-        if not isinstance(other, self.__class__):
+        if not isinstance(other, NetworkMessage):
             return NotImplemented
 
         return all([
@@ -32,6 +34,20 @@ class NetworkMessage(BaseModel):
 
     def __hash__(self):
         return hash((self.message_type, self.message_id, self.timestamp))
+
+    @classmethod
+    def _child_mapping(cls) -> dict[Enum, tuple[Type[NetworkMessageType], Callable[[dict], Enum] | None]]:
+        from .network_auth_message import NetworkAuthMessage
+        from .network_sync_message import NetworkSyncMessage
+        from .network_data_message import NetworkDataMessage
+        from .network_relay_message import NetworkRelayMessage
+
+        return {
+            MessageType.AUTH_MESSAGE: (NetworkAuthMessage, lambda payload: AuthMessageType(payload['messageAttribute']['authType'])),
+            MessageType.SYNC_MESSAGE: (NetworkSyncMessage, None),
+            MessageType.DATA_MESSAGE: (NetworkDataMessage, ),
+            MessageType.RELAY_MESSAGE: (NetworkRelayMessage, None),
+        }
 
     def to_dict(self) -> dict:
         payload = {
@@ -46,24 +62,4 @@ class NetworkMessage(BaseModel):
 
     @classmethod
     def from_dict(cls: Type[NetworkMessageType], payload: dict) -> NetworkMessageType:
-        raise BaseModelMethodNotImplemented('NetworkMessage', 'from_dict')
-
-    @classmethod
-    def factory(cls: Type[NetworkMessageType], payload: dict) -> NetworkMessageType:
-        message_type = MessageType(payload['messageType'])
-
-        from .network_auth_message import NetworkAuthMessage
-        from .network_sync_message import NetworkSyncMessage
-        from .network_data_message import NetworkDataMessage
-        from .network_relay_message import NetworkRelayMessage
-
-        if message_type == MessageType.AUTH_MESSAGE:
-            return NetworkAuthMessage.factory(payload)
-        if message_type == MessageType.SYNC_MESSAGE:
-            return NetworkSyncMessage.factory(payload)
-        if message_type == MessageType.DATA_MESSAGE:
-            return NetworkDataMessage.factory(payload)
-        if message_type == MessageType.RELAY_MESSAGE:
-            return NetworkRelayMessage.factory(payload)
-
-        raise ValueError(f'Unknown message type: {payload["messageType"]}')
+        raise NetworkMessageNotImplementedException('from_dict method not implemented')

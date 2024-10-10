@@ -24,3 +24,7 @@ class NetworkNotImplementedException(DeDiLinkNotImplementedException):
 
 class NodeNotFoundException(DeDiLinkNotFoundException):
     pass
+
+
+class NetworkMessageNotImplementedException(DeDiLinkNotImplementedException):
+    pass
