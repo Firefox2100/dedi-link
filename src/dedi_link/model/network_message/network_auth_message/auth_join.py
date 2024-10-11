@@ -1,5 +1,5 @@
 import uuid
-from typing import TypeVar, Type, Generic
+from typing import TypeVar, Generic
 
 from dedi_link.etc.consts import MESSAGE_DATA, MESSAGE_ATTRIBUTES
 from dedi_link.etc.enums import AuthMessageType

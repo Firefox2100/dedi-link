@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Type, TypeVar, Callable
 
-from dedi_link.etc.exceptions import BaseModelNotImplementedException
+from dedi_link.etc.exceptions import BaseModelNotImplemented
 
 
 BaseModelType = TypeVar('BaseModelType', bound='BaseModel')
@@ -33,7 +33,7 @@ class BaseModel:
         :param kwargs: Named arguments
         :return: A single model instance
         """
-        raise BaseModelNotImplementedException('load method has to be implemented by the child class')
+        raise BaseModelNotImplemented('load method has to be implemented by the child class')
 
     @classmethod
     def load_all(cls: Type[BaseModelType], *args, **kwargs) -> list[BaseModelType]:
@@ -46,7 +46,7 @@ class BaseModel:
         :param kwargs: Named arguments
         :return: A list of model instances
         """
-        raise BaseModelNotImplementedException('load_all method has to be implemented by the child class')
+        raise BaseModelNotImplemented('load_all method has to be implemented by the child class')
 
     def store(self, *args, **kwargs):
         """
@@ -55,7 +55,7 @@ class BaseModel:
         :param kwargs: Named arguments
         :return:
         """
-        raise BaseModelNotImplementedException('store method has to be implemented by the child class')
+        raise BaseModelNotImplemented('store method has to be implemented by the child class')
 
     def update(self, payload: dict):
         """
@@ -65,7 +65,7 @@ class BaseModel:
         :param payload: The dictionary containing the new values
         :return: None
         """
-        raise BaseModelNotImplementedException('update method has to be implemented by the child class')
+        raise BaseModelNotImplemented('update method has to be implemented by the child class')
 
     def delete(self, *args, **kwargs):
         """
@@ -74,14 +74,14 @@ class BaseModel:
         :param kwargs: Named arguments
         :return: None
         """
-        raise BaseModelNotImplementedException('delete method has to be implemented by the child class')
+        raise BaseModelNotImplemented('delete method has to be implemented by the child class')
 
     def to_dict(self) -> dict:
         """
         Serialize the instance to a dictionary
         :return: A dictionary representation of the instance
         """
-        raise BaseModelNotImplementedException('to_dict method has to be implemented by the child class')
+        raise BaseModelNotImplemented('to_dict method has to be implemented by the child class')
 
     @classmethod
     def from_dict(cls: Type[BaseModelType], payload: dict) -> BaseModelType:
@@ -90,7 +90,7 @@ class BaseModel:
         :param payload: The data dictionary containing the instance data
         :return: An instance of the model
         """
-        raise BaseModelNotImplementedException('from_dict method has to be implemented by the child class')
+        raise BaseModelNotImplemented('from_dict method has to be implemented by the child class')
 
     @classmethod
     def factory(cls: Type[BaseModelType], payload: dict, id_var: Enum):

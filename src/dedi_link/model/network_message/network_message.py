@@ -5,7 +5,7 @@ from typing import TypeVar, Type, Callable
 
 from dedi_link.etc.consts import MESSAGE_ATTRIBUTES
 from dedi_link.etc.enums import MessageType, AuthMessageType
-from dedi_link.etc.exceptions import NetworkMessageNotImplementedException
+from dedi_link.etc.exceptions import NetworkMessageNotImplemented
 from ..base_model import BaseModel
 
 
@@ -62,4 +62,4 @@ class NetworkMessage(BaseModel):
 
     @classmethod
     def from_dict(cls, payload: dict) -> 'NetworkMessageType':
-        raise NetworkMessageNotImplementedException('from_dict method not implemented')
+        raise NetworkMessageNotImplemented('from_dict method not implemented')

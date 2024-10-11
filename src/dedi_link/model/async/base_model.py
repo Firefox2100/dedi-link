@@ -1,6 +1,6 @@
 from typing import Type, TypeVar
 
-from dedi_link.etc.exceptions import BaseModelNotImplementedException
+from dedi_link.etc.exceptions import BaseModelNotImplemented
 from ..base_model import BaseModel
 
 
@@ -19,7 +19,7 @@ class AsyncBaseModel(BaseModel):
         :param kwargs: Named arguments
         :return: A single model instance
         """
-        raise BaseModelNotImplementedException('load method has to be implemented by the child class')
+        raise BaseModelNotImplemented('load method has to be implemented by the child class')
 
     @classmethod
     async def load_all(cls: Type[AsyncBaseModelType], *args, **kwargs) -> list[AsyncBaseModelType]:
@@ -32,7 +32,7 @@ class AsyncBaseModel(BaseModel):
         :param kwargs: Named arguments
         :return: A list of model instances
         """
-        raise BaseModelNotImplementedException('load_all method has to be implemented by the child class')
+        raise BaseModelNotImplemented('load_all method has to be implemented by the child class')
 
     async def store(self, *args, **kwargs):
         """
@@ -41,7 +41,7 @@ class AsyncBaseModel(BaseModel):
         :param kwargs: Named arguments
         :return:
         """
-        raise BaseModelNotImplementedException('store method has to be implemented by the child class')
+        raise BaseModelNotImplemented('store method has to be implemented by the child class')
 
     async def update(self, payload: dict):
         """
@@ -51,7 +51,7 @@ class AsyncBaseModel(BaseModel):
         :param payload: The dictionary containing the new values
         :return: None
         """
-        raise BaseModelNotImplementedException('update method has to be implemented by the child class')
+        raise BaseModelNotImplemented('update method has to be implemented by the child class')
 
     async def delete(self, *args, **kwargs):
         """
@@ -60,4 +60,4 @@ class AsyncBaseModel(BaseModel):
         :param kwargs: Named arguments
         :return: None
         """
-        raise BaseModelNotImplementedException('delete method has to be implemented by the child class')
+        raise BaseModelNotImplemented('delete method has to be implemented by the child class')

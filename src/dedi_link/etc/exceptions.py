@@ -2,29 +2,37 @@ class DeDiLinkException(Exception):
     pass
 
 
-class DeDiLinkNotFoundException(DeDiLinkException):
+class DeDiLinkNotFound(DeDiLinkException):
     pass
 
 
-class DeDiLinkNotImplementedException(DeDiLinkException, NotImplementedError):
+class DeDiLinkNotImplemented(DeDiLinkException, NotImplementedError):
     pass
 
 
-class BaseModelNotImplementedException(DeDiLinkNotImplementedException):
+class BaseModelNotImplemented(DeDiLinkNotImplemented):
     pass
 
 
-class NetworkNotFoundException(DeDiLinkNotFoundException):
+class NetworkNotFound(DeDiLinkNotFound):
     pass
 
 
-class NetworkNotImplementedException(DeDiLinkNotImplementedException):
+class NetworkNotImplemented(DeDiLinkNotImplemented):
     pass
 
 
-class NodeNotFoundException(DeDiLinkNotFoundException):
+class NodeNotFound(DeDiLinkNotFound):
     pass
 
 
-class NetworkMessageNotImplementedException(DeDiLinkNotImplementedException):
+class NetworkMessageNotImplemented(DeDiLinkNotImplemented):
+    pass
+
+
+class NetworkRelayMessageEnvelopeTooDeep(DeDiLinkException):
+    pass
+
+
+class NetworkRelayMessageNotAlive(DeDiLinkException):
     pass
