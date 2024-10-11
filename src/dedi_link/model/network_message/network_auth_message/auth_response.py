@@ -82,9 +82,6 @@ class AuthResponse(NetworkAuthMessage, Generic[NodeType, NetworkType]):
 
     @classmethod
     def from_dict(cls, payload: dict) -> 'AuthResponse':
-        message_id = payload[MESSAGE_ATTRIBUTES]['messageID']
-        approved = payload[MESSAGE_ATTRIBUTES]['approved']
-        timestamp = payload['timestamp']
         node = None
         network = None
 
@@ -96,9 +93,9 @@ class AuthResponse(NetworkAuthMessage, Generic[NodeType, NetworkType]):
                 network = cls.NETWORK_CLASS.from_dict(payload[MESSAGE_DATA]['network'])
 
         return cls(
-            message_id=message_id,
-            approved=approved,
+            message_id=payload[MESSAGE_ATTRIBUTES]['messageID'],
+            approved=payload[MESSAGE_ATTRIBUTES]['approved'],
             node=node,
-            timestamp=timestamp,
+            timestamp=payload['timestamp'],
             network=network,
         )

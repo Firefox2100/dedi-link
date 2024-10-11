@@ -100,27 +100,19 @@ class AuthRequestInvite(NetworkAuthMessage, Generic[NodeType, NetworkType]):
 
     @classmethod
     def from_dict(cls, payload: dict) -> 'AuthRequestInvite':
-        message_id = payload[MESSAGE_ATTRIBUTES]['messageID']
-        network_id = payload[MESSAGE_ATTRIBUTES]['networkID']
-        auth_type = AuthMessageType(payload[MESSAGE_ATTRIBUTES]['authType'])
-        status = AuthMessageStatus(payload[MESSAGE_ATTRIBUTES]['status'])
-        target_url = payload[MESSAGE_ATTRIBUTES]['targetUrl']
-        node = cls.NODE_CLASS.from_dict(payload[MESSAGE_DATA]['node'])
-        challenge = payload[MESSAGE_DATA]['challenge']
         network = cls.NETWORK_CLASS.from_dict(payload[MESSAGE_DATA]['network']) if 'network' in payload[
             MESSAGE_DATA] else None
         if network:
             network.node_ids = []
-        timestamp = payload['timestamp']
 
         return cls(
-            message_id=message_id,
-            network_id=network_id,
-            auth_type=auth_type,
-            status=status,
-            target_url=target_url,
-            node=node,
-            challenge=challenge,
-            timestamp=timestamp,
+            message_id=payload[MESSAGE_ATTRIBUTES]['messageID'],
+            network_id=payload[MESSAGE_ATTRIBUTES]['networkID'],
+            auth_type=AuthMessageType(payload[MESSAGE_ATTRIBUTES]['authType']),
+            status=AuthMessageStatus(payload[MESSAGE_ATTRIBUTES]['status']),
+            target_url=payload[MESSAGE_ATTRIBUTES]['targetUrl'],
+            node=cls.NODE_CLASS.from_dict(payload[MESSAGE_DATA]['node']),
+            challenge=payload[MESSAGE_DATA]['challenge'],
+            timestamp=payload['timestamp'],
             network=network,
         )

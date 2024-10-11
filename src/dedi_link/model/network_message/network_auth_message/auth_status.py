@@ -33,19 +33,15 @@ class AuthStatus(NetworkAuthMessage):
         return payload
 
     @classmethod
-    def from_dict(cls, payload: dict) -> AuthStatusType:
-        message_id = payload[MESSAGE_ATTRIBUTES]['messageID']
-        network_id = payload[MESSAGE_ATTRIBUTES]['networkID']
-        timestamp = payload['timestamp']
-
+    def from_dict(cls, payload: dict) -> 'AuthStatus':
         status = None
 
         if 'status' in payload[MESSAGE_ATTRIBUTES]:
             status = AuthMessageStatus(payload[MESSAGE_ATTRIBUTES]['status'])
 
         return cls(
-            message_id=message_id,
-            network_id=network_id,
+            message_id=payload[MESSAGE_ATTRIBUTES]['messageID'],
+            network_id=payload[MESSAGE_ATTRIBUTES]['networkID'],
             status=status,
-            timestamp=timestamp,
+            timestamp=payload['timestamp'],
         )

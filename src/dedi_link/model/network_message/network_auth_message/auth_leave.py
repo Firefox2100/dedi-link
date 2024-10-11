@@ -45,15 +45,10 @@ class AuthLeave(NetworkAuthMessage):
         return payload
 
     @classmethod
-    def from_dict(cls, payload: dict) -> AuthLeaveType:
-        message_id = payload[MESSAGE_ATTRIBUTES]['messageID']
-        network_id = payload[MESSAGE_ATTRIBUTES]['networkID']
-        node_id = payload[MESSAGE_ATTRIBUTES]['nodeID']
-        timestamp = payload['timestamp']
-
+    def from_dict(cls, payload: dict) -> 'AuthLeave':
         return cls(
-            message_id=message_id,
-            network_id=network_id,
-            node_id=node_id,
-            timestamp=timestamp,
+            message_id=payload[MESSAGE_ATTRIBUTES]['messageID'],
+            network_id=payload[MESSAGE_ATTRIBUTES]['networkID'],
+            node_id=payload[MESSAGE_ATTRIBUTES]['nodeID'],
+            timestamp=payload['timestamp'],
         )

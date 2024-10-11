@@ -22,3 +22,12 @@ class AuthMessageStatus(Enum):
     PENDING = 'pending'
     ACCEPTED = 'accepted'
     REJECTED = 'rejected'
+
+
+class SyncTarget(Enum):
+    NODE = 'node'
+    USER = 'user'
+    INDEX = 'index'
+    INSTANCE = 'instance'
+    FULL_SYNC = 'fullSync'
+    POLL = 'poll'

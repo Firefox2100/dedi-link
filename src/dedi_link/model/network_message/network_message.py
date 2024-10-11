@@ -61,5 +61,5 @@ class NetworkMessage(BaseModel):
         return payload
 
     @classmethod
-    def from_dict(cls: Type[NetworkMessageType], payload: dict) -> NetworkMessageType:
+    def from_dict(cls, payload: dict) -> 'NetworkMessageType':
         raise NetworkMessageNotImplementedException('from_dict method not implemented')

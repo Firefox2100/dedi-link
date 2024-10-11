@@ -58,15 +58,10 @@ class AuthJoin(NetworkAuthMessage, Generic[NodeType]):
         return payload
 
     @classmethod
-    def from_dict(cls: Type[AuthJoinType], payload: dict) -> AuthJoinType:
-        message_id = payload[MESSAGE_ATTRIBUTES]['messageID']
-        network_id = payload[MESSAGE_ATTRIBUTES]['networkID']
-        timestamp = payload['timestamp']
-        node = cls.NODE_CLASS.from_dict(payload[MESSAGE_DATA]['node'])
-
+    def from_dict(cls, payload: dict) -> 'AuthJoin':
         return cls(
-            message_id=message_id,
-            network_id=network_id,
-            timestamp=timestamp,
-            node=node,
+            message_id=payload[MESSAGE_ATTRIBUTES]['messageID'],
+            network_id=payload[MESSAGE_ATTRIBUTES]['networkID'],
+            timestamp=payload['timestamp'],
+            node=cls.NODE_CLASS.from_dict(payload[MESSAGE_DATA]['node']),
         )
