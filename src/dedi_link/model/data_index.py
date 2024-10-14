@@ -7,4 +7,8 @@ DataIndexType = TypeVar('DataIndexType', bound='DataIndex')
 
 
 class DataIndex(BaseModel):
-    pass
+    def __add__(self, other):
+        if not isinstance(other, DataIndex):
+            return NotImplemented
+
+        return DataIndex()

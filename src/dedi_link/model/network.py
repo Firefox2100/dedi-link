@@ -11,6 +11,12 @@ NetworkType = TypeVar('NetworkType', bound='Network')
 
 
 class Network(BaseModel, Generic[DataIndexType, NodeType]):
+    """
+    A network that contains nodes which agreed to share data among each other.
+
+    A network is a logical abstraction of a group of nodes that accepts (partially)
+    others credentials and allows access to their data.
+    """
     DATA_INDEX_CLASS = DataIndex
     NODE_CLASS = Node
 

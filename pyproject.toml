@@ -26,6 +26,12 @@ dynamic = [
     "version"
 ]
 
+[project.optional-dependencies]
+test = [
+    "pytest~=8.3",
+    "pytest-cov~=5.0",
+]
+
 [project.urls]
 Homepage = "https://github.com/Firefox2100/dedi-link"
 Issues = "https://github.com/Firefox2100/dedi-link/issues"
