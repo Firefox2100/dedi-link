@@ -7,6 +7,12 @@ DataIndexType = TypeVar('DataIndexType', bound='DataIndex')
 
 
 class DataIndex(BaseModel):
+    """
+    A placeholder class for data index.
+
+    Extend it if your system stores or uses some type of
+    index related to querying data.
+    """
     def __eq__(self, other):
         if not isinstance(other, DataIndex):
             return NotImplemented

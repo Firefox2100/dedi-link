@@ -22,9 +22,19 @@ class BaseModel:
         importing within a method to avoid circular imports
 
         :return: A dictionary mapping the enum values to the child classes, and potentially a
-        function to further identify the child class
+                 function to further identify the child class
         """
         return {}
+
+    @property
+    def access_token(self):
+        """
+        Get the access token for the model
+
+        This is a property to allow for lazy loading of the access token
+        :return: The access token
+        """
+        raise BaseModelNotImplemented('access_token property has to be implemented by the child class')
 
     @classmethod
     def load(cls: Type[BaseModelType], *args, **kwargs) -> BaseModelType:

@@ -8,6 +8,14 @@ UserMappingType = TypeVar('UserMappingType', bound='UserMapping')
 
 
 class UserMapping(BaseModel):
+    """
+    A class controlling how user IDs are mapped to other user IDs.
+
+    User ID mapping is implemented in the case where incoming ID (for
+    example, from a different IdP) does not correspond directly to the
+    IDs used in this system, and mapping is required; or if there are
+    special users like "anonymous" or "service" that are local accounts.
+    """
     def __init__(self,
                  mapping_type: MappingType = MappingType.NO_MAPPING,
                  static_id: str = None,
@@ -66,6 +74,9 @@ class UserMapping(BaseModel):
         This method is extracted separately to allow easier override,
         in case some mapping systems use string manipulation instead
         of table lookup.
+
+        :param user_id: The user ID to map
+        :return: The mapped user ID
         """
         new_id = self.dynamic_mapping.get(user_id)
 
@@ -77,6 +88,12 @@ class UserMapping(BaseModel):
     def map(self,
             user_id: str | None = None,
             ) -> str:
+        """
+        Map a user ID to a new user ID based on the mapping type
+
+        :param user_id: The user ID to map
+        :return: The mapped user ID
+        """
         if self.mapping_type == MappingType.NO_MAPPING:
             if user_id is None:
                 raise ValueError('No user ID provided')

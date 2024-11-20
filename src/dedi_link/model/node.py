@@ -1,6 +1,7 @@
 from typing import Generic, TypeVar
 
 from dedi_link.etc.enums import MappingType
+from dedi_link.etc.exceptions import NodeNotImplemented
 from .base_model import BaseModel
 from .data_index import DataIndex, DataIndexType
 from .user_mapping import UserMapping, UserMappingType
@@ -65,11 +66,6 @@ class Node(BaseModel, Generic[DataIndexType, UserMappingType]):
 
     @classmethod
     def from_dict(cls, payload: dict) -> NodeType:
-        """
-        Build an installation from a dictionary
-        :param payload: Dictionary containing installation information
-        :return:
-        """
         return cls(
             node_id=payload['nodeId'],
             node_name=payload['nodeName'],
@@ -84,6 +80,12 @@ class Node(BaseModel, Generic[DataIndexType, UserMappingType]):
         )
 
     def to_dict(self, key=False) -> dict:
+        """
+        Serialise the Node object to a dictionary
+
+        :param key: Whether to include the public key in the payload
+        :return: The serialised Node object
+        """
         payload = {
             'nodeId': self.node_id,
             'nodeName': self.node_name,
@@ -104,3 +106,16 @@ class Node(BaseModel, Generic[DataIndexType, UserMappingType]):
             payload['score'] = self.score
 
         return payload
+
+    def get_user_key(self, user_id: str) -> str:
+        """
+        Get the user key for the given user ID
+
+        This key is usually stored in KMS or similar service,
+        and should not be held in memory for long. This is why
+        it's not stored as a property of the Node object.
+
+        :param user_id: The user ID to get the key for
+        :return: The user key
+        """
+        raise NodeNotImplemented('get_user_key method not implemented')
