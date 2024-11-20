@@ -60,29 +60,29 @@ class Network(BaseModel, Generic[DataIndexType, NodeType]):
 
     @classmethod
     def from_dict(cls, payload: dict[str, str | list[str] | bool | dict]) -> 'Network':
-        if 'networkID' not in payload or not payload['networkID']:
-            payload['networkID'] = str(uuid.uuid4())
+        if 'networkId' not in payload or not payload['networkId']:
+            payload['networkId'] = str(uuid.uuid4())
 
-        if 'instanceID' not in payload or not payload['instanceID']:
-            payload['instanceID'] = str(uuid.uuid4())
+        if 'instanceId' not in payload or not payload['instanceId']:
+            payload['instanceId'] = str(uuid.uuid4())
 
         return cls(
-            network_id=payload['networkID'],
+            network_id=payload['networkId'],
             network_name=payload['networkName'],
             description=payload['description'],
-            node_ids=payload.get('nodeIDs', []),
+            node_ids=payload.get('nodeIds', []),
             visible=payload['visible'],
-            instance_id=payload['instanceID'],
+            instance_id=payload['instanceId'],
         )
 
     def to_dict(self) -> dict:
         return {
-            'networkID': self.network_id,
+            'networkId': self.network_id,
             'networkName': self.network_name,
             'description': self.description,
-            'nodeIDs': self.node_ids,
+            'nodeIds': self.node_ids,
             'visible': self.visible,
-            'instanceID': self.instance_id,
+            'instanceId': self.instance_id,
         }
 
     def to_dict_with_index(self) -> dict:

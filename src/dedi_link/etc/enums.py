@@ -1,6 +1,12 @@
 from enum import Enum
 
 
+class MappingType(Enum):
+    NO_MAPPING = 'noMapping'
+    STATIC = 'static'
+    DYNAMIC = 'dynamic'
+
+
 class MessageType(Enum):
     AUTH_MESSAGE = 'authMessage'
     DATA_MESSAGE = 'dataMessage'

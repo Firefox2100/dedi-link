@@ -70,10 +70,10 @@ class Node(BaseModel, Generic[DataIndexType, UserMappingType]):
         :return:
         """
         return cls(
-            node_id=payload['nodeID'],
+            node_id=payload['nodeId'],
             node_name=payload['nodeName'],
             url=payload['nodeUrl'],
-            client_id=payload['clientID'],
+            client_id=payload['clientId'],
             description=payload.get('nodeDescription', ''),
             authentication_enabled=payload.get('authenticationEnabled', False),
             user_mapping=cls.USER_MAPPING_CLASS.from_dict(payload.get('userMapping', {})),
