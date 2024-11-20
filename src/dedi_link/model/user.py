@@ -31,13 +31,13 @@ class User(BaseModel):
 
     def to_dict(self) -> dict:
         return {
-            'userID': self.user_id,
+            'userId': self.user_id,
         }
 
     @classmethod
     def from_dict(cls, payload: dict) -> 'User':
         return cls(
-            user_id=payload['userID'],
+            user_id=payload['userId'],
         )
 
     @property
