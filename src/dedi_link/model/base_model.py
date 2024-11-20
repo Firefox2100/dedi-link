@@ -20,6 +20,7 @@ class BaseModel:
 
         This is used to facilitate the factory method, and also allows for lazy
         importing within a method to avoid circular imports
+
         :return: A dictionary mapping the enum values to the child classes, and potentially a
         function to further identify the child class
         """

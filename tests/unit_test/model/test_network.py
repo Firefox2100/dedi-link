@@ -58,6 +58,8 @@ class TestNetwork:
         )
         assert mock_network_1 != mock_network_2
 
+        assert not mock_network_1 == 'Random Object'
+
     def test_hash(self, mock_network_1):
         network_hash = hash(mock_network_1)
         assert isinstance(network_hash, int)
