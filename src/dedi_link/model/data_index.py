@@ -18,3 +18,10 @@ class DataIndex(BaseModel):
             return NotImplemented
 
         return DataIndex()
+
+    def to_dict(self) -> dict:
+        return {}
+
+    @classmethod
+    def from_dict(cls, payload: dict) -> 'DataIndex':
+        return DataIndex()

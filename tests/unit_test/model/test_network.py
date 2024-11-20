@@ -114,24 +114,23 @@ class TestNetwork:
 
     def test_to_dict_with_index(self, mock_network_1):
         with patch('dedi_link.model.network.Network.network_data_index', new_callable=PropertyMock) as mock_data_index:
-            with patch('dedi_link.model.data_index.DataIndex.to_dict', return_value={}):
-                mock_data_index.return_value = DataIndex()
+            mock_data_index.return_value = DataIndex()
 
-                payload = {
-                    'networkId': '62d13013-d80c-4539-adc1-61862bdd65cb',
-                    'networkName': 'Test Network',
-                    'description': 'Test Description',
-                    'nodeIds': ['86b0331a-c92a-44f9-9d3d-23b60e203838'],
-                    'visible': True,
-                    'instanceId': 'f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
-                    'dataIndex': {},
-                }
+            payload = {
+                'networkId': '62d13013-d80c-4539-adc1-61862bdd65cb',
+                'networkName': 'Test Network',
+                'description': 'Test Description',
+                'nodeIds': ['86b0331a-c92a-44f9-9d3d-23b60e203838'],
+                'visible': True,
+                'instanceId': 'f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
+                'dataIndex': {},
+            }
 
-                assert not DeepDiff(
-                    mock_network_1.to_dict_with_index(),
-                    payload,
-                    ignore_order=True,
-                )
+            assert not DeepDiff(
+                mock_network_1.to_dict_with_index(),
+                payload,
+                ignore_order=True,
+            )
 
     def test_network_unimplemented_methods(self, mock_network_1):
         with pytest.raises(NetworkNotImplemented):

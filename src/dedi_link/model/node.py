@@ -1,5 +1,6 @@
 from typing import Generic, TypeVar
 
+from dedi_link.etc.enums import MappingType
 from .base_model import BaseModel
 from .data_index import DataIndex, DataIndexType
 from .user_mapping import UserMapping, UserMappingType
@@ -36,7 +37,7 @@ class Node(BaseModel, Generic[DataIndexType, UserMappingType]):
         self.data_index = data_index or self.DATA_INDEX_CLASS()
         self.score = score
 
-    def __eq__(self, other: 'Node') -> bool:
+    def __eq__(self, other) -> bool:
         if not isinstance(other, Node):
             return NotImplemented
 
@@ -84,22 +85,22 @@ class Node(BaseModel, Generic[DataIndexType, UserMappingType]):
 
     def to_dict(self, key=False) -> dict:
         payload = {
-            'nodeID': self.node_id,
+            'nodeId': self.node_id,
             'nodeName': self.node_name,
             'nodeUrl': self.url,
-            'clientID': self.client_id,
+            'clientId': self.client_id,
             'nodeDescription': self.description,
         }
 
         if self.authentication_enabled is not None:
             payload['authenticationEnabled'] = self.authentication_enabled
-        if self.user_mapping is not None and self.user_mapping.mapping_type != UserMappingType.NO_MAPPING:
+        if self.user_mapping is not None and self.user_mapping.mapping_type != MappingType.NO_MAPPING:
             payload['userMapping'] = self.user_mapping.to_dict()
         if self.public_key is not None and key:
             payload['publicKey'] = self.public_key
         if self.data_index is not None:
             payload['dataIndex'] = self.data_index.to_dict()
-        if self.score:
+        if self.score is not None:
             payload['score'] = self.score
 
         return payload
