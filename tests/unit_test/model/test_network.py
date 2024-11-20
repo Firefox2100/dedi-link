@@ -66,12 +66,12 @@ class TestNetwork:
 
     def test_from_dict(self, mock_network_1):
         payload = {
-            'networkID': '62d13013-d80c-4539-adc1-61862bdd65cb',
+            'networkId': '62d13013-d80c-4539-adc1-61862bdd65cb',
             'networkName': 'Test Network',
             'description': 'Test Description',
-            'nodeIDs': ['86b0331a-c92a-44f9-9d3d-23b60e203838'],
+            'nodeIds': ['86b0331a-c92a-44f9-9d3d-23b60e203838'],
             'visible': True,
-            'instanceID': 'f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
+            'instanceId': 'f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
         }
 
         network = Network.from_dict(payload)
@@ -82,7 +82,7 @@ class TestNetwork:
         payload = {
             'networkName': 'Test Network',
             'description': 'Test Description',
-            'nodeIDs': ['86b0331a-c92a-44f9-9d3d-23b60e203838'],
+            'nodeIds': ['86b0331a-c92a-44f9-9d3d-23b60e203838'],
             'visible': True,
         }
 
@@ -98,12 +98,12 @@ class TestNetwork:
 
     def test_to_dict(self, mock_network_1):
         payload = {
-            'networkID': '62d13013-d80c-4539-adc1-61862bdd65cb',
+            'networkId': '62d13013-d80c-4539-adc1-61862bdd65cb',
             'networkName': 'Test Network',
             'description': 'Test Description',
-            'nodeIDs': ['86b0331a-c92a-44f9-9d3d-23b60e203838'],
+            'nodeIds': ['86b0331a-c92a-44f9-9d3d-23b60e203838'],
             'visible': True,
-            'instanceID': 'f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
+            'instanceId': 'f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
         }
 
         assert not DeepDiff(
@@ -118,12 +118,12 @@ class TestNetwork:
                 mock_data_index.return_value = DataIndex()
 
                 payload = {
-                    'networkID': '62d13013-d80c-4539-adc1-61862bdd65cb',
+                    'networkId': '62d13013-d80c-4539-adc1-61862bdd65cb',
                     'networkName': 'Test Network',
                     'description': 'Test Description',
-                    'nodeIDs': ['86b0331a-c92a-44f9-9d3d-23b60e203838'],
+                    'nodeIds': ['86b0331a-c92a-44f9-9d3d-23b60e203838'],
                     'visible': True,
-                    'instanceID': 'f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
+                    'instanceId': 'f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
                     'dataIndex': {},
                 }
 
