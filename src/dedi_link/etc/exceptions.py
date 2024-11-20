@@ -41,6 +41,10 @@ class NodeNotFound(DeDiLinkNotFound):
     pass
 
 
+class UserNotImplemented(DeDiLinkNotImplemented):
+    pass
+
+
 class NetworkMessageNotImplemented(DeDiLinkNotImplemented):
     pass
 

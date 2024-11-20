@@ -37,3 +37,17 @@ class Network(AsyncBaseModel, SyncNetwork[DataIndexType, NodeType]):
             data_index += node.data_index
 
         return data_index
+
+    async def to_dict_with_index(self) -> dict:
+        """
+        Convert the network object to a dictionary, with index included.
+
+        :return: Dictionary
+        """
+        data_index = await self.network_data_index
+
+        payload = self.to_dict()
+
+        payload['dataIndex'] = data_index.to_dict()
+
+        return payload

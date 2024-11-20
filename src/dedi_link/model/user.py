@@ -1,5 +1,6 @@
 from typing import TypeVar
 
+from dedi_link.etc.exceptions import UserNotImplemented
 from .base_model import BaseModel
 
 
@@ -50,7 +51,7 @@ class User(BaseModel):
 
         :return: The public key of the user.
         """
-        raise NotImplementedError('public_key property not implemented')
+        raise UserNotImplemented('public_key property not implemented')
 
     @property
     def private_key(self) -> str:
@@ -59,4 +60,4 @@ class User(BaseModel):
 
         :return: The private key of the user.
         """
-        raise NotImplementedError('private_key property not implemented')
+        raise UserNotImplemented('private_key property not implemented')

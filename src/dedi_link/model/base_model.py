@@ -40,6 +40,7 @@ class BaseModel:
     def load(cls: Type[BaseModelType], *args, **kwargs) -> BaseModelType:
         """
         Load a model from the database
+
         :param args: Unnamed arguments
         :param kwargs: Named arguments
         :return: A single model instance
@@ -62,6 +63,7 @@ class BaseModel:
     def store(self, *args, **kwargs):
         """
         Store the model in the database
+
         :param args: Unnamed arguments
         :param kwargs: Named arguments
         :return:
@@ -81,6 +83,7 @@ class BaseModel:
     def delete(self, *args, **kwargs):
         """
         Delete the instance from the database
+
         :param args: Unnamed arguments
         :param kwargs: Named arguments
         :return: None
@@ -90,6 +93,7 @@ class BaseModel:
     def to_dict(self) -> dict:
         """
         Serialize the instance to a dictionary
+
         :return: A dictionary representation of the instance
         """
         raise BaseModelNotImplemented('to_dict method has to be implemented by the child class')
@@ -98,6 +102,7 @@ class BaseModel:
     def from_dict(cls: Type[BaseModelType], payload: dict) -> BaseModelType:
         """
         Build an instance from a dictionary
+
         :param payload: The data dictionary containing the instance data
         :return: An instance of the model
         """
@@ -106,8 +111,10 @@ class BaseModel:
     @classmethod
     def factory(cls: Type[BaseModelType], payload: dict, id_var: Enum):
         """
-        Create an instance of (usually) a child class from a dictionary,
-        by following the mapping defined as a class attribute
+        Create an instance of (usually) a child class from a dictionary
+
+
+        By following the mapping defined as a class attribute
         :param payload:
         :param id_var:
         :return:

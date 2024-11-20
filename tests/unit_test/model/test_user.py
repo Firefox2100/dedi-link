@@ -1,6 +1,7 @@
 import pytest
 from deepdiff import DeepDiff
 
+from dedi_link.etc.exceptions import UserNotImplemented
 from dedi_link.model import User
 
 
@@ -61,9 +62,9 @@ class TestUser:
         assert user == mock_user_1
 
     def test_public_key(self, mock_user_1):
-        with pytest.raises(NotImplementedError):
+        with pytest.raises(UserNotImplemented):
             _ = mock_user_1.public_key
 
     def test_private_key(self, mock_user_1):
-        with pytest.raises(NotImplementedError):
+        with pytest.raises(UserNotImplemented):
             _ = mock_user_1.private_key
