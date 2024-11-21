@@ -12,6 +12,7 @@ NetworkAuthMessageType = TypeVar('NetworkAuthMessageType', bound='NetworkAuthMes
 class NetworkAuthMessage(NetworkMessage):
     def __init__(self,
                  network_id: str,
+                 node_id: str,
                  auth_type: AuthMessageType,
                  message_id: str = None,
                  timestamp: int | None = None,
@@ -19,10 +20,11 @@ class NetworkAuthMessage(NetworkMessage):
         super().__init__(
             message_type=MessageType.AUTH_MESSAGE,
             message_id=message_id or str(uuid.uuid4()),
+            network_id=network_id,
+            node_id=node_id,
             timestamp=timestamp,
         )
 
-        self.network_id = network_id
         self.auth_type = auth_type
 
     def __eq__(self, other: 'NetworkAuthMessage'):
@@ -58,9 +60,6 @@ class NetworkAuthMessage(NetworkMessage):
     def to_dict(self) -> dict:
         payload = super().to_dict()
 
-        payload[MESSAGE_ATTRIBUTES].update({
-            'networkID': self.network_id,
-            'authType': self.auth_type.value,
-        })
+        payload[MESSAGE_ATTRIBUTES]['authType'] = self.auth_type.value
 
         return payload

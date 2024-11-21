@@ -25,12 +25,15 @@ class AuthResponse(NetworkAuthMessage, Generic[NodeType, NetworkType]):
     def __init__(self,
                  message_id: str,
                  approved: bool,
+                 network_id: str = '',
+                 node_id: str = '',
                  node: NodeType | None = None,
                  timestamp: int | None = None,
                  network: NetworkType | None = None,
                  ):
         super().__init__(
-            network_id='',
+            network_id=network_id,
+            node_id=node_id,
             auth_type=AuthMessageType.RESPONSE,
             message_id=message_id,
             timestamp=timestamp,

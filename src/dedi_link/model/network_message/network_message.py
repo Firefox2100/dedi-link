@@ -1,25 +1,45 @@
 import uuid
 import time
+import json
+import base64
 from enum import Enum
 from typing import TypeVar, Type, Callable
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.backends import default_backend
 
 from dedi_link.etc.consts import MESSAGE_ATTRIBUTES
-from dedi_link.etc.enums import MessageType, AuthMessageType
+from dedi_link.etc.enums import MessageType, AuthMessageType, DataMessageType
 from dedi_link.etc.exceptions import NetworkMessageNotImplemented
 from ..base_model import BaseModel
+from ..network import Network
+from .network_message_header import NetworkMessageHeader
 
 
 NetworkMessageType = TypeVar('NetworkMessageType', bound='NetworkMessage')
 
 
 class NetworkMessage(BaseModel):
+    """
+    Base model for a network message
+
+    A message is a self-contained unit of communication used in the protocol.
+    All communication between nodes is RESTful, so all messages need to state
+    clearly who it's from, who it's intended for, what it does, and have all
+    the data needed to perform the action.
+    """
     def __init__(self,
                  message_type: MessageType,
+                 network_id: str,
+                 node_id: str,
                  message_id: str = None,
                  timestamp: int | None = None,
                  ):
         self.message_type = message_type
         self.message_id = message_id or str(uuid.uuid4())
+        self.network_id = network_id
+        self.node_id = node_id
         self.timestamp = timestamp or int(time.time())
 
     def __eq__(self, other: 'NetworkMessage'):
@@ -29,11 +49,19 @@ class NetworkMessage(BaseModel):
         return all([
             self.message_type == other.message_type,
             self.message_id == other.message_id,
+            self.network_id == other.network_id,
+            self.node_id == other.node_id,
             self.timestamp == other.timestamp,
         ])
 
     def __hash__(self):
-        return hash((self.message_type, self.message_id, self.timestamp))
+        return hash((
+            self.message_type,
+            self.message_id,
+            self.network_id,
+            self.node_id,
+            self.timestamp
+        ))
 
     @classmethod
     def _child_mapping(cls) -> dict[Enum, tuple[Type[NetworkMessageType], Callable[[dict], Enum] | None]]:
@@ -45,7 +73,7 @@ class NetworkMessage(BaseModel):
         return {
             MessageType.AUTH_MESSAGE: (NetworkAuthMessage, lambda payload: AuthMessageType(payload['messageAttribute']['authType'])),
             MessageType.SYNC_MESSAGE: (NetworkSyncMessage, None),
-            MessageType.DATA_MESSAGE: (NetworkDataMessage, ),
+            MessageType.DATA_MESSAGE: (NetworkDataMessage, lambda payload: DataMessageType(payload['messageAttribute']['dataType'])),
             MessageType.RELAY_MESSAGE: (NetworkRelayMessage, None),
         }
 
@@ -53,7 +81,9 @@ class NetworkMessage(BaseModel):
         payload = {
             'messageType': self.message_type.value,
             MESSAGE_ATTRIBUTES: {
-                'messageID': self.message_id,
+                'messageId': self.message_id,
+                'networkId': self.network_id,
+                'nodeId': self.node_id,
             },
             'timestamp': self.timestamp,
         }
@@ -62,4 +92,66 @@ class NetworkMessage(BaseModel):
 
     @classmethod
     def from_dict(cls, payload: dict) -> 'NetworkMessageType':
+        """
+        Build an instance from a dictionary
+
+        The from_dict method is purposefully not implemented, because under
+        no circumstances should you want to construct a base class of message.
+        Each message must be of a specific type, and use the factory method
+        from the child class
+        :param payload: The data dictionary containing the instance data
+        :return: An instance of the model
+        """
         raise NetworkMessageNotImplemented('from_dict method not implemented')
+
+    @staticmethod
+    def sign_payload(private_pem: str, payload: str) -> str:
+        """
+        Sign a payload with a private key in PEM format.
+
+        :param private_pem: Private key in PEM format
+        :param payload: Payload to sign, in string format
+        :return: Signature in base64 encoded format
+        """
+        private_key = serialization.load_pem_private_key(
+            private_pem.encode(),
+            password=None,
+            backend=default_backend()
+        )
+
+        signature = private_key.sign(
+            payload.encode(),
+            padding.PSS(
+                mgf=padding.MGF1(hashes.SHA256()),
+                salt_length=padding.PSS.MAX_LENGTH
+            ),
+            hashes.SHA256()
+        )
+
+        return base64.b64encode(signature).decode()
+
+    def generate_headers(self,
+                         access_token: str | None = None,
+                         ) -> NetworkMessageHeader:
+        """
+        Generate the headers for the message
+
+        :param access_token:
+        :return: A NetworkMessageHeader instance
+        """
+        network = Network.load(self.network_id)
+
+        server_signature = self.sign_payload(
+            private_pem=network.private_key,
+            payload=json.dumps(self.to_dict()),
+        )
+
+        if access_token is None:
+            access_token = self.access_token
+
+        return NetworkMessageHeader(
+            node_id=self.node_id,
+            network_id=self.network_id,
+            server_signature=server_signature,
+            access_token=access_token,
+        )

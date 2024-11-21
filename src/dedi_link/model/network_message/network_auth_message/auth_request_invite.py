@@ -24,6 +24,7 @@ class AuthRequestInvite(NetworkAuthMessage, Generic[NodeType, NetworkType]):
 
     def __init__(self,
                  network_id: str,
+                 node_id: str,
                  auth_type: AuthMessageType,
                  status: AuthMessageStatus,
                  node: NodeType,
@@ -35,6 +36,7 @@ class AuthRequestInvite(NetworkAuthMessage, Generic[NodeType, NetworkType]):
                  ):
         super().__init__(
             network_id=network_id,
+            node_id=node_id,
             auth_type=auth_type,
             message_id=message_id or str(uuid.uuid4()),
             timestamp=timestamp,
@@ -108,6 +110,7 @@ class AuthRequestInvite(NetworkAuthMessage, Generic[NodeType, NetworkType]):
         return cls(
             message_id=payload[MESSAGE_ATTRIBUTES]['messageID'],
             network_id=payload[MESSAGE_ATTRIBUTES]['networkID'],
+            node_id=payload[MESSAGE_ATTRIBUTES]['nodeID'],
             auth_type=AuthMessageType(payload[MESSAGE_ATTRIBUTES]['authType']),
             status=AuthMessageStatus(payload[MESSAGE_ATTRIBUTES]['status']),
             target_url=payload[MESSAGE_ATTRIBUTES]['targetUrl'],
