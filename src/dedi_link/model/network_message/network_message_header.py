@@ -1,3 +1,9 @@
+from typing import TypeVar
+
+
+NetworkMessageHeaderType = TypeVar('NetworkMessageHeaderType', bound='NetworkMessageHeader')
+
+
 class NetworkMessageHeader:
     """
     Network Message Header
@@ -59,7 +65,7 @@ class NetworkMessageHeader:
         if self.user_id is not None:
             headers['X-User-ID'] = self.user_id
         if self.delivered is not None:
-            headers['X-Delivered'] = 'True'
+            headers['X-Delivered'] = 'true'
 
         return headers
 
@@ -71,10 +77,14 @@ class NetworkMessageHeader:
                         such as the headers from a Quart request object.
         :return:
         """
-
         access_token = headers.get('Authorization', None)
         if access_token is not None:
             access_token = access_token.split(' ')[1]
+
+        if headers.get('X-Delivered', None) is not None:
+            delivered = headers.get('X-Delivered', None).lower() == 'true'
+        else:
+            delivered = False
 
         return cls(
             node_id=headers.get('X-Node-ID', None),
@@ -82,5 +92,5 @@ class NetworkMessageHeader:
             server_signature=headers.get('X-Server-Signature', None),
             access_token=access_token,
             user_id=headers.get('X-User-ID', None),
-            delivered=headers.get('X-Delivered', None),
+            delivered=delivered,
         )

@@ -1,4 +1,5 @@
 from typing import TypeVar
+from deepdiff import DeepDiff
 
 from dedi_link.etc.enums import MappingType
 from .base_model import BaseModel
@@ -25,6 +26,9 @@ class UserMapping(BaseModel):
         self.static_id = static_id
         self.dynamic_mapping = dynamic_mapping or {}
 
+        if mapping_type == MappingType.STATIC and static_id is None:
+                raise ValueError('Static ID is required for static mapping')
+
     def __eq__(self, other):
         if not isinstance(other, UserMapping):
             return NotImplemented
@@ -37,7 +41,11 @@ class UserMapping(BaseModel):
         elif self.mapping_type == MappingType.STATIC:
             return self.static_id == other.static_id
         elif self.mapping_type == MappingType.DYNAMIC:
-            return self.dynamic_mapping == other.dynamic_mapping
+            return not DeepDiff(
+                self.dynamic_mapping,
+                other.dynamic_mapping,
+                ignore_order=True,
+            )
 
         return False
 

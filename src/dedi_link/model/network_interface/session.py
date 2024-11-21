@@ -7,7 +7,7 @@ from ..network_message import NetworkMessageType, NetworkMessageHeader
 
 class Session:
     def __init__(self):
-        self.session = requests.Session()
+        self._session = requests.Session()
 
     def __enter__(self):
         return self
@@ -16,12 +16,12 @@ class Session:
         self.close()
 
     def close(self):
-        self.session.close()
+        self._session.close()
 
     def get(self,
             url: str,
             ) -> dict:
-        response = self.session.get(url)
+        response = self._session.get(url)
 
         if response.status_code != 200:
             raise NetworkRequestFailed(response.status_code)
@@ -38,7 +38,7 @@ class Session:
             access_token=access_token,
         ).headers
 
-        response = self.session.post(
+        response = self._session.post(
             url,
             json=payload,
             headers=headers,

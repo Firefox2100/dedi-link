@@ -6,6 +6,11 @@ from dedi_link.model import BaseModel
 
 
 class TestBaseModel:
+    def test_access_token(self):
+        base_model_instance = BaseModel()
+        with pytest.raises(BaseModelNotImplemented):
+            _ = base_model_instance.access_token
+
     def test_load(self):
         with pytest.raises(BaseModelNotImplemented):
             BaseModel.load()

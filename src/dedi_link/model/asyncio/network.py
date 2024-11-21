@@ -11,6 +11,8 @@ NetworkType = TypeVar('NetworkType', bound='Network')
 
 
 class Network(AsyncBaseModel, SyncNetwork[DataIndexType, NodeType]):
+    NODE_CLASS = Node
+
     @property
     async def nodes(self) -> list[NodeType]:
         raise NetworkNotImplemented('nodes property not implemented')
@@ -51,3 +53,12 @@ class Network(AsyncBaseModel, SyncNetwork[DataIndexType, NodeType]):
         payload['dataIndex'] = data_index.to_dict()
 
         return payload
+
+    @property
+    async def private_key(self) -> str:
+        """
+        Get the network private key.
+
+        :return: Private key in PEM string format
+        """
+        raise NetworkNotImplemented('private_key property not implemented')

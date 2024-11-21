@@ -27,7 +27,7 @@ class BaseModel:
         return {}
 
     @property
-    def access_token(self):
+    def access_token(self) -> str:
         """
         Get the access token for the model
 
