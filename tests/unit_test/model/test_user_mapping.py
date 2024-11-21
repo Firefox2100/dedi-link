@@ -14,6 +14,13 @@ def mock_user_mapping_1():
 
 
 @pytest.fixture
+def mock_user_mapping_dict_1():
+    return {
+        'mappingType': 'static',
+        'staticId': '46592ab0-196a-4db2-a7fe-baf9a83d493b',
+    }
+
+@pytest.fixture
 def mock_user_mapping_2():
     return UserMapping(
         mapping_type=MappingType.DYNAMIC,
@@ -22,6 +29,17 @@ def mock_user_mapping_2():
             '1303f0bc-0707-4118-97b5-7a5c9cfa9d8a': '0b5b32d0-317c-4d48-9874-8afddb913d08',
         },
     )
+
+
+@pytest.fixture
+def mock_user_mapping_dict_2():
+    return {
+        'mappingType': 'dynamic',
+        'dynamicMapping': {
+            'b6c2f7ca-95f5-4d00-94eb-dd289a000f7b': 'ed946072-57b9-4c00-a813-501773dc6146',
+            '1303f0bc-0707-4118-97b5-7a5c9cfa9d8a': '0b5b32d0-317c-4d48-9874-8afddb913d08',
+        },
+    }
 
 
 class TestUserMapping:
@@ -77,48 +95,32 @@ class TestUserMapping:
             mapping_type='Wrong input',     # noqa
         )
 
-    def test_to_dict(self, mock_user_mapping_1, mock_user_mapping_2):
-        payload_1 = {
-            'mappingType': 'static',
-            'staticId': '46592ab0-196a-4db2-a7fe-baf9a83d493b',
-        }
-
-        payload_2 = {
-            'mappingType': 'dynamic',
-            'dynamicMapping': {
-                'b6c2f7ca-95f5-4d00-94eb-dd289a000f7b': 'ed946072-57b9-4c00-a813-501773dc6146',
-                '1303f0bc-0707-4118-97b5-7a5c9cfa9d8a': '0b5b32d0-317c-4d48-9874-8afddb913d08',
-            },
-        }
-
+    def test_to_dict(self,
+                     mock_user_mapping_1,
+                     mock_user_mapping_2,
+                     mock_user_mapping_dict_1,
+                     mock_user_mapping_dict_2,
+                     ):
         assert not DeepDiff(
             mock_user_mapping_1.to_dict(),
-            payload_1,
+            mock_user_mapping_dict_1,
             ignore_order=True,
         )
 
         assert not DeepDiff(
             mock_user_mapping_2.to_dict(),
-            payload_2,
+            mock_user_mapping_dict_2,
             ignore_order=True,
         )
 
-    def test_from_dict(self, mock_user_mapping_1, mock_user_mapping_2):
-        payload_1 = {
-            'mappingType': 'static',
-            'staticId': '46592ab0-196a-4db2-a7fe-baf9a83d493b',
-        }
-
-        payload_2 = {
-            'mappingType': 'dynamic',
-            'dynamicMapping': {
-                'b6c2f7ca-95f5-4d00-94eb-dd289a000f7b': 'ed946072-57b9-4c00-a813-501773dc6146',
-                '1303f0bc-0707-4118-97b5-7a5c9cfa9d8a': '0b5b32d0-317c-4d48-9874-8afddb913d08',
-            },
-        }
-
-        user_mapping_1 = UserMapping.from_dict(payload_1)
-        user_mapping_2 = UserMapping.from_dict(payload_2)
+    def test_from_dict(self,
+                       mock_user_mapping_1,
+                       mock_user_mapping_2,
+                       mock_user_mapping_dict_1,
+                       mock_user_mapping_dict_2,
+                       ):
+        user_mapping_1 = UserMapping.from_dict(mock_user_mapping_dict_1)
+        user_mapping_2 = UserMapping.from_dict(mock_user_mapping_dict_2)
 
         assert user_mapping_1 == mock_user_mapping_1
         assert user_mapping_2 == mock_user_mapping_2

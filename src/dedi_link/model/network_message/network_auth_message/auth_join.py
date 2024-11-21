@@ -23,12 +23,14 @@ class AuthJoin(NetworkAuthMessage, Generic[NodeType]):
 
     def __init__(self,
                  network_id: str,
+                 node_id: str,
                  node: NodeType,
                  message_id: str = None,
                  timestamp: int | None = None,
                  ):
         super().__init__(
             network_id=network_id,
+            node_id=node_id,
             auth_type=AuthMessageType.JOIN,
             message_id=message_id or str(uuid.uuid4()),
             timestamp=timestamp,
@@ -52,7 +54,7 @@ class AuthJoin(NetworkAuthMessage, Generic[NodeType]):
         payload = super().to_dict()
 
         payload[MESSAGE_DATA] = {
-            'node': self.node.to_dict(key=True)
+            'node': self.node.to_dict(key=True),
         }
 
         return payload
@@ -60,8 +62,9 @@ class AuthJoin(NetworkAuthMessage, Generic[NodeType]):
     @classmethod
     def from_dict(cls, payload: dict) -> 'AuthJoin':
         return cls(
-            message_id=payload[MESSAGE_ATTRIBUTES]['messageID'],
-            network_id=payload[MESSAGE_ATTRIBUTES]['networkID'],
+            message_id=payload[MESSAGE_ATTRIBUTES]['messageId'],
+            network_id=payload[MESSAGE_ATTRIBUTES]['networkId'],
+            node_id=payload[MESSAGE_ATTRIBUTES]['nodeId'],
             timestamp=payload['timestamp'],
             node=cls.NODE_CLASS.from_dict(payload[MESSAGE_DATA]['node']),
         )

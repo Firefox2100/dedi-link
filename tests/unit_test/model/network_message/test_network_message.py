@@ -18,7 +18,7 @@ def mock_network_message_1():
     return NetworkMessage(
         message_type=MessageType.AUTH_MESSAGE,
         network_id='3ac1ed5a-0285-47f6-8b9c-12d16f3b3e2d',
-        node_id='d14a144f-d6b0-4137-9bfb-6f47031f0c2a',
+        node_id='f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
         message_id='ef893ef0-1d29-4cae-ac61-0891f346fed3',
         timestamp=1704067200,
     )
@@ -29,7 +29,7 @@ def mock_network_message_2():
     return NetworkMessage(
         message_type=MessageType.AUTH_MESSAGE,
         network_id='3ac1ed5a-0285-47f6-8b9c-12d16f3b3e2d',
-        node_id='d14a144f-d6b0-4137-9bfb-6f47031f0c2a',
+        node_id='f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
         message_id='41b0a563-d0fe-46f4-ae43-813a36914a65',
         timestamp=1704067200,
     )
@@ -117,7 +117,7 @@ class TestNetworkMessage:
         network_message = NetworkMessage(
             message_type=MessageType.AUTH_MESSAGE,
             network_id='3ac1ed5a-0285-47f6-8b9c-12d16f3b3e2d',
-            node_id='d14a144f-d6b0-4137-9bfb-6f47031f0c2a',
+            node_id='f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
             message_id='ef893ef0-1d29-4cae-ac61-0891f346fed3',
             timestamp=1704067200,
         )
@@ -125,14 +125,14 @@ class TestNetworkMessage:
         assert network_message.message_type == MessageType.AUTH_MESSAGE
         assert network_message.message_id == 'ef893ef0-1d29-4cae-ac61-0891f346fed3'
         assert network_message.network_id == '3ac1ed5a-0285-47f6-8b9c-12d16f3b3e2d'
-        assert network_message.node_id == 'd14a144f-d6b0-4137-9bfb-6f47031f0c2a'
+        assert network_message.node_id == 'f3bb816f-608b-4dd7-ac74-8e0d0a0979ad'
         assert network_message.timestamp == 1704067200
 
     def test_equality(self, mock_network_message_1, mock_network_message_2):
         assert mock_network_message_1 == NetworkMessage(
             message_type=MessageType.AUTH_MESSAGE,
             network_id='3ac1ed5a-0285-47f6-8b9c-12d16f3b3e2d',
-            node_id='d14a144f-d6b0-4137-9bfb-6f47031f0c2a',
+            node_id='f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
             message_id='ef893ef0-1d29-4cae-ac61-0891f346fed3',
             timestamp=1704067200,
         )
@@ -152,7 +152,7 @@ class TestNetworkMessage:
             'messageAttributes': {
                 'messageId': 'ef893ef0-1d29-4cae-ac61-0891f346fed3',
                 'networkId': '3ac1ed5a-0285-47f6-8b9c-12d16f3b3e2d',
-                'nodeId': 'd14a144f-d6b0-4137-9bfb-6f47031f0c2a',
+                'nodeId': 'f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
             },
             'timestamp': 1704067200,
         }
@@ -213,7 +213,7 @@ class TestNetworkMessage:
                 headers = mock_network_message_1.generate_headers()
 
                 assert headers == NetworkMessageHeader(
-                    node_id='d14a144f-d6b0-4137-9bfb-6f47031f0c2a',
+                    node_id='f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
                     network_id='3ac1ed5a-0285-47f6-8b9c-12d16f3b3e2d',
                     server_signature='signature',
                     access_token='access_token',

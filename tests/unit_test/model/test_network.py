@@ -3,31 +3,8 @@ from unittest.mock import patch, PropertyMock
 from deepdiff import DeepDiff
 
 from dedi_link.etc.exceptions import NetworkNotImplemented
-from dedi_link.model import Network, DataIndex, Node
+from dedi_link.model import Network, DataIndex
 
-
-@pytest.fixture
-def mock_network_1():
-    return Network(
-        network_id='62d13013-d80c-4539-adc1-61862bdd65cb',
-        network_name='Test Network',
-        description='Test Description',
-        node_ids=['86b0331a-c92a-44f9-9d3d-23b60e203838'],
-        visible=True,
-        instance_id='f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
-    )
-
-
-@pytest.fixture
-def mock_network_2():
-    return Network(
-        network_id='428fa5a2-132f-4a9e-981a-cad16ae702db',
-        network_name='Test Network 2',
-        description='Test Description 2',
-        node_ids=['20b6b2dd-b21d-49e4-ba2b-4a92fe1ba348'],
-        visible=True,
-        instance_id='dbc92bce-e74a-4f9c-b53a-5d41c1611872',
-    )
 
 class TestNetwork:
     def test_init(self):
@@ -64,27 +41,15 @@ class TestNetwork:
         network_hash = hash(mock_network_1)
         assert isinstance(network_hash, int)
 
-    def test_from_dict(self, mock_network_1):
-        payload = {
-            'networkId': '62d13013-d80c-4539-adc1-61862bdd65cb',
-            'networkName': 'Test Network',
-            'description': 'Test Description',
-            'nodeIds': ['86b0331a-c92a-44f9-9d3d-23b60e203838'],
-            'visible': True,
-            'instanceId': 'f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
-        }
-
-        network = Network.from_dict(payload)
+    def test_from_dict(self, mock_network_1, mock_network_dict_1):
+        network = Network.from_dict(mock_network_dict_1)
 
         assert network == mock_network_1
 
-    def test_from_dict_missing_id(self):
-        payload = {
-            'networkName': 'Test Network',
-            'description': 'Test Description',
-            'nodeIds': ['86b0331a-c92a-44f9-9d3d-23b60e203838'],
-            'visible': True,
-        }
+    def test_from_dict_missing_id(self, mock_network_dict_1):
+        payload = mock_network_dict_1.copy()
+        payload.pop('networkId')
+        payload.pop('instanceId')
 
         network = Network.from_dict(payload)
 
@@ -96,35 +61,22 @@ class TestNetwork:
         assert network.instance_id != ''
         assert network.instance_id != 'f3bb816f-608b-4dd7-ac74-8e0d0a0979ad'
 
-    def test_to_dict(self, mock_network_1):
-        payload = {
-            'networkId': '62d13013-d80c-4539-adc1-61862bdd65cb',
-            'networkName': 'Test Network',
-            'description': 'Test Description',
-            'nodeIds': ['86b0331a-c92a-44f9-9d3d-23b60e203838'],
-            'visible': True,
-            'instanceId': 'f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
-        }
-
+    def test_to_dict(self, mock_network_1, mock_network_dict_1):
         assert not DeepDiff(
             mock_network_1.to_dict(),
-            payload,
+            mock_network_dict_1,
             ignore_order=True,
         )
 
-    def test_to_dict_with_index(self, mock_network_1):
-        with patch('dedi_link.model.network.Network.network_data_index', new_callable=PropertyMock) as mock_data_index:
+    def test_to_dict_with_index(self, mock_network_1, mock_network_dict_1):
+        with patch(
+                'dedi_link.model.network.Network.network_data_index',
+                new_callable=PropertyMock,
+        ) as mock_data_index:
             mock_data_index.return_value = DataIndex()
 
-            payload = {
-                'networkId': '62d13013-d80c-4539-adc1-61862bdd65cb',
-                'networkName': 'Test Network',
-                'description': 'Test Description',
-                'nodeIds': ['86b0331a-c92a-44f9-9d3d-23b60e203838'],
-                'visible': True,
-                'instanceId': 'f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
-                'dataIndex': {},
-            }
+            payload = mock_network_dict_1.copy()
+            payload['dataIndex'] = {}
 
             assert not DeepDiff(
                 mock_network_1.to_dict_with_index(),
@@ -145,18 +97,11 @@ class TestNetwork:
         with pytest.raises(NetworkNotImplemented):
             _ = mock_network_1.self_data_index
 
-    def test_network_data_index(self, mock_network_1):
+    def test_network_data_index(self, mock_network_1, mock_node_1):
         with patch('dedi_link.model.network.Network.nodes_approved', new_callable=PropertyMock) as mock_nodes:
             with patch('dedi_link.model.network.Network.self_data_index', new_callable=PropertyMock) as mock_index:
                 mock_nodes.return_value = [
-                    Node(
-                        node_id='cade9b4c-d3c4-4316-89a7-1ef1aec380fc',
-                        node_name='Test Node',
-                        url='https://test-node.com',
-                        description='Test Description',
-                        client_id='test-client-id',
-                        data_index=DataIndex(),
-                    )
+                    mock_node_1,
                 ]
                 mock_index.return_value = DataIndex()
 

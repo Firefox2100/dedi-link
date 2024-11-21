@@ -30,6 +30,7 @@ class AuthRequestInvite(NetworkAuthMessage, Generic[NodeType, NetworkType]):
                  node: NodeType,
                  target_url: str,
                  challenge: list[str],
+                 justification: str = '',
                  message_id: str = None,
                  timestamp: int | None = None,
                  network: NetworkType | None = None,
@@ -47,6 +48,7 @@ class AuthRequestInvite(NetworkAuthMessage, Generic[NodeType, NetworkType]):
         self.node = node
         self.challenge = challenge
         self.network = network
+        self.justification = justification
 
         if network is not None:
             assert self.network_id == self.network.network_id
@@ -98,6 +100,9 @@ class AuthRequestInvite(NetworkAuthMessage, Generic[NodeType, NetworkType]):
             payload[MESSAGE_DATA]['network'].pop('nodeIDs', None)
             payload[MESSAGE_DATA]['network'].pop('instanceID')
 
+        if self.justification:
+            payload[MESSAGE_DATA]['justification'] = self.justification
+
         return payload
 
     @classmethod
@@ -116,6 +121,7 @@ class AuthRequestInvite(NetworkAuthMessage, Generic[NodeType, NetworkType]):
             target_url=payload[MESSAGE_ATTRIBUTES]['targetUrl'],
             node=cls.NODE_CLASS.from_dict(payload[MESSAGE_DATA]['node']),
             challenge=payload[MESSAGE_DATA]['challenge'],
+            justification=payload[MESSAGE_DATA].get('justification', ''),
             timestamp=payload['timestamp'],
             network=network,
         )

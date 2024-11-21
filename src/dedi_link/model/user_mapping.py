@@ -63,7 +63,7 @@ class UserMapping(BaseModel):
 
     @classmethod
     def from_dict(cls, payload: dict[str, str | dict]) -> 'UserMapping':
-        mapping_type = MappingType(payload['mappingType'])
+        mapping_type = MappingType(payload.get('mappingType', MappingType.NO_MAPPING.value))
         static_id = payload.get('staticId')
         dynamic_mapping = payload.get('dynamicMapping')
 

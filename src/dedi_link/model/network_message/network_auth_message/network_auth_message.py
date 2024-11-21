@@ -6,6 +6,7 @@ from dedi_link.etc.consts import MESSAGE_ATTRIBUTES
 from dedi_link.etc.enums import MessageType, AuthMessageType
 from ..network_message import NetworkMessage
 
+
 NetworkAuthMessageType = TypeVar('NetworkAuthMessageType', bound='NetworkAuthMessage')
 
 
@@ -27,18 +28,17 @@ class NetworkAuthMessage(NetworkMessage):
 
         self.auth_type = auth_type
 
-    def __eq__(self, other: 'NetworkAuthMessage'):
+    def __eq__(self, other):
         if not isinstance(other, self.__class__):
             return NotImplemented
 
         return all([
             super().__eq__(other),
-            self.network_id == other.network_id,
             self.auth_type == other.auth_type,
         ])
 
     def __hash__(self):
-        return hash((super().__hash__(), self.network_id, self.auth_type))
+        return hash((super().__hash__(), self.auth_type))
 
     @classmethod
     def _child_mapping(cls) -> dict[Enum, tuple[Type[NetworkAuthMessageType], Callable[[dict], Enum] | None]]:

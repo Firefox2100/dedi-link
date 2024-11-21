@@ -73,9 +73,9 @@ class NetworkMessage(BaseModel, Generic[NetworkMessageHeaderType]):
         from .network_relay_message import NetworkRelayMessage
 
         return {
-            MessageType.AUTH_MESSAGE: (NetworkAuthMessage, lambda payload: AuthMessageType(payload['messageAttribute']['authType'])),
+            MessageType.AUTH_MESSAGE: (NetworkAuthMessage, lambda payload: AuthMessageType(payload['messageAttributes']['authType'])),
             MessageType.SYNC_MESSAGE: (NetworkSyncMessage, None),
-            MessageType.DATA_MESSAGE: (NetworkDataMessage, lambda payload: DataMessageType(payload['messageAttribute']['dataType'])),
+            MessageType.DATA_MESSAGE: (NetworkDataMessage, lambda payload: DataMessageType(payload['messageAttributes']['dataType'])),
             MessageType.RELAY_MESSAGE: (NetworkRelayMessage, None),
         }
 
