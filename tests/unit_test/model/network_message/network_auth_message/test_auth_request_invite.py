@@ -3,7 +3,7 @@ from deepdiff import DeepDiff
 from copy import deepcopy
 
 from dedi_link.etc.enums import AuthMessageType, AuthMessageStatus, MessageType
-from dedi_link.model import NetworkMessage
+from dedi_link.model.network_message import NetworkMessage, NetworkAuthMessage
 from dedi_link.model.network_message.network_auth_message import AuthRequestInvite
 
 
@@ -241,14 +241,16 @@ class TestAuthRequestInvite:
                      mock_auth_request_invite_dict_1,
                      mock_auth_request_invite_dict_2,
                      ):
-        id_var_1 = MessageType(mock_auth_request_invite_dict_1['messageType'])
-        id_var_2 = MessageType(mock_auth_request_invite_dict_2['messageType'])
+        network_message_1 = NetworkMessage.factory(mock_auth_request_invite_dict_1)
+        network_message_2 = NetworkMessage.factory(mock_auth_request_invite_dict_2)
 
-        network_message_1 = NetworkMessage.factory(mock_auth_request_invite_dict_1, id_var_1)
-        network_message_2 = NetworkMessage.factory(mock_auth_request_invite_dict_2, id_var_2)
+        network_auth_message_1 = NetworkAuthMessage.factory(mock_auth_request_invite_dict_1)
+        network_auth_message_2 = NetworkAuthMessage.factory(mock_auth_request_invite_dict_2)
 
         assert network_message_1 == mock_auth_request_invite_1
         assert network_message_2 == mock_auth_request_invite_2
+        assert network_auth_message_1 == mock_auth_request_invite_1
+        assert network_auth_message_2 == mock_auth_request_invite_2
 
     def test_generate_challenge(self, mock_auth_request_invite_1):
         auth_request_invite = deepcopy(mock_auth_request_invite_1)

@@ -113,6 +113,15 @@ class NetworkMessage(BaseModel, Generic[NetworkMessageHeaderType]):
         raise NetworkMessageNotImplemented('from_dict method not implemented')
 
     @classmethod
+    def factory(cls, payload: dict):
+        id_var = MessageType(payload['messageType'])
+
+        return cls.factory_from_id(
+            payload=payload,
+            id_var=id_var,
+        )
+
+    @classmethod
     def _sign_payload(cls,
                       private_pem: str,
                       payload: str,

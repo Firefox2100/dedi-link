@@ -43,15 +43,15 @@ class TestBaseModel:
         with pytest.raises(BaseModelNotImplemented):
             BaseModel.from_dict({})
 
-    def test_factory_with_no_mapping(self):
+    def test_factory_from_id_with_no_mapping(self):
         class TestEnum(Enum):
             TEST = 'test'
             ANOTHER_TEST = 'another_test'
 
         with pytest.raises(BaseModelNotImplemented):
-            BaseModel.factory({}, TestEnum.TEST)
+            BaseModel.factory_from_id({}, TestEnum.TEST)
 
-    def test_factory_mapping_not_exist(self):
+    def test_factory_from_id_mapping_not_exist(self):
         class TestEnum(Enum):
             TEST = 'test'
             ANOTHER_TEST = 'another_test'
@@ -64,4 +64,8 @@ class TestBaseModel:
                 }
 
         with pytest.raises(ValueError):
-            TestModel.factory({}, TestEnum.ANOTHER_TEST)
+            TestModel.factory_from_id({}, TestEnum.ANOTHER_TEST)
+
+    def test_factory(self):
+        with pytest.raises(BaseModelNotImplemented):
+            BaseModel.factory({})

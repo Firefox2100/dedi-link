@@ -69,6 +69,15 @@ class NetworkAuthMessage(NetworkMessage):
             AuthMessageType.STATUS: (AuthStatus, None),
         }
 
+    @classmethod
+    def factory(cls, payload: dict):
+        id_var = AuthMessageType(payload[MESSAGE_ATTRIBUTES]['authType'])
+
+        return cls.factory_from_id(
+            payload=payload,
+            id_var=id_var,
+        )
+
     def to_dict(self) -> dict:
         payload = super().to_dict()
 

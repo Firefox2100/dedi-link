@@ -1,9 +1,8 @@
 import pytest
 from deepdiff import DeepDiff
-from copy import deepcopy
 
-from dedi_link.etc.enums import AuthMessageType, AuthMessageStatus, MessageType
-from dedi_link.model import NetworkMessage
+from dedi_link.etc.enums import AuthMessageType, MessageType
+from dedi_link.model.network_message import NetworkMessage, NetworkAuthMessage
 from dedi_link.model.network_message.network_auth_message import AuthResponse
 
 
@@ -176,3 +175,13 @@ class TestAuthResponse:
                        ):
         assert mock_auth_response_1 == AuthResponse.from_dict(mock_auth_response_dict_1)
         assert mock_auth_response_2 == AuthResponse.from_dict(mock_auth_response_dict_2)
+
+    def test_factory(self,
+                     mock_auth_response_1,
+                     mock_auth_response_dict_1,
+                     ):
+        network_message = NetworkMessage.factory(mock_auth_response_dict_1)
+        network_auth_message = NetworkAuthMessage.factory(mock_auth_response_dict_1)
+
+        assert network_message == mock_auth_response_1
+        assert network_auth_message == mock_auth_response_1

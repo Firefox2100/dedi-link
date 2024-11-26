@@ -2,7 +2,7 @@ import pytest
 from deepdiff import DeepDiff
 
 from dedi_link.etc.enums import AuthMessageType, MessageType
-from dedi_link.model import NetworkMessage
+from dedi_link.model.network_message import NetworkMessage, NetworkAuthMessage
 from dedi_link.model.network_message.network_auth_message import AuthJoin
 
 
@@ -98,8 +98,8 @@ class TestAuthJoin:
         assert auth_join == mock_auth_join_1
 
     def test_factory(self, mock_auth_join_1, mock_auth_join_dict_1):
-        id_var = MessageType(mock_auth_join_dict_1['messageType'])
-
-        network_message = NetworkMessage.factory(mock_auth_join_dict_1, id_var)
+        network_message = NetworkMessage.factory(mock_auth_join_dict_1)
+        network_auth_message = NetworkAuthMessage.factory(mock_auth_join_dict_1)
 
         assert network_message == mock_auth_join_1
+        assert network_auth_message == mock_auth_join_1

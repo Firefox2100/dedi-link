@@ -109,12 +109,12 @@ class BaseModel:
         raise BaseModelNotImplemented('from_dict method has to be implemented by the child class')
 
     @classmethod
-    def factory(cls: Type[BaseModelType], payload: dict, id_var: Enum):
+    def factory_from_id(cls: Type[BaseModelType], payload: dict, id_var: Enum):
         """
-        Create an instance of (usually) a child class from a dictionary
-
+        Raw method for creating an instance of (usually) a child class from a dictionary
 
         By following the mapping defined as a class attribute
+
         :param payload:
         :param id_var:
         :return:
@@ -134,4 +134,17 @@ class BaseModel:
         else:
             # A deeper mapping function provided, get the new id_var and call factory again
             new_id_var = mapping_target[1](payload)
-            return mapping_target[0].factory(payload, new_id_var)
+            return mapping_target[0].factory_from_id(payload, new_id_var)
+
+    @classmethod
+    def factory(cls, payload: dict):
+        """
+        Encapsulated method to create an object from a dictionary
+
+        This is meant to be overridden by the child classes to provide handle the id_var
+        creation internally, and exposing a convenient API to the caller. By default, it
+        calls the to_dict method directly to prevent unexpected behavior
+
+        :param payload: The dictionary containing the data
+        """
+        return cls.from_dict(payload)
