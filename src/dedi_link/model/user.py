@@ -8,15 +8,17 @@ UserType = TypeVar('UserType', bound='User')
 
 
 class User(BaseModel):
-    """
-    The basic user model that is used for authentication and authorisation only.
-
-    In implementation of this library this likely will be extended to include more
-    information about the user, like email, name, etc.
-    """
     def __init__(self,
                  user_id: str,
                  ):
+        """
+        The basic user model that is used for authentication and authorisation only.
+
+        In implementation of this library this likely will be extended to include more
+        information about the user, like email, name, etc.
+
+        :param user_id: The user ID.
+        """
         self.user_id = user_id
 
     def __eq__(self, other: 'User'):

@@ -21,14 +21,6 @@ NetworkMessageType = TypeVar('NetworkMessageType', bound='NetworkMessage')
 
 
 class NetworkMessage(BaseModel, Generic[NetworkMessageHeaderType]):
-    """
-    Base model for a network message
-
-    A message is a self-contained unit of communication used in the protocol.
-    All communication between nodes is RESTful, so all messages need to state
-    clearly who it's from, who it's intended for, what it does, and have all
-    the data needed to perform the action.
-    """
     NETWORK_MESSAGE_HEADER_CLASS = NetworkMessageHeader
 
     def __init__(self,
@@ -38,6 +30,20 @@ class NetworkMessage(BaseModel, Generic[NetworkMessageHeaderType]):
                  message_id: str = None,
                  timestamp: int | None = None,
                  ):
+        """
+        Base model for a network message
+
+        A message is a self-contained unit of communication used in the protocol.
+        All communication between nodes is RESTful, so all messages need to state
+        clearly who it's from, who it's intended for, what it does, and have all
+        the data needed to perform the action.
+
+        :param message_type: The type of message
+        :param network_id: The network ID
+        :param node_id: The node ID
+        :param message_id: The message ID
+        :param timestamp: The timestamp in seconds since epoch
+        """
         self.message_type = message_type
         self.message_id = message_id or str(uuid.uuid4())
         self.network_id = network_id

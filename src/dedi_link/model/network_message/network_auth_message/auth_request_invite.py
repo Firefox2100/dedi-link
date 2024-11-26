@@ -1,11 +1,14 @@
 import uuid
+import secrets
 from deepdiff import DeepDiff
+from copy import deepcopy
 from typing import TypeVar, Generic
 
 from dedi_link.etc.consts import MESSAGE_ATTRIBUTES, MESSAGE_DATA
 from dedi_link.etc.enums import AuthMessageType, AuthMessageStatus
 from ...node import Node, NodeType
 from ...network import Network, NetworkType
+from ...config import DDLConfig
 from .network_auth_message import NetworkAuthMessage
 
 
@@ -29,7 +32,7 @@ class AuthRequestInvite(NetworkAuthMessage, Generic[NodeType, NetworkType]):
                  status: AuthMessageStatus,
                  node: NodeType,
                  target_url: str,
-                 challenge: list[str],
+                 challenge: list[str] = None,
                  justification: str = '',
                  message_id: str = None,
                  timestamp: int | None = None,
@@ -43,6 +46,9 @@ class AuthRequestInvite(NetworkAuthMessage, Generic[NodeType, NetworkType]):
             timestamp=timestamp,
         )
 
+        if auth_type not in (AuthMessageType.REQUEST, AuthMessageType.INVITE):
+            raise ValueError(f'Invalid auth type: {auth_type}')
+
         self.status = status
         self.target_url = target_url
         self.node = node
@@ -50,8 +56,11 @@ class AuthRequestInvite(NetworkAuthMessage, Generic[NodeType, NetworkType]):
         self.network = network
         self.justification = justification
 
-        if network is not None:
-            assert self.network_id == self.network.network_id
+        if self.challenge is None:
+            self.generate_challenge()
+
+        if network is not None and self.network_id != self.network.network_id:
+            raise ValueError('Network ID mismatch')
 
     def __eq__(self, other: 'AuthRequestInvite'):
         if not isinstance(other, self.__class__):
@@ -64,12 +73,23 @@ class AuthRequestInvite(NetworkAuthMessage, Generic[NodeType, NetworkType]):
         ):
             return False
 
+        self_network = deepcopy(self.network)
+        other_network = deepcopy(other.network)
+
+        if self_network is not None and other_network is not None:
+            # Remove the instance ID and node IDs from the network object
+            # They are expected to be different
+            self_network.instance_id = None
+            self_network.node_ids = []
+            other_network.instance_id = None
+            other_network.node_ids = []
+
         return all([
             super().__eq__(other),
             self.status == other.status,
             self.target_url == other.target_url,
             self.node == other.node,
-            self.network == other.network,
+            self_network == other_network,
         ])
 
     def __hash__(self):
@@ -97,8 +117,8 @@ class AuthRequestInvite(NetworkAuthMessage, Generic[NodeType, NetworkType]):
 
         if self.network is not None:
             payload[MESSAGE_DATA]['network'] = self.network.to_dict()
-            payload[MESSAGE_DATA]['network'].pop('nodeIDs', None)
-            payload[MESSAGE_DATA]['network'].pop('instanceID')
+            payload[MESSAGE_DATA]['network'].pop('nodeIds', None)
+            payload[MESSAGE_DATA]['network'].pop('instanceId')
 
         if self.justification:
             payload[MESSAGE_DATA]['justification'] = self.justification
@@ -113,9 +133,9 @@ class AuthRequestInvite(NetworkAuthMessage, Generic[NodeType, NetworkType]):
             network.node_ids = []
 
         return cls(
-            message_id=payload[MESSAGE_ATTRIBUTES]['messageID'],
-            network_id=payload[MESSAGE_ATTRIBUTES]['networkID'],
-            node_id=payload[MESSAGE_ATTRIBUTES]['nodeID'],
+            message_id=payload[MESSAGE_ATTRIBUTES]['messageId'],
+            network_id=payload[MESSAGE_ATTRIBUTES]['networkId'],
+            node_id=payload[MESSAGE_ATTRIBUTES]['nodeId'],
             auth_type=AuthMessageType(payload[MESSAGE_ATTRIBUTES]['authType']),
             status=AuthMessageStatus(payload[MESSAGE_ATTRIBUTES]['status']),
             target_url=payload[MESSAGE_ATTRIBUTES]['targetUrl'],
@@ -125,3 +145,27 @@ class AuthRequestInvite(NetworkAuthMessage, Generic[NodeType, NetworkType]):
             timestamp=payload['timestamp'],
             network=network,
         )
+
+    def generate_challenge(self) -> list[str]:
+        """
+        Generate three random words for security verification
+
+        The words are taken from BIP-0039 word list, but the generation process
+        is not tied to the request itself like most BIP-0039 implementations.
+        The words cannot be reproduced from the request, or used to recover the
+        requet information.
+
+        :return: A list of three random words
+        """
+        challenge = []
+
+        words = DDLConfig().bip_39
+
+        while len(challenge) < 3:
+            word = secrets.choice(words).strip()
+            if word not in challenge:
+                challenge.append(word)
+
+        self.challenge = challenge
+
+        return challenge

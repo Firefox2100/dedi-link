@@ -26,7 +26,25 @@ class Node(BaseModel, Generic[DataIndexType, UserMappingType]):
                  data_index: DataIndexType = None,
                  score: float = 0.0,
                  ):
+        """
+        A node in a network
 
+        A Node object represents a node in the network, a basic
+        unit of operation and communication.
+
+        :param node_id: The unique ID of the node
+        :param node_name: The name of the node
+        :param url: The URL of the node
+        :param description: A description of the node
+        :param client_id: The client ID of the node
+        :param authentication_enabled: Whether the requests coming from this node requires authentication.
+                                       If disabled, all users will be mapped to the same static user with the
+                                       same permissions.
+        :param user_mapping: The user mapping for this node
+        :param public_key: The public key of the node
+        :param data_index: The data index of the node
+        :param score: The score of the node
+        """
         self.node_id = node_id
         self.node_name = node_name
         self.url = url

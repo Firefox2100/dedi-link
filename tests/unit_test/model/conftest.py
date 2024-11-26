@@ -84,3 +84,18 @@ def mock_node_2():
         data_index=DataIndex(),
         score=0,
     )
+
+
+@pytest.fixture
+def mock_node_dict_2():
+    return {
+        'nodeId': 'd3398f33-e621-465c-846f-f7f79dff6a87',
+        'nodeName': 'Test Node 2',
+        'nodeUrl': 'https://node2.example.com',
+        'nodeDescription': 'This is a test node 2',
+        'clientId': 'f2827c56-758e-491d-829c-b86c7299b43f',
+        'authenticationEnabled': False,
+        'publicKey': 'test-public-key-2',
+        'dataIndex': {},
+        'score': 0,
+    }

@@ -11,14 +11,6 @@ AuthJoinType = TypeVar('AuthJoinType', bound='AuthJoin')
 
 
 class AuthJoin(NetworkAuthMessage, Generic[NodeType]):
-    """
-    Network Authorization Join Message
-
-    This message notifies the other nodes within the network about
-    a new node joining. The node information is only for the others
-    to record it initially, and they will synchronise with the new
-    node directly.
-    """
     NODE_CLASS = Node
 
     def __init__(self,
@@ -28,6 +20,20 @@ class AuthJoin(NetworkAuthMessage, Generic[NodeType]):
                  message_id: str = None,
                  timestamp: int | None = None,
                  ):
+        """
+        Network Authorization Join Message
+
+        This message notifies the other nodes within the network about
+        a new node joining. The node information is only for the others
+        to record it initially, and they will synchronise with the new
+        node directly.
+
+        :param network_id: The network ID
+        :param node_id: The node ID
+        :param node: The node that is joining
+        :param message_id: The message ID
+        :param timestamp: The timestamp in seconds since epoch
+        """
         super().__init__(
             network_id=network_id,
             node_id=node_id,

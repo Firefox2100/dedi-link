@@ -11,12 +11,6 @@ NetworkType = TypeVar('NetworkType', bound='Network')
 
 
 class Network(BaseModel, Generic[DataIndexType, NodeType]):
-    """
-    A network that contains nodes which agreed to share data among each other.
-
-    A network is a logical abstraction of a group of nodes that accepts (partially)
-    others credentials and allows access to their data.
-    """
     DATA_INDEX_CLASS = DataIndex
     NODE_CLASS = Node
 
@@ -28,6 +22,19 @@ class Network(BaseModel, Generic[DataIndexType, NodeType]):
                  visible: bool = False,
                  instance_id: str = None,
                  ):
+        """
+        A network that contains nodes which agreed to share data among each other.
+
+        A network is a logical abstraction of a group of nodes that accepts (partially)
+        others credentials and allows access to their data.
+
+        :param network_id: The unique ID of the network
+        :param network_name: The name of the network
+        :param description: A description of the network
+        :param node_ids: The IDs of the nodes in the network
+        :param visible: Whether the network is visible to others to apply for joining
+        :param instance_id: The unique ID of the network instance
+        """
         self.network_id = network_id
         self.network_name = network_name
         self.description = description

@@ -17,7 +17,7 @@ from dedi_link.model.network_message import NetworkMessageHeader
 def mock_network_message_1():
     return NetworkMessage(
         message_type=MessageType.AUTH_MESSAGE,
-        network_id='3ac1ed5a-0285-47f6-8b9c-12d16f3b3e2d',
+        network_id='62d13013-d80c-4539-adc1-61862bdd65cb',
         node_id='f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
         message_id='ef893ef0-1d29-4cae-ac61-0891f346fed3',
         timestamp=1704067200,
@@ -28,7 +28,7 @@ def mock_network_message_1():
 def mock_network_message_2():
     return NetworkMessage(
         message_type=MessageType.AUTH_MESSAGE,
-        network_id='3ac1ed5a-0285-47f6-8b9c-12d16f3b3e2d',
+        network_id='62d13013-d80c-4539-adc1-61862bdd65cb',
         node_id='f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
         message_id='41b0a563-d0fe-46f4-ae43-813a36914a65',
         timestamp=1704067200,
@@ -116,7 +116,7 @@ class TestNetworkMessage:
     def test_init(self):
         network_message = NetworkMessage(
             message_type=MessageType.AUTH_MESSAGE,
-            network_id='3ac1ed5a-0285-47f6-8b9c-12d16f3b3e2d',
+            network_id='62d13013-d80c-4539-adc1-61862bdd65cb',
             node_id='f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
             message_id='ef893ef0-1d29-4cae-ac61-0891f346fed3',
             timestamp=1704067200,
@@ -124,14 +124,14 @@ class TestNetworkMessage:
 
         assert network_message.message_type == MessageType.AUTH_MESSAGE
         assert network_message.message_id == 'ef893ef0-1d29-4cae-ac61-0891f346fed3'
-        assert network_message.network_id == '3ac1ed5a-0285-47f6-8b9c-12d16f3b3e2d'
+        assert network_message.network_id == '62d13013-d80c-4539-adc1-61862bdd65cb'
         assert network_message.node_id == 'f3bb816f-608b-4dd7-ac74-8e0d0a0979ad'
         assert network_message.timestamp == 1704067200
 
     def test_equality(self, mock_network_message_1, mock_network_message_2):
         assert mock_network_message_1 == NetworkMessage(
             message_type=MessageType.AUTH_MESSAGE,
-            network_id='3ac1ed5a-0285-47f6-8b9c-12d16f3b3e2d',
+            network_id='62d13013-d80c-4539-adc1-61862bdd65cb',
             node_id='f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
             message_id='ef893ef0-1d29-4cae-ac61-0891f346fed3',
             timestamp=1704067200,
@@ -151,7 +151,7 @@ class TestNetworkMessage:
             'messageType': 'authMessage',
             'messageAttributes': {
                 'messageId': 'ef893ef0-1d29-4cae-ac61-0891f346fed3',
-                'networkId': '3ac1ed5a-0285-47f6-8b9c-12d16f3b3e2d',
+                'networkId': '62d13013-d80c-4539-adc1-61862bdd65cb',
                 'nodeId': 'f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
             },
             'timestamp': 1704067200,
@@ -214,7 +214,7 @@ class TestNetworkMessage:
 
                 assert headers == NetworkMessageHeader(
                     node_id='f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
-                    network_id='3ac1ed5a-0285-47f6-8b9c-12d16f3b3e2d',
+                    network_id='62d13013-d80c-4539-adc1-61862bdd65cb',
                     server_signature='signature',
                     access_token='access_token',
                 )

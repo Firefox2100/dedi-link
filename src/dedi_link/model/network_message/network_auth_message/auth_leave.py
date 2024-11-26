@@ -16,6 +16,18 @@ class AuthLeave(NetworkAuthMessage):
                  message_id: str = None,
                  timestamp: int | None = None,
                  ):
+        """
+        Network Authorization Leave Message
+
+        This message notifies the other nodes within the network about
+        this node leaving. The others are expected to remove all information
+        about this node.
+
+        :param network_id: The network ID
+        :param node_id: The node ID
+        :param message_id: The message ID
+        :param timestamp: The timestamp in seconds since epoch
+        """
         super().__init__(
             network_id=network_id,
             node_id=node_id,

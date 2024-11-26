@@ -61,5 +61,9 @@ class NodeNotImplemented(DeDiLinkNotImplemented):
     pass
 
 
+class NetworkInterfaceNotImplemented(DeDiLinkNotImplemented):
+    pass
+
+
 class NetworkRequestFailed(DeDiLinkException):
     pass

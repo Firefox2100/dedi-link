@@ -9,19 +9,24 @@ UserMappingType = TypeVar('UserMappingType', bound='UserMapping')
 
 
 class UserMapping(BaseModel):
-    """
-    A class controlling how user IDs are mapped to other user IDs.
-
-    User ID mapping is implemented in the case where incoming ID (for
-    example, from a different IdP) does not correspond directly to the
-    IDs used in this system, and mapping is required; or if there are
-    special users like "anonymous" or "service" that are local accounts.
-    """
     def __init__(self,
                  mapping_type: MappingType = MappingType.NO_MAPPING,
                  static_id: str = None,
                  dynamic_mapping: dict[str, str] = None,
                  ):
+        """
+        A class controlling how user IDs are mapped to other user IDs.
+
+        User ID mapping is implemented in the case where incoming ID (for
+        example, from a different IdP) does not correspond directly to the
+        IDs used in this system, and mapping is required; or if there are
+        special users like "anonymous" or "service" that are local accounts.
+
+        :param mapping_type: The type of mapping to use
+        :param static_id: The static ID to map to, if mapping type is static
+        :param dynamic_mapping: The dynamic mapping to use, if mapping type is dynamic
+        :raises ValueError: If the mapping type is static and no static ID is provided
+        """
         self.mapping_type = mapping_type
         self.static_id = static_id
         self.dynamic_mapping = dynamic_mapping or {}
@@ -85,6 +90,7 @@ class UserMapping(BaseModel):
 
         :param user_id: The user ID to map
         :return: The mapped user ID
+        :raises ValueError: If the user ID is not found in the mapping
         """
         new_id = self.dynamic_mapping.get(user_id)
 
@@ -101,6 +107,7 @@ class UserMapping(BaseModel):
 
         :param user_id: The user ID to map
         :return: The mapped user ID
+        :raises ValueError: If the mapping type is invalid or no user ID is provided
         """
         if self.mapping_type == MappingType.NO_MAPPING:
             if user_id is None:

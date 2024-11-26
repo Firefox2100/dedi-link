@@ -18,6 +18,18 @@ class NetworkAuthMessage(NetworkMessage):
                  message_id: str = None,
                  timestamp: int | None = None,
                  ):
+        """
+        Base model for a network authorisation message
+
+        This class of messages handle permission, node authorisation, and other
+        security-related operations.
+
+        :param network_id: The network ID
+        :param node_id: The node ID
+        :param auth_type: The type of authorisation message
+        :param message_id: The message ID
+        :param timestamp: The timestamp in seconds since epoch
+        """
         super().__init__(
             message_type=MessageType.AUTH_MESSAGE,
             message_id=message_id or str(uuid.uuid4()),
@@ -29,7 +41,7 @@ class NetworkAuthMessage(NetworkMessage):
         self.auth_type = auth_type
 
     def __eq__(self, other):
-        if not isinstance(other, self.__class__):
+        if not isinstance(other, NetworkAuthMessage):
             return NotImplemented
 
         return all([

@@ -8,7 +8,7 @@ from dedi_link.model.network_message import NetworkMessageHeader
 def mock_network_message_header_1():
     return NetworkMessageHeader(
         node_id='f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
-        network_id='3ac1ed5a-0285-47f6-8b9c-12d16f3b3e2d',
+        network_id='62d13013-d80c-4539-adc1-61862bdd65cb',
         server_signature='server_signature',
         access_token='access_token',
         user_id='19a80cb0-7861-42c9-9212-c2e0cbe8dcfb',
@@ -32,7 +32,7 @@ class TestNetworkMessageHeader:
     def test_init(self):
         network_message_header = NetworkMessageHeader(
             node_id='f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
-            network_id='3ac1ed5a-0285-47f6-8b9c-12d16f3b3e2d',
+            network_id='62d13013-d80c-4539-adc1-61862bdd65cb',
             server_signature='server_signature',
             access_token='access_token',
             user_id='19a80cb0-7861-42c9-9212-c2e0cbe8dcfb',
@@ -40,7 +40,7 @@ class TestNetworkMessageHeader:
         )
 
         assert network_message_header.node_id == 'f3bb816f-608b-4dd7-ac74-8e0d0a0979ad'
-        assert network_message_header.network_id == '3ac1ed5a-0285-47f6-8b9c-12d16f3b3e2d'
+        assert network_message_header.network_id == '62d13013-d80c-4539-adc1-61862bdd65cb'
         assert network_message_header.server_signature == 'server_signature'
         assert network_message_header.access_token == 'access_token'
         assert network_message_header.user_id == '19a80cb0-7861-42c9-9212-c2e0cbe8dcfb'
@@ -49,7 +49,7 @@ class TestNetworkMessageHeader:
     def test_equality(self, mock_network_message_header_1, mock_network_message_header_2):
         assert mock_network_message_header_1 == NetworkMessageHeader(
             node_id='f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
-            network_id='3ac1ed5a-0285-47f6-8b9c-12d16f3b3e2d',
+            network_id='62d13013-d80c-4539-adc1-61862bdd65cb',
             server_signature='server_signature',
             access_token='access_token',
             user_id='19a80cb0-7861-42c9-9212-c2e0cbe8dcfb',
@@ -69,7 +69,7 @@ class TestNetworkMessageHeader:
         payload = {
             'Content-Type': 'application/json',
             'X-Node-ID': 'f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
-            'X-Network-ID': '3ac1ed5a-0285-47f6-8b9c-12d16f3b3e2d',
+            'X-Network-ID': '62d13013-d80c-4539-adc1-61862bdd65cb',
             'X-Server-Signature': 'server_signature',
             'Authorization': 'Bearer access_token',
             'X-User-ID': '19a80cb0-7861-42c9-9212-c2e0cbe8dcfb',
@@ -86,7 +86,7 @@ class TestNetworkMessageHeader:
         payload = {
             'Content-Type': 'application/json',
             'X-Node-ID': 'f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
-            'X-Network-ID': '3ac1ed5a-0285-47f6-8b9c-12d16f3b3e2d',
+            'X-Network-ID': '62d13013-d80c-4539-adc1-61862bdd65cb',
             'X-Server-Signature': 'server_signature',
             'Authorization': 'Bearer access_token',
             'X-User-ID': '19a80cb0-7861-42c9-9212-c2e0cbe8dcfb',
