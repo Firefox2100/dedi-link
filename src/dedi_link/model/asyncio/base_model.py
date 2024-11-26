@@ -4,7 +4,7 @@ from dedi_link.etc.exceptions import BaseModelNotImplemented
 from ..base_model import BaseModel
 
 
-AsyncBaseModelType = TypeVar('AsyncBaseModelType', bound='AsyncBaseModel')
+AsyncBaseModelT = TypeVar('AsyncBaseModelT', bound='AsyncBaseModel')
 
 
 class AsyncBaseModel(BaseModel):
@@ -22,7 +22,7 @@ class AsyncBaseModel(BaseModel):
         raise BaseModelNotImplemented('access_token property has to be implemented by the child class')
 
     @classmethod
-    async def load(cls: Type[AsyncBaseModelType], *args, **kwargs) -> AsyncBaseModelType:
+    async def load(cls: Type[AsyncBaseModelT], *args, **kwargs) -> AsyncBaseModelT:
         """
         Load a model from the database asynchronously
         :param args: Unnamed arguments
@@ -32,7 +32,7 @@ class AsyncBaseModel(BaseModel):
         raise BaseModelNotImplemented('load method has to be implemented by the child class')
 
     @classmethod
-    async def load_all(cls: Type[AsyncBaseModelType], *args, **kwargs) -> list[AsyncBaseModelType]:
+    async def load_all(cls: Type[AsyncBaseModelT], *args, **kwargs) -> list[AsyncBaseModelT]:
         """
         Load all models from the database asynchronously
 

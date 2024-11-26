@@ -3,12 +3,9 @@ from enum import Enum
 from typing import TypeVar, Type, Callable, TYPE_CHECKING
 
 from dedi_link.etc.enums import DataMessageType, MessageType
-from ..network_message import NetworkMessage
+from ..network_message import NetworkMessage, NetworkMessageT
 
-if TYPE_CHECKING:
-    from dedi_link.model import NetworkMessageType
-
-NetworkDataMessageType = TypeVar('NetworkDataMessageType', bound='NetworkDataMessage')
+NetworkDataMessageT = TypeVar('NetworkDataMessageT', bound='NetworkDataMessage')
 
 
 class NetworkDataMessage(NetworkMessage):
@@ -34,7 +31,7 @@ class NetworkDataMessage(NetworkMessage):
         self.should_relay = should_relay
 
     @classmethod
-    def _child_mapping(cls) -> dict[Enum, tuple[Type['NetworkMessageType'], Callable[[dict], Enum] | None]]:
+    def _child_mapping(cls) -> dict[Enum, tuple[Type['NetworkMessageT'], Callable[[dict], Enum] | None]]:
         from .data_query import DataQuery
         from .data_response import DataResponse
 

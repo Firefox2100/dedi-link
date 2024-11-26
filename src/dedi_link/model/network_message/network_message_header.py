@@ -1,7 +1,7 @@
 from typing import TypeVar
 
 
-NetworkMessageHeaderType = TypeVar('NetworkMessageHeaderType', bound='NetworkMessageHeader')
+NetworkMessageHeaderT = TypeVar('NetworkMessageHeaderT', bound='NetworkMessageHeader')
 
 
 class NetworkMessageHeader:

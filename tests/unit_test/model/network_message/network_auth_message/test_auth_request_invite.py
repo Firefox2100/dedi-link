@@ -11,7 +11,7 @@ from dedi_link.model.network_message.network_auth_message import AuthRequestInvi
 def mock_auth_request_invite_1(mock_node_1):
     return AuthRequestInvite(
         network_id='62d13013-d80c-4539-adc1-61862bdd65cb',
-        node_id='62d13013-d80c-4539-adc1-61862bdd65cb',
+        node_id='f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
         auth_type=AuthMessageType.REQUEST,
         status=AuthMessageStatus.SENT,
         node=mock_node_1,
@@ -30,7 +30,7 @@ def mock_auth_request_invite_dict_1(mock_node_dict_1):
         'messageAttributes': {
             'messageId': 'a63c273c-bad2-4521-a7ce-5c9a4c07682d',
             'networkId': '62d13013-d80c-4539-adc1-61862bdd65cb',
-            'nodeId': '62d13013-d80c-4539-adc1-61862bdd65cb',
+            'nodeId': 'f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
             'authType': 'request',
             'targetUrl': 'https://node2.example.com',
             'status': 'sent',
@@ -48,7 +48,7 @@ def mock_auth_request_invite_dict_1(mock_node_dict_1):
 def mock_auth_request_invite_2(mock_node_1, mock_network_1):
     return AuthRequestInvite(
         network_id='62d13013-d80c-4539-adc1-61862bdd65cb',
-        node_id='62d13013-d80c-4539-adc1-61862bdd65cb',
+        node_id='f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
         auth_type=AuthMessageType.INVITE,
         status=AuthMessageStatus.SENT,
         node=mock_node_1,
@@ -72,7 +72,7 @@ def mock_auth_request_invite_dict_2(mock_node_dict_1, mock_network_dict_1):
         'messageAttributes': {
             'messageId': '6669a5d8-7802-42a1-99a4-a303c0a4253c',
             'networkId': '62d13013-d80c-4539-adc1-61862bdd65cb',
-            'nodeId': '62d13013-d80c-4539-adc1-61862bdd65cb',
+            'nodeId': 'f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
             'authType': 'invite',
             'targetUrl': 'https://node2.example.com',
             'status': 'sent',
@@ -91,7 +91,7 @@ class TestAuthRequestInvite:
     def test_init(self, mock_node_1):
         auth_request_invite = AuthRequestInvite(
             network_id='62d13013-d80c-4539-adc1-61862bdd65cb',
-            node_id='62d13013-d80c-4539-adc1-61862bdd65cb',
+            node_id='f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
             auth_type=AuthMessageType.REQUEST,
             status=AuthMessageStatus.SENT,
             node=mock_node_1,
@@ -106,7 +106,7 @@ class TestAuthRequestInvite:
         assert auth_request_invite.auth_type == AuthMessageType.REQUEST
         assert auth_request_invite.status == AuthMessageStatus.SENT
         assert auth_request_invite.network_id == '62d13013-d80c-4539-adc1-61862bdd65cb'
-        assert auth_request_invite.node_id == '62d13013-d80c-4539-adc1-61862bdd65cb'
+        assert auth_request_invite.node_id == 'f3bb816f-608b-4dd7-ac74-8e0d0a0979ad'
         assert auth_request_invite.node == mock_node_1
         assert auth_request_invite.target_url == 'https://node2.example.com'
         assert auth_request_invite.challenge == ['accident', 'flip', 'royal']
@@ -118,7 +118,7 @@ class TestAuthRequestInvite:
         with pytest.raises(ValueError):
             _ = AuthRequestInvite(
                 network_id='62d13013-d80c-4539-adc1-61862bdd65cb',
-                node_id='62d13013-d80c-4539-adc1-61862bdd65cb',
+                node_id='f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
                 auth_type=AuthMessageType.JOIN,
                 status=AuthMessageStatus.SENT,
                 node=mock_node_1,
@@ -132,7 +132,7 @@ class TestAuthRequestInvite:
     def test_init_generate_challenge(self, mock_node_1):
         auth_request_invite = AuthRequestInvite(
             network_id='62d13013-d80c-4539-adc1-61862bdd65cb',
-            node_id='62d13013-d80c-4539-adc1-61862bdd65cb',
+            node_id='f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
             auth_type=AuthMessageType.REQUEST,
             status=AuthMessageStatus.SENT,
             node=mock_node_1,
@@ -146,7 +146,7 @@ class TestAuthRequestInvite:
         assert auth_request_invite.auth_type == AuthMessageType.REQUEST
         assert auth_request_invite.status == AuthMessageStatus.SENT
         assert auth_request_invite.network_id == '62d13013-d80c-4539-adc1-61862bdd65cb'
-        assert auth_request_invite.node_id == '62d13013-d80c-4539-adc1-61862bdd65cb'
+        assert auth_request_invite.node_id == 'f3bb816f-608b-4dd7-ac74-8e0d0a0979ad'
         assert auth_request_invite.node == mock_node_1
         assert auth_request_invite.target_url == 'https://node2.example.com'
         assert auth_request_invite.justification == 'This is a test'
@@ -167,7 +167,7 @@ class TestAuthRequestInvite:
         with pytest.raises(ValueError):
             _ = AuthRequestInvite(
                 network_id='64b3b646-26eb-43c1-987d-3247b4a7e02a',
-                node_id='62d13013-d80c-4539-adc1-61862bdd65cb',
+                node_id='f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
                 auth_type=AuthMessageType.INVITE,
                 status=AuthMessageStatus.SENT,
                 node=mock_node_1,
@@ -186,7 +186,7 @@ class TestAuthRequestInvite:
                       ):
         assert mock_auth_request_invite_1 == AuthRequestInvite(
             network_id='62d13013-d80c-4539-adc1-61862bdd65cb',
-            node_id='62d13013-d80c-4539-adc1-61862bdd65cb',
+            node_id='f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
             auth_type=AuthMessageType.REQUEST,
             status=AuthMessageStatus.SENT,
             node=mock_node_1,

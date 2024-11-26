@@ -8,33 +8,36 @@ class DeDiLinkException(Exception):
     """
     Base exception for all Decentralised Discovery Link exceptions.
     """
-    pass
 
 
 class DeDiLinkNotFound(DeDiLinkException):
     """
     Base exception for all resources not found errors
     """
-    pass
 
 
 class DeDiLinkNotImplemented(DeDiLinkException, NotImplementedError):
     """
     Base exception for all method not implemented (by this class or its parents) errors
     """
-    pass
 
 
 class BaseModelNotImplemented(DeDiLinkNotImplemented):
-    pass
+    """
+    The called method is not implemented, which is defined in the base model.
+    """
 
 
 class NetworkNotFound(DeDiLinkNotFound):
-    pass
+    """
+    The network was not found.
+    """
 
 
 class NetworkNotImplemented(DeDiLinkNotImplemented):
-    pass
+    """
+    The called method is not implemented, which is defined in the network.
+    """
 
 
 class NodeNotFound(DeDiLinkNotFound):

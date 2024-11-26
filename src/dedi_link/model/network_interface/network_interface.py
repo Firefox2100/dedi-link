@@ -1,17 +1,20 @@
 import math
+import networkx as nx
 from typing import TypeVar, Any, List
 from collections import Counter
+from contextlib import contextmanager
 
 from dedi_link.etc.consts import LOGGER
-from dedi_link.etc.exceptions import NetworkRequestFailed
+from dedi_link.etc.exceptions import NetworkRequestFailed, NetworkInterfaceNotImplemented
 from ..config import DDLConfig
 from ..network import Network
 from ..node import Node
-from ..network_message import NetworkMessage, NetworkMessageHeader, NetworkMessageType
+from ..network_message import NetworkMessage, NetworkMessageHeader, NetworkMessageT
 from .session import Session
 
 
 T = TypeVar('T')
+NetworkInterfaceT = TypeVar('NetworkInterfaceT', bound='NetworkInterface')
 
 
 class NetworkInterface:
@@ -36,6 +39,13 @@ class NetworkInterface:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
 
+    @property
+    def network_graph(self) -> nx.DiGraph:
+        """
+        Get a networkx.DiGraph representation of the network
+        """
+        raise NetworkInterfaceNotImplemented('network_graph method needs to be implemented by an application')
+
     def close(self):
         self.session.close()
 
@@ -53,6 +63,36 @@ class NetworkInterface:
             config=interface.config,
         )
 
+    @staticmethod
+    def vote_from_responses(objects: List[List[T]], identifier: str, value_to_search: Any, obj_type=None) -> T:
+        """
+        Find the majority vote from a list of responses
+
+        :param objects: List of responses, containing a list of objects
+        :param identifier: Attribute to compare
+        :param value_to_search: Value to search
+        :param obj_type: Type of the object
+        :return: Object that has the majority vote
+        """
+        # Create a list to store objects that match the identifier value
+        matching_objects = []
+
+        # Iterate through list[list[CustomClass]] to find objects that have the specified identifier value
+        for sublist in objects:
+            for obj in sublist:
+                if obj_type is not None and isinstance(obj, dict):
+                    o = obj_type.from_dict(obj)
+                else:
+                    o = obj
+                if getattr(o, identifier) == value_to_search:
+                    matching_objects.append(o)
+
+        # Use Counter to find the most common object based on all its attributes
+        counter = Counter(matching_objects)
+        majority_object, _ = counter.most_common(1)[0]
+
+        return majority_object
+
     def check_connectivity(self,
                            url: str | None = None,
                            path: str = '/api'
@@ -61,9 +101,13 @@ class NetworkInterface:
         Check whether the URL is reachable from the current machine.
 
         Note that this can only check the connectivity from the current machine.
+        For example, the node may appear online, but it may be behind a firewall or filter
+        that this machine can access while the others cannot
+
         If there is specific method to make it reachable (like a custom DNS record),
         it might still not be reachable from the outside, even if this method returns True.
         :param url: URL to check, None to check for the current node
+        :param path: Path to check
         :return:
         """
         LOGGER.debug(f'Checking connectivity to {url}')
@@ -92,35 +136,6 @@ class NetworkInterface:
         except Exception as e:
             LOGGER.logger.debug(f'Connectivity check failed for {url}: {e}')
             return False
-
-    @staticmethod
-    def vote_from_responses(objects: List[List[T]], identifier: str, value_to_search: Any, obj_type=None) -> T:
-        """
-        Find the majority vote from a list of responses
-        :param objects: List of responses, containing a list of objects
-        :param identifier: Attribute to compare
-        :param value_to_search: Value to search
-        :param obj_type: Type of the object
-        :return: Object that has the majority vote
-        """
-        # Create a list to store objects that match the identifier value
-        matching_objects = []
-
-        # Iterate through list[list[CustomClass]] to find objects that have the specified identifier value
-        for sublist in objects:
-            for obj in sublist:
-                if obj_type is not None and isinstance(obj, dict):
-                    o = obj_type.from_dict(obj)
-                else:
-                    o = obj
-                if getattr(o, identifier) == value_to_search:
-                    matching_objects.append(o)
-
-        # Use Counter to find the most common object based on all its attributes
-        counter = Counter(matching_objects)
-        majority_object, _ = counter.most_common(1)[0]
-
-        return majority_object
 
     def calculate_new_score(self,
                             time_elapsed: float,
@@ -151,7 +166,38 @@ class NetworkInterface:
         return self.config.time_score_weight * response_time_score + \
             (1 - self.config.time_score_weight) * response_quality_score
 
-    async def send_message(self,
+    def find_path_to_node(self,
+                          node_id: str,
+                          ) -> list[list[str]]:
+        """
+        Tries to find the shortest path to a node in the network
+        """
+        with self.network_graph as graph:
+            # Find all shortest paths to the given node
+            try:
+                paths = nx.all_shortest_paths(graph, source=self.instance_id, target=node_id)
+            except nx.NetworkXNoPath:
+                # Not reachable, find the shortest path on all nodes that are reachable
+                all_shortest_paths = nx.single_source_shortest_path(graph, source=self.instance_id)
+
+                # Sort the paths by the score of the terminating node
+                # Because nodes with higher scores are more likely to be able to reach other nodes
+                paths = sorted(all_shortest_paths.items(), key=lambda x: graph.nodes[x[0]]['score'])
+
+            # Compare them with scores
+            max_score = -1
+            best_path = None
+
+            for path in paths:
+                path_score = sum([graph.nodes[n]['score'] for n in path])
+
+                if path_score > max_score:
+                    max_score = path_score
+                    best_path = path
+
+            return [best_path]
+
+    def send_message(self,
                            node: Node,
                            message: NetworkMessage,
                            path: str = '/api',
@@ -191,7 +237,7 @@ class NetworkInterface:
 
             record_count = None
 
-            if message.message_type == NetworkMessageType.DATA_MESSAGE:
+            if message.message_type == NetworkMessageT.DATA_MESSAGE:
                 message: NetworkDataMessage
                 if message.data_type == NetworkDataMessageType.RECORD_QUERY:
                     # The response should be a record response
@@ -372,7 +418,7 @@ class NetworkInterface:
                 )
 
                 # If the message is not data message, the user should be a service account
-                if message.message_type != NetworkMessageType.DATA_MESSAGE:
+                if message.message_type != NetworkMessageT.DATA_MESSAGE:
                     if not user_info['preferred_username'].startswith('service-account-'):
                         raise InvalidAuthenticationStatus('Service account required')
                 else:
@@ -509,7 +555,7 @@ class NetworkInterface:
                 message.message_id = str(uuid.uuid4())
             tasks.append(self.send_message(node, message, path, access_token, should_raise))
 
-        if message.message_type != NetworkMessageType.RELAY_MESSAGE:
+        if message.message_type != NetworkMessageT.RELAY_MESSAGE:
             relay_message = NetworkRelayMessage(
                 sender_id=self.instance_id,
                 recipient_ids=[node.node_id for node in unreachable_nodes],

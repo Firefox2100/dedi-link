@@ -4,7 +4,7 @@ from dedi_link.etc.exceptions import UserNotImplemented
 from .base_model import BaseModel
 
 
-UserType = TypeVar('UserType', bound='User')
+UserT = TypeVar('UserT', bound='User')
 
 
 class User(BaseModel):
@@ -21,8 +21,8 @@ class User(BaseModel):
         """
         self.user_id = user_id
 
-    def __eq__(self, other: 'User'):
-        if not isinstance(other, self.__class__):
+    def __eq__(self, other):
+        if not isinstance(other, User):
             return NotImplemented
 
         return all([

@@ -10,7 +10,7 @@ from dedi_link.model.network_message.network_auth_message import AuthJoin
 def mock_auth_join_1(mock_node_1):
     return AuthJoin(
         network_id='62d13013-d80c-4539-adc1-61862bdd65cb',
-        node_id='62d13013-d80c-4539-adc1-61862bdd65cb',
+        node_id='f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
         node=mock_node_1,
         message_id='1be8938b-f656-4c8b-9e45-93c84af95723',
         timestamp=1704067200,
@@ -24,7 +24,7 @@ def mock_auth_join_dict_1(mock_node_dict_1):
         'messageAttributes': {
             'messageId': '1be8938b-f656-4c8b-9e45-93c84af95723',
             'networkId': '62d13013-d80c-4539-adc1-61862bdd65cb',
-            'nodeId': '62d13013-d80c-4539-adc1-61862bdd65cb',
+            'nodeId': 'f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
             'authType': 'join',
         },
         'messageData':{
@@ -38,7 +38,7 @@ def mock_auth_join_dict_1(mock_node_dict_1):
 def mock_auth_join_2(mock_node_2):
     return AuthJoin(
         network_id='62d13013-d80c-4539-adc1-61862bdd65cb',
-        node_id='62d13013-d80c-4539-adc1-61862bdd65cb',
+        node_id='f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
         node=mock_node_2,
         message_id='ddf9be31-319e-4592-8346-4cfd61a550fc',
         timestamp=1704067200,
@@ -49,7 +49,7 @@ class TestAuthJoin:
     def test_init(self, mock_node_1):
         auth_join = AuthJoin(
             network_id='62d13013-d80c-4539-adc1-61862bdd65cb',
-            node_id='62d13013-d80c-4539-adc1-61862bdd65cb',
+            node_id='f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
             node=mock_node_1,
             message_id='1be8938b-f656-4c8b-9e45-93c84af95723',
             timestamp=1704067200,
@@ -59,7 +59,7 @@ class TestAuthJoin:
         assert auth_join.auth_type == AuthMessageType.JOIN
         assert auth_join.message_id == '1be8938b-f656-4c8b-9e45-93c84af95723'
         assert auth_join.network_id == '62d13013-d80c-4539-adc1-61862bdd65cb'
-        assert auth_join.node_id == '62d13013-d80c-4539-adc1-61862bdd65cb'
+        assert auth_join.node_id == 'f3bb816f-608b-4dd7-ac74-8e0d0a0979ad'
         assert auth_join.node == mock_node_1
         assert auth_join.timestamp == 1704067200
 
@@ -70,7 +70,7 @@ class TestAuthJoin:
                       ):
         assert mock_auth_join_1 == AuthJoin(
             network_id='62d13013-d80c-4539-adc1-61862bdd65cb',
-            node_id='62d13013-d80c-4539-adc1-61862bdd65cb',
+            node_id='f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
             node=mock_node_1,
             message_id='1be8938b-f656-4c8b-9e45-93c84af95723',
             timestamp=1704067200,

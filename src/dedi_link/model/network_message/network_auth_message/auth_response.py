@@ -2,26 +2,28 @@ from typing import TypeVar, Generic
 
 from dedi_link.etc.consts import MESSAGE_ATTRIBUTES, MESSAGE_DATA
 from dedi_link.etc.enums import AuthMessageType
-from ...node import Node, NodeType
-from ...network import Network, NetworkType
+from ...node import Node, NodeT
+from ...network import NetworkT
+from ..network_message_header import NetworkMessageHeaderT
 from .network_auth_message import NetworkAuthMessage
 
 
-AuthResponseType = TypeVar('AuthResponseType', bound='AuthResponse')
+AuthResponseT = TypeVar('AuthResponseT', bound='AuthResponse')
 
 
-class AuthResponse(NetworkAuthMessage, Generic[NodeType, NetworkType]):
+class AuthResponse(NetworkAuthMessage[NetworkMessageHeaderT, NetworkT],
+                   Generic[NetworkMessageHeaderT, NetworkT, NodeT]
+                   ):
     NODE_CLASS = Node
-    NETWORK_CLASS = Network
 
     def __init__(self,
                  message_id: str,
                  approved: bool,
                  network_id: str = '',
                  node_id: str = '',
-                 node: NodeType | None = None,
+                 node: NodeT | None = None,
                  timestamp: int | None = None,
-                 network: NetworkType | None = None,
+                 network: NetworkT | None = None,
                  ):
         """
         Network Authorisation Response Message

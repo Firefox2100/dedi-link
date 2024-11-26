@@ -6,22 +6,19 @@ from typing import TypeVar, Generic
 
 from dedi_link.etc.consts import MESSAGE_ATTRIBUTES, MESSAGE_DATA
 from dedi_link.etc.enums import AuthMessageType, AuthMessageStatus
-from ...node import Node, NodeType
-from ...network import Network, NetworkType
+from ...node import Node, NodeT
+from ...network import Network, NetworkT
 from ...config import DDLConfig
+from ..network_message_header import NetworkMessageHeaderT
 from .network_auth_message import NetworkAuthMessage
 
 
-AuthRequestInviteType = TypeVar('AuthRequestInviteType', bound='AuthRequestInvite')
+AuthRequestInviteT = TypeVar('AuthRequestInviteT', bound='AuthRequestInvite')
 
 
-class AuthRequestInvite(NetworkAuthMessage, Generic[NodeType, NetworkType]):
-    """
-    Network Authorization Request or Invite Message
-
-    This message is for requesting to join a network by asking a node,
-    or to invite a node to join a network that this node is in.
-    """
+class AuthRequestInvite(NetworkAuthMessage[NetworkMessageHeaderT, NetworkT],
+                        Generic[NetworkMessageHeaderT, NetworkT, NodeT]
+                        ):
     NODE_CLASS = Node
     NETWORK_CLASS = Network
 
@@ -30,14 +27,32 @@ class AuthRequestInvite(NetworkAuthMessage, Generic[NodeType, NetworkType]):
                  node_id: str,
                  auth_type: AuthMessageType,
                  status: AuthMessageStatus,
-                 node: NodeType,
+                 node: NodeT,
                  target_url: str,
                  challenge: list[str] = None,
                  justification: str = '',
                  message_id: str = None,
                  timestamp: int | None = None,
-                 network: NetworkType | None = None,
+                 network: NetworkT | None = None,
                  ):
+        """
+        Network Authorization Request or Invite Message
+
+        This message is for requesting to join a network by asking a node,
+        or to invite a node to join a network that this node is in.
+
+        :param network_id: The network ID
+        :param node_id: The node ID
+        :param auth_type: The type of authorisation message
+        :param status: The status of the request
+        :param node: The node that is joining or being invited
+        :param target_url: The URL to send the response to
+        :param challenge: The security challenge
+        :param justification: The reason for the request
+        :param message_id: The message ID
+        :param timestamp: The timestamp in seconds since epoch
+        :param network: The network object representing the network being joined
+        """
         super().__init__(
             network_id=network_id,
             node_id=node_id,
@@ -62,8 +77,8 @@ class AuthRequestInvite(NetworkAuthMessage, Generic[NodeType, NetworkType]):
         if network is not None and self.network_id != self.network.network_id:
             raise ValueError('Network ID mismatch')
 
-    def __eq__(self, other: 'AuthRequestInvite'):
-        if not isinstance(other, self.__class__):
+    def __eq__(self, other):
+        if not isinstance(other, AuthRequestInvite):
             return NotImplemented
 
         if DeepDiff(

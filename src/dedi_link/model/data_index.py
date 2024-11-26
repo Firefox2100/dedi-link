@@ -3,7 +3,7 @@ from typing import TypeVar
 from .base_model import BaseModel
 
 
-DataIndexType = TypeVar('DataIndexType', bound='DataIndex')
+DataIndexT = TypeVar('DataIndexT', bound='DataIndex')
 
 
 class DataIndex(BaseModel):

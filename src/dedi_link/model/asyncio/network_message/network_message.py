@@ -1,16 +1,21 @@
 import json
-from typing import TypeVar
+from typing import TypeVar, Generic
 
 from ..base_model import AsyncBaseModel
-from ..network import Network
-from ...network_message.network_message_header import NetworkMessageHeader, NetworkMessageHeaderType
+from ..network import Network, NetworkT
+from ...network_message.network_message_header import NetworkMessageHeaderT
 from ...network_message.network_message import NetworkMessage as SyncNetworkMessage
 
 
-NetworkMessageType = TypeVar('NetworkMessageType', bound='NetworkMessage')
+NetworkMessageT = TypeVar('NetworkMessageT', bound='NetworkMessage')
 
 
-class NetworkMessage(AsyncBaseModel, SyncNetworkMessage[NetworkMessageHeader]):
+class NetworkMessage(SyncNetworkMessage[NetworkMessageHeaderT, NetworkT],
+                     AsyncBaseModel,
+                     Generic[NetworkMessageHeaderT, NetworkT],
+                     ):
+    NETWORK_CLASS = Network
+
     @property
     async def signature(self) -> str:
         """
@@ -18,7 +23,7 @@ class NetworkMessage(AsyncBaseModel, SyncNetworkMessage[NetworkMessageHeader]):
 
         :return: Signature in base64 encoded format
         """
-        network = await Network.load(self.network_id)
+        network = await self.NETWORK_CLASS.load(self.network_id)
         private_pem = await network.private_key
         payload = json.dumps(self.to_dict())
 
@@ -26,7 +31,7 @@ class NetworkMessage(AsyncBaseModel, SyncNetworkMessage[NetworkMessageHeader]):
 
     async def generate_headers(self,
                          access_token: str | None = None,
-                         ) -> NetworkMessageHeaderType:
+                         ) -> NetworkMessageHeaderT:
         """
         Generate the headers for the message
 

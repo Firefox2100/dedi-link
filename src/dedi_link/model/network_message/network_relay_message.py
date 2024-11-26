@@ -9,7 +9,7 @@ from .network_message import NetworkMessage
 from .network_message_header import NetworkMessageHeader
 
 
-NetworkRelayMessageType = TypeVar('NetworkRelayMessageType', bound='NetworkRelayMessage')
+NetworkRelayMessageT = TypeVar('NetworkRelayMessageT', bound='NetworkRelayMessage')
 
 
 class NetworkRelayMessage(NetworkMessage):

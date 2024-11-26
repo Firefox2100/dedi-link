@@ -4,8 +4,8 @@ from .base_model import AsyncBaseModel
 from ..user import User as SyncUser
 
 
-UserType = TypeVar('UserType', bound='User')
+UserT = TypeVar('UserT', bound='User')
 
 
-class User(AsyncBaseModel, SyncUser):
+class User(SyncUser, AsyncBaseModel):
     pass

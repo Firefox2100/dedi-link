@@ -1,8 +1,8 @@
-from .base_model import BaseModel, BaseModelType
+from .base_model import BaseModel, BaseModelT
 from .config import DDLConfig
-from .data_index import DataIndex, DataIndexType
-from .network import Network, NetworkType
-from .network_message import NetworkMessage, NetworkMessageType
-from .node import Node, NodeType
-from .user import User, UserType
-from .user_mapping import UserMapping, UserMappingType
+from .data_index import DataIndex, DataIndexT
+from .network import Network, NetworkT
+from .network_message import NetworkMessage, NetworkMessageT
+from .node import Node, NodeT
+from .user import User, UserT
+from .user_mapping import UserMapping, UserMappingT

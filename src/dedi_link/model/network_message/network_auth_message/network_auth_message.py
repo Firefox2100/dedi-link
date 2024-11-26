@@ -1,16 +1,20 @@
 import uuid
 from enum import Enum
-from typing import Type, TypeVar, Callable
+from typing import Type, TypeVar, Callable, Generic
 
 from dedi_link.etc.consts import MESSAGE_ATTRIBUTES
 from dedi_link.etc.enums import MessageType, AuthMessageType
+from ...network import NetworkT
 from ..network_message import NetworkMessage
+from ..network_message_header import NetworkMessageHeaderT
 
 
-NetworkAuthMessageType = TypeVar('NetworkAuthMessageType', bound='NetworkAuthMessage')
+NetworkAuthMessageT = TypeVar('NetworkAuthMessageT', bound='NetworkAuthMessage')
 
 
-class NetworkAuthMessage(NetworkMessage):
+class NetworkAuthMessage(NetworkMessage[NetworkMessageHeaderT, NetworkT],
+                         Generic[NetworkMessageHeaderT, NetworkT]
+                         ):
     def __init__(self,
                  network_id: str,
                  node_id: str,
@@ -53,7 +57,7 @@ class NetworkAuthMessage(NetworkMessage):
         return hash((super().__hash__(), self.auth_type))
 
     @classmethod
-    def _child_mapping(cls) -> dict[Enum, tuple[Type[NetworkAuthMessageType], Callable[[dict], Enum] | None]]:
+    def _child_mapping(cls) -> dict[Enum, tuple[Type[NetworkAuthMessageT], Callable[[dict], Enum] | None]]:
         from .auth_request_invite import AuthRequestInvite
         from .auth_response import AuthResponse
         from .auth_join import AuthJoin

@@ -3,14 +3,14 @@ from typing import Generic, TypeVar
 from dedi_link.etc.enums import MappingType
 from dedi_link.etc.exceptions import NodeNotImplemented
 from .base_model import BaseModel
-from .data_index import DataIndex, DataIndexType
-from .user_mapping import UserMapping, UserMappingType
+from .data_index import DataIndex, DataIndexT
+from .user_mapping import UserMapping, UserMappingT
 
 
-NodeType = TypeVar('NodeType', bound='Node')
+NodeT = TypeVar('NodeT', bound='Node')
 
 
-class Node(BaseModel, Generic[DataIndexType, UserMappingType]):
+class Node(BaseModel, Generic[DataIndexT, UserMappingT]):
     DATA_INDEX_CLASS = DataIndex
     USER_MAPPING_CLASS = UserMapping
 
@@ -21,9 +21,9 @@ class Node(BaseModel, Generic[DataIndexType, UserMappingType]):
                  description: str,
                  client_id: str,
                  authentication_enabled: bool | None = None,
-                 user_mapping: UserMappingType | None = None,
+                 user_mapping: UserMappingT | None = None,
                  public_key: str | None = None,
-                 data_index: DataIndexType = None,
+                 data_index: DataIndexT = None,
                  score: float = 0.0,
                  ):
         """
@@ -83,7 +83,7 @@ class Node(BaseModel, Generic[DataIndexType, UserMappingType]):
         )
 
     @classmethod
-    def from_dict(cls, payload: dict) -> NodeType:
+    def from_dict(cls, payload: dict) -> NodeT:
         return cls(
             node_id=payload['nodeId'],
             node_name=payload['nodeName'],

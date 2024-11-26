@@ -1,15 +1,19 @@
 import uuid
-from typing import TypeVar
+from typing import TypeVar, Generic
 
 from dedi_link.etc.consts import MESSAGE_ATTRIBUTES
 from dedi_link.etc.enums import AuthMessageType
+from ...network import NetworkT
+from ..network_message_header import NetworkMessageHeaderT
 from .network_auth_message import NetworkAuthMessage
 
 
-AuthLeaveType = TypeVar('AuthLeaveType', bound='AuthLeave')
+AuthLeaveT = TypeVar('AuthLeaveT', bound='AuthLeave')
 
 
-class AuthLeave(NetworkAuthMessage):
+class AuthLeave(NetworkAuthMessage[NetworkMessageHeaderT, NetworkT],
+                Generic[NetworkMessageHeaderT, NetworkT]
+                ):
     def __init__(self,
                  node_id: str,
                  network_id: str,

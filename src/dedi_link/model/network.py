@@ -3,14 +3,14 @@ from typing import Generic, TypeVar
 
 from dedi_link.etc.exceptions import NetworkNotImplemented
 from .base_model import BaseModel
-from .data_index import DataIndex, DataIndexType
-from .node import Node, NodeType
+from .data_index import DataIndex, DataIndexT
+from .node import Node, NodeT
 
 
-NetworkType = TypeVar('NetworkType', bound='Network')
+NetworkT = TypeVar('NetworkT', bound='Network')
 
 
-class Network(BaseModel, Generic[DataIndexType, NodeType]):
+class Network(BaseModel, Generic[DataIndexT, NodeT]):
     DATA_INDEX_CLASS = DataIndex
     NODE_CLASS = Node
 
@@ -107,7 +107,7 @@ class Network(BaseModel, Generic[DataIndexType, NodeType]):
         return payload
 
     @property
-    def nodes(self) -> list[NodeType]:
+    def nodes(self) -> list[NodeT]:
         """
         Get all nodes in the network.
 
@@ -116,7 +116,7 @@ class Network(BaseModel, Generic[DataIndexType, NodeType]):
         raise NetworkNotImplemented('nodes property not implemented')
 
     @property
-    def nodes_pending(self) -> list[NodeType]:
+    def nodes_pending(self) -> list[NodeT]:
         """
         Get pending nodes in the network.
 
@@ -128,7 +128,7 @@ class Network(BaseModel, Generic[DataIndexType, NodeType]):
         raise NetworkNotImplemented('nodes_pending property not implemented')
 
     @property
-    def nodes_approved(self) -> list[NodeType]:
+    def nodes_approved(self) -> list[NodeT]:
         """
         Get approved nodes in the network.
 
@@ -137,7 +137,7 @@ class Network(BaseModel, Generic[DataIndexType, NodeType]):
         raise NetworkNotImplemented('nodes_approved property not implemented')
 
     @property
-    def self_data_index(self) -> DataIndexType:
+    def self_data_index(self) -> DataIndexT:
         """
         Get the data index of the instance itself for this network.
 
@@ -146,7 +146,7 @@ class Network(BaseModel, Generic[DataIndexType, NodeType]):
         raise NetworkNotImplemented('self_data_index property not implemented')
 
     @property
-    def network_data_index(self) -> DataIndexType:
+    def network_data_index(self) -> DataIndexT:
         """
         Get the data index of the network.
 

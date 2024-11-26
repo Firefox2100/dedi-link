@@ -13,15 +13,16 @@ from dedi_link.etc.consts import MESSAGE_ATTRIBUTES
 from dedi_link.etc.enums import MessageType, AuthMessageType, DataMessageType
 from dedi_link.etc.exceptions import NetworkMessageNotImplemented
 from ..base_model import BaseModel
-from ..network import Network
-from .network_message_header import NetworkMessageHeader, NetworkMessageHeaderType
+from ..network import Network, NetworkT
+from .network_message_header import NetworkMessageHeader, NetworkMessageHeaderT
 
 
-NetworkMessageType = TypeVar('NetworkMessageType', bound='NetworkMessage')
+NetworkMessageT = TypeVar('NetworkMessageT', bound='NetworkMessage')
 
 
-class NetworkMessage(BaseModel, Generic[NetworkMessageHeaderType]):
+class NetworkMessage(BaseModel, Generic[NetworkMessageHeaderT, NetworkT]):
     NETWORK_MESSAGE_HEADER_CLASS = NetworkMessageHeader
+    NETWORK_CLASS = Network
 
     def __init__(self,
                  message_type: MessageType,
@@ -72,7 +73,7 @@ class NetworkMessage(BaseModel, Generic[NetworkMessageHeaderType]):
         ))
 
     @classmethod
-    def _child_mapping(cls) -> dict[Enum, tuple[Type[NetworkMessageType], Callable[[dict], Enum] | None]]:
+    def _child_mapping(cls) -> dict[Enum, tuple[Type[NetworkMessageT], Callable[[dict], Enum] | None]]:
         from .network_auth_message import NetworkAuthMessage
         from .network_sync_message import NetworkSyncMessage
         from .network_data_message import NetworkDataMessage
@@ -99,7 +100,7 @@ class NetworkMessage(BaseModel, Generic[NetworkMessageHeaderType]):
         return payload
 
     @classmethod
-    def from_dict(cls, payload: dict) -> 'NetworkMessageType':
+    def from_dict(cls, payload: dict) -> 'NetworkMessageT':
         """
         Build an instance from a dictionary
 
@@ -150,7 +151,7 @@ class NetworkMessage(BaseModel, Generic[NetworkMessageHeaderType]):
 
         :return: Signature in base64 encoded format
         """
-        network = Network.load(self.network_id)
+        network = self.NETWORK_CLASS.load(self.network_id)
         private_pem = network.private_key
         payload = json.dumps(self.to_dict())
 
@@ -158,7 +159,7 @@ class NetworkMessage(BaseModel, Generic[NetworkMessageHeaderType]):
 
     def generate_headers(self,
                          access_token: str | None = None,
-                         ) -> NetworkMessageHeaderType:
+                         ) -> NetworkMessageHeaderT:
         """
         Generate the headers for the message
 

@@ -2,35 +2,37 @@ from typing import TypeVar
 
 from dedi_link.etc.exceptions import NetworkNotImplemented
 from .base_model import AsyncBaseModel
-from .node import Node, NodeType
-from ..data_index import DataIndexType
+from .node import Node, NodeT
+from ..data_index import DataIndexT
 from ..network import Network as SyncNetwork
 
 
-NetworkType = TypeVar('NetworkType', bound='Network')
+NetworkT = TypeVar('NetworkT', bound='Network')
 
 
-class Network(AsyncBaseModel, SyncNetwork[DataIndexType, NodeType]):
+class Network(SyncNetwork[DataIndexT, NodeT],
+              AsyncBaseModel
+              ):
     NODE_CLASS = Node
 
     @property
-    async def nodes(self) -> list[NodeType]:
+    async def nodes(self) -> list[NodeT]:
         raise NetworkNotImplemented('nodes property not implemented')
 
     @property
-    async def nodes_pending(self) -> list[NodeType]:
+    async def nodes_pending(self) -> list[NodeT]:
         raise NetworkNotImplemented('nodes_pending property not implemented')
 
     @property
-    async def nodes_approved(self) -> list[NodeType]:
+    async def nodes_approved(self) -> list[NodeT]:
         raise NetworkNotImplemented('nodes_approved property not implemented')
 
     @property
-    async def self_data_index(self) -> DataIndexType:
+    async def self_data_index(self) -> DataIndexT:
         raise NetworkNotImplemented('self_data_index property not implemented')
 
     @property
-    async def network_data_index(self) -> DataIndexType:
+    async def network_data_index(self) -> DataIndexT:
         data_index = await self.self_data_index
 
         nodes = await self.nodes_approved

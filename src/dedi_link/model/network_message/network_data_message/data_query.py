@@ -5,7 +5,7 @@ from dedi_link.etc.enums import DataMessageType
 from .network_data_message import NetworkDataMessage
 
 
-DataQueryType = TypeVar('DataQueryType', bound='DataQuery')
+DataQueryT = TypeVar('DataQueryT', bound='DataQuery')
 
 
 class DataQuery(NetworkDataMessage):

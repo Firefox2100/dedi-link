@@ -4,7 +4,7 @@ from typing import Type, TypeVar, Callable
 from dedi_link.etc.exceptions import BaseModelNotImplemented
 
 
-BaseModelType = TypeVar('BaseModelType', bound='BaseModel')
+BaseModelT = TypeVar('BaseModelT', bound='BaseModel')
 
 
 class BaseModel:
@@ -14,7 +14,7 @@ class BaseModel:
     This class defines a uniform interface for all models to implement
     """
     @classmethod
-    def _child_mapping(cls) -> dict[Enum, tuple[Type[BaseModelType], Callable[[dict], Enum] | None]]:
+    def _child_mapping(cls) -> dict[Enum, tuple[Type[BaseModelT], Callable[[dict], Enum] | None]]:
         """
         Mapping of the child classes to the enum values
 
@@ -37,7 +37,7 @@ class BaseModel:
         raise BaseModelNotImplemented('access_token property has to be implemented by the child class')
 
     @classmethod
-    def load(cls: Type[BaseModelType], *args, **kwargs) -> BaseModelType:
+    def load(cls: Type[BaseModelT], *args, **kwargs) -> BaseModelT:
         """
         Load a model from the database
 
@@ -48,7 +48,7 @@ class BaseModel:
         raise BaseModelNotImplemented('load method has to be implemented by the child class')
 
     @classmethod
-    def load_all(cls: Type[BaseModelType], *args, **kwargs) -> list[BaseModelType]:
+    def load_all(cls: Type[BaseModelT], *args, **kwargs) -> list[BaseModelT]:
         """
         Load all models from the database
 
@@ -99,7 +99,7 @@ class BaseModel:
         raise BaseModelNotImplemented('to_dict method has to be implemented by the child class')
 
     @classmethod
-    def from_dict(cls: Type[BaseModelType], payload: dict) -> BaseModelType:
+    def from_dict(cls: Type[BaseModelT], payload: dict) -> BaseModelT:
         """
         Build an instance from a dictionary
 
@@ -109,7 +109,7 @@ class BaseModel:
         raise BaseModelNotImplemented('from_dict method has to be implemented by the child class')
 
     @classmethod
-    def factory_from_id(cls: Type[BaseModelType], payload: dict, id_var: Enum):
+    def factory_from_id(cls: Type[BaseModelT], payload: dict, id_var: Enum):
         """
         Raw method for creating an instance of (usually) a child class from a dictionary
 

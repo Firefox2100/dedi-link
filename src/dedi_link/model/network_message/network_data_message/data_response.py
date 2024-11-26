@@ -9,7 +9,7 @@ from ...user import User
 from .network_data_message import NetworkDataMessage
 
 
-DataResponseType = TypeVar('DataResponseType', bound='DataResponse')
+DataResponseT = TypeVar('DataResponseT', bound='DataResponse')
 
 
 class DataResponse(NetworkDataMessage):

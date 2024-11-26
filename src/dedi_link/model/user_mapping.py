@@ -5,7 +5,7 @@ from dedi_link.etc.enums import MappingType
 from .base_model import BaseModel
 
 
-UserMappingType = TypeVar('UserMappingType', bound='UserMapping')
+UserMappingT = TypeVar('UserMappingT', bound='UserMapping')
 
 
 class UserMapping(BaseModel):

@@ -2,7 +2,7 @@ import requests
 
 from dedi_link.etc.enums import MessageType
 from dedi_link.etc.exceptions import NetworkRequestFailed
-from ..network_message import NetworkMessageType, NetworkMessageHeader
+from ..network_message import NetworkMessageT, NetworkMessageHeader
 
 
 class Session:
@@ -30,9 +30,9 @@ class Session:
 
     def post(self,
              url: str,
-             message: NetworkMessageType,
+             message: NetworkMessageT,
              access_token: str | None = None,
-             ) -> tuple[NetworkMessageType, NetworkMessageHeader]:
+             ) -> tuple[NetworkMessageT, NetworkMessageHeader]:
         payload = message.to_dict()
         headers = message.generate_headers(
             access_token=access_token,

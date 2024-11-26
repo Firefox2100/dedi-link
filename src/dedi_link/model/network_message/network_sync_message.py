@@ -7,7 +7,7 @@ from dedi_link.etc.enums import SyncTarget, MessageType
 from .network_message import NetworkMessage
 
 
-NetworkSyncMessageType = TypeVar('NetworkSyncMessageType', bound='NetworkSyncMessage')
+NetworkSyncMessageT = TypeVar('NetworkSyncMessageT', bound='NetworkSyncMessage')
 
 
 class NetworkSyncMessage(NetworkMessage):
