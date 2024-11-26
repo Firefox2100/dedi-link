@@ -20,7 +20,6 @@ def mock_network_1():
     )
 
 
-@pytest.mark.asyncio
 class TestNetwork:
     def test_init(self):
         network = Network(
@@ -83,6 +82,7 @@ class TestNetwork:
             ignore_order=True,
         )
 
+    @pytest.mark.asyncio
     async def test_to_dict_with_index(self, mock_network_1):
         with patch('dedi_link.model.asyncio.network.Network.network_data_index', new_callable=PropertyMock) as mock_data_index:
             mock_data_index.return_value = async_wrapper(DataIndex())
@@ -103,6 +103,7 @@ class TestNetwork:
                 ignore_order=True,
             )
 
+    @pytest.mark.asyncio
     async def test_network_unimplemented_methods(self, mock_network_1):
         with pytest.raises(NetworkNotImplemented):
             _ = await mock_network_1.nodes
@@ -116,6 +117,7 @@ class TestNetwork:
         with pytest.raises(NetworkNotImplemented):
             _ = await mock_network_1.self_data_index
 
+    @pytest.mark.asyncio
     async def test_network_data_index(self, mock_network_1):
         with patch('dedi_link.model.asyncio.network.Network.nodes_approved', new_callable=PropertyMock) as mock_nodes:
             with patch('dedi_link.model.asyncio.network.Network.self_data_index', new_callable=PropertyMock) as mock_index:
