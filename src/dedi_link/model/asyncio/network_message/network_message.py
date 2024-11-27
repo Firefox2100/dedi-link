@@ -1,17 +1,17 @@
 import json
 from typing import TypeVar, Generic
 
-from ..base_model import AsyncBaseModel
+from ..base_model import AsyncDataInterface
 from ..network import Network, NetworkT
 from ...network_message.network_message_header import NetworkMessageHeaderT
-from ...network_message.network_message import NetworkMessage as SyncNetworkMessage
+from ...network_message.network_message import NetworkMessageB
 
 
 NetworkMessageT = TypeVar('NetworkMessageT', bound='NetworkMessage')
 
 
-class NetworkMessage(SyncNetworkMessage[NetworkMessageHeaderT, NetworkT],
-                     AsyncBaseModel,
+class NetworkMessage(NetworkMessageB[NetworkMessageHeaderT, NetworkT],
+                     AsyncDataInterface,
                      Generic[NetworkMessageHeaderT, NetworkT],
                      ):
     NETWORK_CLASS = Network

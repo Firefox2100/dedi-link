@@ -1,4 +1,5 @@
-from .base_model import AsyncBaseModel, AsyncBaseModelT
+from ..base_model import BaseModel
+from .base_model import AsyncDataInterface, AsyncDataInterfaceT
 from ..config import DDLConfig
 from ..data_index import DataIndex, DataIndexT
 from .network import Network, NetworkT

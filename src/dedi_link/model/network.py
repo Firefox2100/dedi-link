@@ -2,15 +2,16 @@ import uuid
 from typing import Generic, TypeVar
 
 from dedi_link.etc.exceptions import NetworkNotImplemented
-from .base_model import BaseModel
+from .base_model import BaseModel, SyncDataInterface
 from .data_index import DataIndex, DataIndexT
 from .node import Node, NodeT
 
 
+NetworkBT = TypeVar('NetworkBT', bound='NetworkB')
 NetworkT = TypeVar('NetworkT', bound='Network')
 
 
-class Network(BaseModel, Generic[DataIndexT, NodeT]):
+class NetworkB(BaseModel, Generic[DataIndexT, NodeT]):
     DATA_INDEX_CLASS = DataIndex
     NODE_CLASS = Node
 
@@ -43,7 +44,7 @@ class Network(BaseModel, Generic[DataIndexT, NodeT]):
         self.node_ids = node_ids or []
 
     def __eq__(self, other):
-        if not isinstance(other, Network):
+        if not isinstance(other, NetworkB):
             return NotImplemented
 
         return all([
@@ -66,7 +67,7 @@ class Network(BaseModel, Generic[DataIndexT, NodeT]):
         )
 
     @classmethod
-    def from_dict(cls, payload: dict[str, str | list[str] | bool | dict]) -> 'Network':
+    def from_dict(cls, payload: dict[str, str | list[str] | bool | dict]) -> NetworkBT:
         if 'networkId' not in payload or not payload['networkId']:
             payload['networkId'] = str(uuid.uuid4())
 
@@ -92,6 +93,8 @@ class Network(BaseModel, Generic[DataIndexT, NodeT]):
             'instanceId': self.instance_id,
         }
 
+
+class Network(NetworkB[DataIndexT, NodeT], SyncDataInterface, Generic[DataIndexT, NodeT]):
     def to_dict_with_index(self) -> dict:
         """
         Convert the network object to a dictionary, with index included.

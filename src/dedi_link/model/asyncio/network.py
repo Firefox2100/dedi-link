@@ -1,17 +1,18 @@
-from typing import TypeVar
+from typing import TypeVar, Generic
 
 from dedi_link.etc.exceptions import NetworkNotImplemented
-from .base_model import AsyncBaseModel
+from .base_model import AsyncDataInterface
 from .node import Node, NodeT
 from ..data_index import DataIndexT
-from ..network import Network as SyncNetwork
+from ..network import NetworkB
 
 
 NetworkT = TypeVar('NetworkT', bound='Network')
 
 
-class Network(SyncNetwork[DataIndexT, NodeT],
-              AsyncBaseModel
+class Network(NetworkB[DataIndexT, NodeT],
+              AsyncDataInterface,
+              Generic[DataIndexT, NodeT]
               ):
     NODE_CLASS = Node
 

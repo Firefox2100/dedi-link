@@ -12,15 +12,16 @@ from cryptography.hazmat.backends import default_backend
 from dedi_link.etc.consts import MESSAGE_ATTRIBUTES
 from dedi_link.etc.enums import MessageType, AuthMessageType, DataMessageType
 from dedi_link.etc.exceptions import NetworkMessageNotImplemented
-from ..base_model import BaseModel
+from ..base_model import BaseModel, SyncDataInterface
 from ..network import Network, NetworkT
 from .network_message_header import NetworkMessageHeader, NetworkMessageHeaderT
 
 
+NetworkMessageBT = TypeVar('NetworkMessageBT', bound='NetworkMessageB')
 NetworkMessageT = TypeVar('NetworkMessageT', bound='NetworkMessage')
 
 
-class NetworkMessage(BaseModel, Generic[NetworkMessageHeaderT, NetworkT]):
+class NetworkMessageB(BaseModel, Generic[NetworkMessageHeaderT, NetworkT]):
     NETWORK_MESSAGE_HEADER_CLASS = NetworkMessageHeader
     NETWORK_CLASS = Network
 
@@ -80,9 +81,11 @@ class NetworkMessage(BaseModel, Generic[NetworkMessageHeaderT, NetworkT]):
         from .network_relay_message import NetworkRelayMessage
 
         return {
-            MessageType.AUTH_MESSAGE: (NetworkAuthMessage, lambda payload: AuthMessageType(payload['messageAttributes']['authType'])),
+            MessageType.AUTH_MESSAGE: (
+            NetworkAuthMessage, lambda payload: AuthMessageType(payload['messageAttributes']['authType'])),
             MessageType.SYNC_MESSAGE: (NetworkSyncMessage, None),
-            MessageType.DATA_MESSAGE: (NetworkDataMessage, lambda payload: DataMessageType(payload['messageAttributes']['dataType'])),
+            MessageType.DATA_MESSAGE: (
+            NetworkDataMessage, lambda payload: DataMessageType(payload['messageAttributes']['dataType'])),
             MessageType.RELAY_MESSAGE: (NetworkRelayMessage, None),
         }
 
@@ -100,7 +103,7 @@ class NetworkMessage(BaseModel, Generic[NetworkMessageHeaderT, NetworkT]):
         return payload
 
     @classmethod
-    def from_dict(cls, payload: dict) -> 'NetworkMessageT':
+    def from_dict(cls, payload: dict) -> NetworkMessageBT:
         """
         Build an instance from a dictionary
 
@@ -144,6 +147,11 @@ class NetworkMessage(BaseModel, Generic[NetworkMessageHeaderT, NetworkT]):
 
         return base64.b64encode(signature).decode()
 
+
+class NetworkMessage(NetworkMessageB[NetworkMessageHeaderT, NetworkT],
+                     SyncDataInterface,
+                     Generic[NetworkMessageHeaderT, NetworkT]
+                     ):
     @property
     def signature(self) -> str:
         """

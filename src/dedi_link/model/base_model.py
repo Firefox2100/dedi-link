@@ -4,27 +4,16 @@ from typing import Type, TypeVar, Callable
 from dedi_link.etc.exceptions import BaseModelNotImplemented
 
 
+SyncDataInterfaceT = TypeVar('SyncDataInterfaceT', bound='SyncDataInterface')
 BaseModelT = TypeVar('BaseModelT', bound='BaseModel')
 
 
-class BaseModel:
+class SyncDataInterface:
     """
-    Abstract class for all models
+    A synchronous interface for data-related operations.
 
-    This class defines a uniform interface for all models to implement
+    This interface should be implemented by all classes that need to perform data-related operations.
     """
-    @classmethod
-    def _child_mapping(cls) -> dict[Enum, tuple[Type[BaseModelT], Callable[[dict], Enum] | None]]:
-        """
-        Mapping of the child classes to the enum values
-
-        This is used to facilitate the factory method, and also allows for lazy
-        importing within a method to avoid circular imports
-
-        :return: A dictionary mapping the enum values to the child classes, and potentially a
-                 function to further identify the child class
-        """
-        return {}
 
     @property
     def access_token(self) -> str:
@@ -89,6 +78,26 @@ class BaseModel:
         :return: None
         """
         raise BaseModelNotImplemented('delete method has to be implemented by the child class')
+
+
+class BaseModel:
+    """
+    Abstract class for all models
+
+    This class defines a uniform interface for all models to implement
+    """
+    @classmethod
+    def _child_mapping(cls) -> dict[Enum, tuple[Type[BaseModelT], Callable[[dict], Enum] | None]]:
+        """
+        Mapping of the child classes to the enum values
+
+        This is used to facilitate the factory method, and also allows for lazy
+        importing within a method to avoid circular imports
+
+        :return: A dictionary mapping the enum values to the child classes, and potentially a
+                 function to further identify the child class
+        """
+        return {}
 
     def to_dict(self) -> dict:
         """

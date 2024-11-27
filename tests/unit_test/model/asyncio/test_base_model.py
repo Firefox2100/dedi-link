@@ -1,77 +1,35 @@
 import pytest
-from enum import Enum
 
 from dedi_link.etc.exceptions import BaseModelNotImplemented
-from dedi_link.model.asyncio import AsyncBaseModel
+from dedi_link.model.asyncio import AsyncDataInterface
 
 
-class TestAsyncBaseModel:
-    @pytest.mark.asyncio
+@pytest.mark.asyncio
+class TestAsyncDataInterface:
     async def test_access_token(self):
-        base_model_instance = AsyncBaseModel()
+        async_interface_instance = AsyncDataInterface()
         with pytest.raises(BaseModelNotImplemented):
-            _ = await base_model_instance.access_token
+            _ = await async_interface_instance.access_token
 
-    @pytest.mark.asyncio
     async def test_load(self):
         with pytest.raises(BaseModelNotImplemented):
-            await AsyncBaseModel.load()
+            await AsyncDataInterface.load()
 
-    @pytest.mark.asyncio
     async def test_load_all(self):
         with pytest.raises(BaseModelNotImplemented):
-            await AsyncBaseModel.load_all()
+            await AsyncDataInterface.load_all()
 
-    @pytest.mark.asyncio
     async def test_store(self):
-        base_model_instance = AsyncBaseModel()
+        async_interface_instance = AsyncDataInterface()
         with pytest.raises(BaseModelNotImplemented):
-            await base_model_instance.store()
+            await async_interface_instance.store()
 
-    @pytest.mark.asyncio
     async def test_update(self):
-        base_model_instance = AsyncBaseModel()
+        async_interface_instance = AsyncDataInterface()
         with pytest.raises(BaseModelNotImplemented):
-            await base_model_instance.update({})
+            await async_interface_instance.update({})
 
-    @pytest.mark.asyncio
     async def test_delete(self):
-        base_model_instance = AsyncBaseModel()
+        async_interface_instance = AsyncDataInterface()
         with pytest.raises(BaseModelNotImplemented):
-            await base_model_instance.delete()
-
-    def test_to_dict(self):
-        base_model_instance = AsyncBaseModel()
-        with pytest.raises(BaseModelNotImplemented):
-            base_model_instance.to_dict()
-
-    def test_from_dict(self):
-        with pytest.raises(BaseModelNotImplemented):
-            AsyncBaseModel.from_dict({})
-
-    def test_factory_from_id_with_no_mapping(self):
-        class TestEnum(Enum):
-            TEST = 'test'
-            ANOTHER_TEST = 'another_test'
-
-        with pytest.raises(BaseModelNotImplemented):
-            AsyncBaseModel.factory_from_id({}, TestEnum.TEST)
-
-    def test_factory_from_id_mapping_not_exist(self):
-        class TestEnum(Enum):
-            TEST = 'test'
-            ANOTHER_TEST = 'another_test'
-
-        class TestModel(AsyncBaseModel):
-            @classmethod
-            def _child_mapping(cls):
-                return {
-                    TestEnum.TEST: (TestModel, None),
-                }
-
-        with pytest.raises(ValueError):
-            TestModel.factory_from_id({}, TestEnum.ANOTHER_TEST)
-
-    def test_factory(self):
-        with pytest.raises(BaseModelNotImplemented):
-            AsyncBaseModel.factory({})
+            await async_interface_instance.delete()

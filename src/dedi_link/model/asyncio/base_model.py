@@ -1,13 +1,12 @@
 from typing import Type, TypeVar
 
 from dedi_link.etc.exceptions import BaseModelNotImplemented
-from ..base_model import BaseModel
 
 
-AsyncBaseModelT = TypeVar('AsyncBaseModelT', bound='AsyncBaseModel')
+AsyncDataInterfaceT = TypeVar('AsyncDataInterfaceT', bound='AsyncBaseModel')
 
 
-class AsyncBaseModel(BaseModel):
+class AsyncDataInterface:
     """
     Asynchronous base class for the async part of library
     """
@@ -22,7 +21,7 @@ class AsyncBaseModel(BaseModel):
         raise BaseModelNotImplemented('access_token property has to be implemented by the child class')
 
     @classmethod
-    async def load(cls: Type[AsyncBaseModelT], *args, **kwargs) -> AsyncBaseModelT:
+    async def load(cls: Type[AsyncDataInterfaceT], *args, **kwargs) -> AsyncDataInterfaceT:
         """
         Load a model from the database asynchronously
         :param args: Unnamed arguments
@@ -32,7 +31,7 @@ class AsyncBaseModel(BaseModel):
         raise BaseModelNotImplemented('load method has to be implemented by the child class')
 
     @classmethod
-    async def load_all(cls: Type[AsyncBaseModelT], *args, **kwargs) -> list[AsyncBaseModelT]:
+    async def load_all(cls: Type[AsyncDataInterfaceT], *args, **kwargs) -> list[AsyncDataInterfaceT]:
         """
         Load all models from the database asynchronously
 

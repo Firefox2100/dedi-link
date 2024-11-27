@@ -2,38 +2,40 @@ import pytest
 from enum import Enum
 
 from dedi_link.etc.exceptions import BaseModelNotImplemented
-from dedi_link.model import BaseModel
+from dedi_link.model import BaseModel, SyncDataInterface
 
 
-class TestBaseModel:
+class TestSyncDataInterface:
     def test_access_token(self):
-        base_model_instance = BaseModel()
+        sync_interface_instance = SyncDataInterface()
         with pytest.raises(BaseModelNotImplemented):
-            _ = base_model_instance.access_token
+            _ = sync_interface_instance.access_token
 
     def test_load(self):
         with pytest.raises(BaseModelNotImplemented):
-            BaseModel.load()
+            SyncDataInterface.load()
 
     def test_load_all(self):
         with pytest.raises(BaseModelNotImplemented):
-            BaseModel.load_all()
+            SyncDataInterface.load_all()
 
     def test_store(self):
-        base_model_instance = BaseModel()
+        sync_interface_instance = SyncDataInterface()
         with pytest.raises(BaseModelNotImplemented):
-            base_model_instance.store()
+            sync_interface_instance.store()
 
     def test_update(self):
-        base_model_instance = BaseModel()
+        sync_interface_instance = SyncDataInterface()
         with pytest.raises(BaseModelNotImplemented):
-            base_model_instance.update({})
+            sync_interface_instance.update({})
 
     def test_delete(self):
-        base_model_instance = BaseModel()
+        sync_interface_instance = SyncDataInterface()
         with pytest.raises(BaseModelNotImplemented):
-            base_model_instance.delete()
+            sync_interface_instance.delete()
 
+
+class TestBaseModel:
     def test_to_dict(self):
         base_model_instance = BaseModel()
         with pytest.raises(BaseModelNotImplemented):

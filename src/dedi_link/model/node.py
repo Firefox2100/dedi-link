@@ -2,15 +2,16 @@ from typing import Generic, TypeVar
 
 from dedi_link.etc.enums import MappingType
 from dedi_link.etc.exceptions import NodeNotImplemented
-from .base_model import BaseModel
+from .base_model import BaseModel, SyncDataInterface
 from .data_index import DataIndex, DataIndexT
 from .user_mapping import UserMapping, UserMappingT
 
 
+NodeBT = TypeVar('NodeBT', bound='NodeB')
 NodeT = TypeVar('NodeT', bound='Node')
 
 
-class Node(BaseModel, Generic[DataIndexT, UserMappingT]):
+class NodeB(BaseModel, Generic[DataIndexT, UserMappingT]):
     DATA_INDEX_CLASS = DataIndex
     USER_MAPPING_CLASS = UserMapping
 
@@ -57,7 +58,7 @@ class Node(BaseModel, Generic[DataIndexT, UserMappingT]):
         self.score = score
 
     def __eq__(self, other) -> bool:
-        if not isinstance(other, Node):
+        if not isinstance(other, NodeB):
             return NotImplemented
 
         return all([
@@ -83,7 +84,7 @@ class Node(BaseModel, Generic[DataIndexT, UserMappingT]):
         )
 
     @classmethod
-    def from_dict(cls, payload: dict) -> NodeT:
+    def from_dict(cls, payload: dict) -> NodeBT:
         return cls(
             node_id=payload['nodeId'],
             node_name=payload['nodeName'],
@@ -125,6 +126,11 @@ class Node(BaseModel, Generic[DataIndexT, UserMappingT]):
 
         return payload
 
+
+class Node(NodeB[DataIndexT, UserMappingT],
+           SyncDataInterface,
+           Generic[DataIndexT, UserMappingT]
+           ):
     def get_user_key(self, user_id: str) -> str:
         """
         Get the user key for the given user ID

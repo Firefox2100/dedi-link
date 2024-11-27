@@ -1,13 +1,14 @@
 from typing import TypeVar
 
 from dedi_link.etc.exceptions import UserNotImplemented
-from .base_model import BaseModel
+from .base_model import BaseModel, SyncDataInterface
 
 
+UserBT = TypeVar('UserBT', bound='UserB')
 UserT = TypeVar('UserT', bound='User')
 
 
-class User(BaseModel):
+class UserB(BaseModel):
     def __init__(self,
                  user_id: str,
                  ):
@@ -38,11 +39,13 @@ class User(BaseModel):
         }
 
     @classmethod
-    def from_dict(cls, payload: dict) -> 'User':
+    def from_dict(cls, payload: dict) -> UserBT:
         return cls(
             user_id=payload['userId'],
         )
 
+
+class User(UserB):
     @property
     def public_key(self) -> str:
         """

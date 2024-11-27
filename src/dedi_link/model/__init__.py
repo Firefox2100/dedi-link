@@ -1,4 +1,4 @@
-from .base_model import BaseModel, BaseModelT
+from .base_model import BaseModel, SyncDataInterface, SyncDataInterfaceT, BaseModelT
 from .config import DDLConfig
 from .data_index import DataIndex, DataIndexT
 from .network import Network, NetworkT
