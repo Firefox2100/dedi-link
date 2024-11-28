@@ -24,6 +24,10 @@ The library is intended to be a backbone of a data discovery system. The system 
 Class Diagram
 =============
 
+Below is the class diagram for the library structure:
+
 .. uml:: class_diagram.puml
     :caption: Class Diagram
 
+
+Please note that the class diagram only shows the synchronous part of the library. The asynchronous part is exactly the same in inheritance, structure, etc. except it uses async data interfaces and methods. Also, type hints, generic typing and polymorphism are used throughout the library to ensure type safety and ease of use, which are also not represented in the diagram.

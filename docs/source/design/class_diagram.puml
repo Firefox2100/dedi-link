@@ -1,4 +1,10 @@
 @startuml Class Diagram
+enum MappingType {
+    NO_MAPPING
+    STATIC
+    DYNAMIC
+}
+
 enum MessageType {
     AUTH_MESSAGE
     SYNC_MESSAGE
@@ -31,12 +37,154 @@ enum SyncTarget {
 }
 
 interface SyncDataInterface {
-    + {field} access_token() : str
+    + {field} {abstract} access_token() : str
 
-    + {static} load()
-    + {static} load_all()
-    + store()
-    + update(payload: dict)
-    + delete()
+    + {static} {abstract} load()
+    + {static} {abstract} load_all()
+    + {abstract} store()
+    + {abstract} update(payload: dict)
+    + {abstract} delete()
 }
+
+class BaseModel {
+    # {static} _child_mapping() : dict
+    + {static} {abstract} from_dict(payload: dict)
+    + {static} factory_from_id(payload: dict, id_var: enum)
+    + {static} factory(payload: dict)
+    + {abstract} to_dict() : dict
+}
+
+class DDLConfig {
+    + name : str
+    + description : str
+    + url : str
+    + allow_non_client_authenticated : bool
+    + auto_user_registration : bool
+    + anonymous_access : bool
+    + default_ttl : int
+    + optimal_record_percentage : float
+    + time_score_weight : float
+    + ema_factor : float
+}
+
+class DataIndex {
+    + __eq__(other: DataIndex) : bool
+    + __add__(other: DataIndex) : DataIndex
+    + {static} from_dict(payload: dict)
+    + to_dict() : dict
+}
+
+class NetworkB {
+    + {static} DATA_INDEX_CLASS : type[DataIndex]
+    + {static} NODE_CLASS : type[Node]
+    + network_id : str
+    + network_name : str
+    + description : str
+    + node_ids : list[str]
+    + visible : bool
+    + instance_id : str
+
+    + __eq__(other: NetworkB) : bool
+    + __hash__() : int
+    + {static} from_dict(payload: dict)
+    + to_dict() : dict
+}
+
+class Network {
+    + {field} nodes() : list[Node]
+    + {field} nodes_pending() : list[Node]
+    + {field} nodes_approved() : list[Node]
+    + {field} self_data_index() : DataIndex
+    + {field} network_data_index() : DataIndex
+    + {field} private_key() : str
+    + to_dict_with_index() : dict
+}
+
+class NodeB {
+    + {static} DATA_INDEX_CLASS : type[DataIndex]
+    + {static} USER_MAPPING_CLASS : type[UserMapping]
+
+    + node_id : str
+    + node_name : str
+    + url : str
+    + description : str
+    + client_id : str
+    + authentication_enabled : bool
+    + user_mapping : UserMapping
+    + public_key : str
+    + data_index : DataIndex
+    + score : float
+
+    + __eq__(other: NodeB) : bool
+    + __hash__() : int
+    + {static} from_dict(payload: dict)
+    + to_dict() : dict
+}
+
+class Node {
+    + get_user_key(user_id: str) : str
+}
+
+class UserB {
+    + user_id : str
+
+    + __eq__(other: UserB) : bool
+    + __hash__() : int
+    + {static} from_dict(payload: dict)
+    + to_dict() : dict
+}
+
+class User {
+    + {field} public_key() : str
+    + {field} private_key() : str
+}
+
+class UserMapping {
+    + mapping_type : MappingType
+    + static_id : str
+    + dynamic_mapping : dict[str, str]
+}
+
+class NetworkMessageB {
+    + {static} NETWORK_MESSAGE_HEADER_CLASS : type[NetworkMessageHeader]
+    + {static} NETWORK_CLASS : type[Network]
+    + message_type : MessageType
+    + network_id : str
+    + node_id : str
+    + message_id : str
+    + timestamp : int
+
+    + __eq__(other: NetworkMessageB) : bool
+    + __hash__() : int
+    # {static} _child_mapping() : dict
+    # {static} _sign_payload(private_pem: str, payload: dict) : str
+    + {static} from_dict(payload: dict)
+    + {static} factory(payload: dict)
+    + to_dict() : dict
+}
+
+class NetworkMessage {
+    + {field} signature() : str
+    + generate_headers() : dict
+}
+
+BaseModel <|-- DataIndex
+BaseModel <|-- NetworkB
+BaseModel <|-- NodeB
+BaseModel <|-- UserB
+BaseModel <|-- UserMapping
+BaseModel <|-- NetworkMessageB
+
+NetworkB <|-- Network
+SyncDataInterface <|-- Network
+NodeB <|-- Node
+SyncDataInterface <|-- Node
+UserB <|-- User
+SyncDataInterface <|-- User
+NetworkMessageB <|-- NetworkMessage
+SyncDataInterface <|-- NetworkMessage
+
+Network o-- Node
+UserMapping *-- MappingType
+NetworkMessageB *-- MessageType
 @enduml
