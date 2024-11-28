@@ -8,9 +8,10 @@ Decentralised Discovery Link is a project that implements a decentralised protoc
     This project is under active development. API may change without prior notice. Do NOT upgrade without reading the release notes first, especially between major versions.
 
 Contents
---------
+========
 
 .. toctree::
 
     about
     design/index
+    appendix/index
