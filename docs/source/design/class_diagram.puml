@@ -1,0 +1,42 @@
+@startuml Class Diagram
+enum MessageType {
+    AUTH_MESSAGE
+    SYNC_MESSAGE
+    DATA_MESSAGE
+    RELAY_MESSAGE
+}
+
+enum AuthMessageType {
+    REQUEST
+    INVITE
+    RESPONSE
+    JOIN
+    LEAVE
+    STATUS
+}
+
+enum AuthMessageStatus {
+    SENT
+    PENDING
+    ACCEPTED
+    REJECTED
+}
+
+enum SyncTarget {
+    NODE
+    USER
+    INSTANCE
+    FULL_SYNC
+    POLL
+}
+
+interface SyncDataInterface {
+    + {field} access_token() : str
+
+    + {static} load()
+    + {static} load_all()
+    + store()
+    + update(payload: dict)
+    + delete()
+}
+@enduml
