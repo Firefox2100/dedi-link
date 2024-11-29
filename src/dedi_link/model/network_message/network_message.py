@@ -1,9 +1,13 @@
+"""
+Network Message Base classes
+"""
+
 import uuid
 import time
 import json
 import base64
 from enum import Enum
-from typing import TypeVar, Type, Callable, Generic
+from typing import TypeVar, Type, Callable, Generic, Protocol, ClassVar
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives import hashes
@@ -21,7 +25,30 @@ NetworkMessageBT = TypeVar('NetworkMessageBT', bound='NetworkMessageB')
 NetworkMessageT = TypeVar('NetworkMessageT', bound='NetworkMessage')
 
 
+class SyncNetworkMessageBP(Protocol):
+    """
+    Protocol promises for the SyncNetworkMessageInterface
+    """
+    NETWORK_MESSAGE_HEADER_CLASS: ClassVar[Type[NetworkMessageHeader]]
+    NETWORK_CLASS: ClassVar[Type[Network]]
+
+    network_id: str
+    node_id: str
+
+    def to_dict(self) -> dict:
+        ...
+
+    def _sign_payload(self,
+                      private_pem: str,
+                      payload: str,
+                      ) -> str:
+        ...
+
+
 class NetworkMessageB(BaseModel, Generic[NetworkMessageHeaderT, NetworkT]):
+    """
+    Base class for a Network Message
+    """
     NETWORK_MESSAGE_HEADER_CLASS = NetworkMessageHeader
     NETWORK_CLASS = Network
 
@@ -34,11 +61,6 @@ class NetworkMessageB(BaseModel, Generic[NetworkMessageHeaderT, NetworkT]):
                  ):
         """
         Base model for a network message
-
-        A message is a self-contained unit of communication used in the protocol.
-        All communication between nodes is RESTful, so all messages need to state
-        clearly who it's from, who it's intended for, what it does, and have all
-        the data needed to perform the action.
 
         :param message_type: The type of message
         :param network_id: The network ID
@@ -74,7 +96,8 @@ class NetworkMessageB(BaseModel, Generic[NetworkMessageHeaderT, NetworkT]):
         ))
 
     @classmethod
-    def _child_mapping(cls) -> dict[Enum, tuple[Type[NetworkMessageT], Callable[[dict], Enum] | None]]:
+    def _child_mapping(cls
+                       ) -> dict[Enum, tuple[Type[NetworkMessageT], Callable[[dict], Enum] | None]]:
         from .network_auth_message import NetworkAuthMessage
         from .network_sync_message import NetworkSyncMessage
         from .network_data_message import NetworkDataMessage
@@ -82,10 +105,14 @@ class NetworkMessageB(BaseModel, Generic[NetworkMessageHeaderT, NetworkT]):
 
         return {
             MessageType.AUTH_MESSAGE: (
-            NetworkAuthMessage, lambda payload: AuthMessageType(payload['messageAttributes']['authType'])),
+                NetworkAuthMessage,
+                lambda payload: AuthMessageType(payload['messageAttributes']['authType'])
+            ),
             MessageType.SYNC_MESSAGE: (NetworkSyncMessage, None),
             MessageType.DATA_MESSAGE: (
-            NetworkDataMessage, lambda payload: DataMessageType(payload['messageAttributes']['dataType'])),
+                NetworkDataMessage,
+                lambda payload: DataMessageType(payload['messageAttributes']['dataType'])
+            ),
             MessageType.RELAY_MESSAGE: (NetworkRelayMessage, None),
         }
 
@@ -148,10 +175,10 @@ class NetworkMessageB(BaseModel, Generic[NetworkMessageHeaderT, NetworkT]):
         return base64.b64encode(signature).decode()
 
 
-class NetworkMessage(NetworkMessageB[NetworkMessageHeaderT, NetworkT],
-                     SyncDataInterface,
-                     Generic[NetworkMessageHeaderT, NetworkT]
-                     ):
+class SyncNetworkMessageInterface(SyncDataInterface,
+                                  SyncNetworkMessageBP,
+                                  Generic[NetworkMessageHeaderT, NetworkT]
+                                  ):
     @property
     def signature(self) -> str:
         """
@@ -185,3 +212,17 @@ class NetworkMessage(NetworkMessageB[NetworkMessageHeaderT, NetworkT],
             server_signature=server_signature,
             access_token=access_token,
         )
+
+
+class NetworkMessage(NetworkMessageB[NetworkMessageHeaderT, NetworkT],
+                     SyncNetworkMessageInterface[NetworkMessageHeaderT, NetworkT],
+                     Generic[NetworkMessageHeaderT, NetworkT]
+                     ):
+    """
+    A generic network message structure
+
+    A message is a self-contained unit of communication used in the protocol.
+    All communication between nodes is RESTful, so all messages need to state
+    clearly who it's from, who it's intended for, what it does, and have all
+    the data needed to perform the action.
+    """

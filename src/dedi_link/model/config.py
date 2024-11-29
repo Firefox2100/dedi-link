@@ -1,7 +1,17 @@
+"""
+Decentralised Discovery Link configuration object
+"""
+
 import importlib.resources as pkg_resources
 
 
 class DDLConfig:
+    """
+    Configuration for a Decentralised Discovery Link node
+
+    This configuration is used to initialise the service, and
+    for it to know about itself and how to operate.
+    """
     def __init__(self,
                  name: str = 'Decentralised Discovery Link',
                  description: str = 'A decentralised discovery service',

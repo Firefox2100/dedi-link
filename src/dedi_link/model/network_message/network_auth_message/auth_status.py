@@ -4,15 +4,19 @@ from dedi_link.etc.consts import MESSAGE_ATTRIBUTES
 from dedi_link.etc.enums import AuthMessageType, AuthMessageStatus
 from ...network import NetworkT
 from ..network_message_header import NetworkMessageHeaderT
-from .network_auth_message import NetworkAuthMessage
+from .network_auth_message import NetworkAuthMessageB, NetworkAuthMessage
 
 
+AuthStatusBT = TypeVar('AuthStatusBT', bound='AuthStatusB')
 AuthStatusT = TypeVar('AuthStatusT', bound='AuthStatus')
 
 
-class AuthStatus(NetworkAuthMessage[NetworkMessageHeaderT, NetworkT],
+class AuthStatusB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT],
                  Generic[NetworkMessageHeaderT, NetworkT]
                  ):
+    """
+    Base model for Auth Status
+    """
     def __init__(self,
                  message_id: str,
                  network_id: str,
@@ -20,6 +24,18 @@ class AuthStatus(NetworkAuthMessage[NetworkMessageHeaderT, NetworkT],
                  status: AuthMessageStatus | None = None,
                  timestamp: int | None = None,
                  ):
+        """
+        Auth Status Message
+
+        This message is used to check for, and notify of, the status of an
+        authorisation request.
+
+        :param message_id: The message ID
+        :param network_id: The network ID
+        :param node_id: The node ID
+        :param status: The status of the request. None when requesting status
+        :param timestamp: The timestamp in seconds since epoch
+        """
         super().__init__(
             network_id=network_id,
             node_id=node_id,
@@ -31,7 +47,7 @@ class AuthStatus(NetworkAuthMessage[NetworkMessageHeaderT, NetworkT],
         self.status = status
 
     def __eq__(self, other):
-        if not isinstance(other, AuthStatus):
+        if not isinstance(other, AuthStatusB):
             return NotImplemented
 
         return all([
@@ -54,7 +70,7 @@ class AuthStatus(NetworkAuthMessage[NetworkMessageHeaderT, NetworkT],
         return payload
 
     @classmethod
-    def from_dict(cls, payload: dict) -> 'AuthStatus':
+    def from_dict(cls, payload: dict) -> AuthStatusBT:
         status = None
 
         if 'status' in payload[MESSAGE_ATTRIBUTES]:
@@ -67,3 +83,15 @@ class AuthStatus(NetworkAuthMessage[NetworkMessageHeaderT, NetworkT],
             status=status,
             timestamp=payload['timestamp'],
         )
+
+
+class AuthStatus(AuthStatusB[NetworkMessageHeaderT, NetworkT],
+                 NetworkAuthMessage[NetworkMessageHeaderT, NetworkT],
+                 Generic[NetworkMessageHeaderT, NetworkT]
+                 ):
+    """
+    Auth Status Message
+
+    This message is used to check for, and notify of, the status of an
+    authorisation request.
+    """

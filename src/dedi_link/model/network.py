@@ -1,3 +1,7 @@
+"""
+Network model.
+"""
+
 import uuid
 from typing import Generic, TypeVar
 
@@ -12,6 +16,9 @@ NetworkT = TypeVar('NetworkT', bound='Network')
 
 
 class NetworkB(BaseModel, Generic[DataIndexT, NodeT]):
+    """
+    A base model for a network.
+    """
     DATA_INDEX_CLASS = DataIndex
     NODE_CLASS = Node
 
@@ -95,6 +102,12 @@ class NetworkB(BaseModel, Generic[DataIndexT, NodeT]):
 
 
 class Network(NetworkB[DataIndexT, NodeT], SyncDataInterface, Generic[DataIndexT, NodeT]):
+    """
+    A network that contains nodes which agreed to share data among each other.
+
+    A network is a logical abstraction of a group of nodes that accepts (partially)
+    others credentials and allows access to their data.
+    """
     def to_dict_with_index(self) -> dict:
         """
         Convert the network object to a dictionary, with index included.

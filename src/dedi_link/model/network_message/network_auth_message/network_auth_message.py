@@ -5,16 +5,17 @@ from typing import Type, TypeVar, Callable, Generic
 from dedi_link.etc.consts import MESSAGE_ATTRIBUTES
 from dedi_link.etc.enums import MessageType, AuthMessageType
 from ...network import NetworkT
-from ..network_message import NetworkMessage
+from ..network_message import NetworkMessageB, NetworkMessage
 from ..network_message_header import NetworkMessageHeaderT
+
 
 
 NetworkAuthMessageT = TypeVar('NetworkAuthMessageT', bound='NetworkAuthMessage')
 
 
-class NetworkAuthMessage(NetworkMessage[NetworkMessageHeaderT, NetworkT],
-                         Generic[NetworkMessageHeaderT, NetworkT]
-                         ):
+class NetworkAuthMessageB(NetworkMessageB[NetworkMessageHeaderT, NetworkT],
+                          Generic[NetworkMessageHeaderT, NetworkT]
+                          ):
     def __init__(self,
                  network_id: str,
                  node_id: str,
@@ -45,7 +46,7 @@ class NetworkAuthMessage(NetworkMessage[NetworkMessageHeaderT, NetworkT],
         self.auth_type = auth_type
 
     def __eq__(self, other):
-        if not isinstance(other, NetworkAuthMessage):
+        if not isinstance(other, NetworkAuthMessageB):
             return NotImplemented
 
         return all([
@@ -88,3 +89,10 @@ class NetworkAuthMessage(NetworkMessage[NetworkMessageHeaderT, NetworkT],
         payload[MESSAGE_ATTRIBUTES]['authType'] = self.auth_type.value
 
         return payload
+
+
+class NetworkAuthMessage(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT],
+                         NetworkMessage[NetworkMessageHeaderT, NetworkT],
+                         Generic[NetworkMessageHeaderT, NetworkT]
+                         ):
+    pass

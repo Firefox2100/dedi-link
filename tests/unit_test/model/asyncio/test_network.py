@@ -134,3 +134,8 @@ class TestNetwork:
                 mock_index.return_value = async_wrapper(DataIndex())
 
                 assert isinstance(await mock_network_1.network_data_index, DataIndex)
+
+    @pytest.mark.asyncio
+    async def test_private_key(self, mock_network_1):
+        with pytest.raises(NetworkNotImplemented):
+            _ = await mock_network_1.private_key

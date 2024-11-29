@@ -1,3 +1,7 @@
+"""
+Node model
+"""
+
 from typing import Generic, TypeVar
 
 from dedi_link.etc.enums import MappingType
@@ -12,6 +16,9 @@ NodeT = TypeVar('NodeT', bound='Node')
 
 
 class NodeB(BaseModel, Generic[DataIndexT, UserMappingT]):
+    """
+    Base model for a Node
+    """
     DATA_INDEX_CLASS = DataIndex
     USER_MAPPING_CLASS = UserMapping
 
@@ -38,9 +45,9 @@ class NodeB(BaseModel, Generic[DataIndexT, UserMappingT]):
         :param url: The URL of the node
         :param description: A description of the node
         :param client_id: The client ID of the node
-        :param authentication_enabled: Whether the requests coming from this node requires authentication.
-                                       If disabled, all users will be mapped to the same static user with the
-                                       same permissions.
+        :param authentication_enabled: Whether the requests coming from this node
+        requires authentication. If disabled, all users will be mapped to the
+        same static user with the same permissions.
         :param user_mapping: The user mapping for this node
         :param public_key: The public key of the node
         :param data_index: The data index of the node
@@ -99,12 +106,6 @@ class NodeB(BaseModel, Generic[DataIndexT, UserMappingT]):
         )
 
     def to_dict(self, key=False) -> dict:
-        """
-        Serialise the Node object to a dictionary
-
-        :param key: Whether to include the public key in the payload
-        :return: The serialised Node object
-        """
         payload = {
             'nodeId': self.node_id,
             'nodeName': self.node_name,
@@ -115,7 +116,8 @@ class NodeB(BaseModel, Generic[DataIndexT, UserMappingT]):
 
         if self.authentication_enabled is not None:
             payload['authenticationEnabled'] = self.authentication_enabled
-        if self.user_mapping is not None and self.user_mapping.mapping_type != MappingType.NO_MAPPING:
+        if (self.user_mapping is not None
+                and self.user_mapping.mapping_type != MappingType.NO_MAPPING):
             payload['userMapping'] = self.user_mapping.to_dict()
         if self.public_key is not None and key:
             payload['publicKey'] = self.public_key
@@ -131,6 +133,12 @@ class Node(NodeB[DataIndexT, UserMappingT],
            SyncDataInterface,
            Generic[DataIndexT, UserMappingT]
            ):
+    """
+    A node in a network
+
+    A Node object represents a node in the network, a basic
+    unit of operation and communication.
+    """
     def get_user_key(self, user_id: str) -> str:
         """
         Get the user key for the given user ID

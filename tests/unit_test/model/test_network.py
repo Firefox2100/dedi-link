@@ -106,3 +106,7 @@ class TestNetwork:
                 mock_index.return_value = DataIndex()
 
                 assert isinstance(mock_network_1.network_data_index, DataIndex)
+
+    def test_private_key(self, mock_network_1):
+        with pytest.raises(NetworkNotImplemented):
+            _ = mock_network_1.private_key

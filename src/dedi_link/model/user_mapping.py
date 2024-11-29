@@ -1,3 +1,13 @@
+"""
+User Mapping mechanism model
+
+User mapping refers to the procedure of "virtually" changing the
+user ID into a different one based on a set of rules. This is
+used to accommodate different authentication system setup, where
+one instance may not be able to correctly accept the credentials
+from another one.
+"""
+
 from typing import TypeVar
 from deepdiff import DeepDiff
 
@@ -9,6 +19,14 @@ UserMappingT = TypeVar('UserMappingT', bound='UserMapping')
 
 
 class UserMapping(BaseModel):
+    """
+    A class controlling how user IDs are mapped to other user IDs.
+
+    User ID mapping is implemented in the case where incoming ID (for
+    example, from a different IdP) does not correspond directly to the
+    IDs used in this system, and mapping is required; or if there are
+    special users like "anonymous" or "service" that are local accounts.
+    """
     def __init__(self,
                  mapping_type: MappingType = MappingType.NO_MAPPING,
                  static_id: str = None,

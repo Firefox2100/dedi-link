@@ -1,3 +1,7 @@
+"""
+User model.
+"""
+
 from typing import TypeVar
 
 from dedi_link.etc.exceptions import UserNotImplemented
@@ -9,6 +13,9 @@ UserT = TypeVar('UserT', bound='User')
 
 
 class UserB(BaseModel):
+    """
+    The base model for a User
+    """
     def __init__(self,
                  user_id: str,
                  ):
@@ -45,7 +52,13 @@ class UserB(BaseModel):
         )
 
 
-class User(UserB):
+class User(UserB, SyncDataInterface):
+    """
+    The basic user model that is used for authentication and authorisation only.
+
+    In implementation of this library this likely will be extended to include more
+    information about the user, like email, name, etc.
+    """
     @property
     def public_key(self) -> str:
         """

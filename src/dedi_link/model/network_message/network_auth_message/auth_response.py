@@ -5,15 +5,19 @@ from dedi_link.etc.enums import AuthMessageType
 from ...node import Node, NodeT
 from ...network import NetworkT
 from ..network_message_header import NetworkMessageHeaderT
-from .network_auth_message import NetworkAuthMessage
+from .network_auth_message import NetworkAuthMessageB, NetworkAuthMessage
 
 
+AuthResponseBT = TypeVar('AuthResponseBT', bound='AuthResponseB')
 AuthResponseT = TypeVar('AuthResponseT', bound='AuthResponse')
 
 
-class AuthResponse(NetworkAuthMessage[NetworkMessageHeaderT, NetworkT],
-                   Generic[NetworkMessageHeaderT, NetworkT, NodeT]
-                   ):
+class AuthResponseB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT],
+                    Generic[NetworkMessageHeaderT, NetworkT, NodeT]
+                    ):
+    """
+    The base model for Auth Response
+    """
     NODE_CLASS = Node
 
     def __init__(self,
@@ -66,7 +70,7 @@ class AuthResponse(NetworkAuthMessage[NetworkMessageHeaderT, NetworkT],
                     raise ValueError('Network ID must match the Network object')
 
     def __eq__(self, other: 'AuthResponse'):
-        if not isinstance(other, AuthResponse):
+        if not isinstance(other, AuthResponseB):
             return NotImplemented
 
         self_network = self.network
@@ -107,7 +111,7 @@ class AuthResponse(NetworkAuthMessage[NetworkMessageHeaderT, NetworkT],
         return payload
 
     @classmethod
-    def from_dict(cls, payload: dict) -> 'AuthResponse':
+    def from_dict(cls, payload: dict) -> AuthResponseBT:
         node = None
         network = None
 
@@ -127,3 +131,17 @@ class AuthResponse(NetworkAuthMessage[NetworkMessageHeaderT, NetworkT],
             timestamp=payload['timestamp'],
             network=network,
         )
+
+
+class AuthResponse(AuthResponseB[NetworkMessageHeaderT, NetworkT, NodeT],
+                   NetworkAuthMessage[NetworkMessageHeaderT, NetworkT],
+                   Generic[NetworkMessageHeaderT, NetworkT, NodeT]
+                   ):
+    """
+    Network Authorisation Response Message
+
+    This message is used to respond to a previous request or invitation.
+    It should carry information the counterparty does not know. For example,
+    if the previous message is a request, then the response should carry the
+    network information.
+    """

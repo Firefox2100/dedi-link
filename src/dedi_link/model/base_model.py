@@ -1,3 +1,7 @@
+"""
+The base models of all data models used in the library
+"""
+
 from enum import Enum
 from typing import Type, TypeVar, Callable
 
@@ -12,7 +16,8 @@ class SyncDataInterface:
     """
     A synchronous interface for data-related operations.
 
-    This interface should be implemented by all classes that need to perform data-related operations.
+    This interface should be implemented by all classes that
+    need to perform data-related operations.
     """
 
     @property
@@ -23,7 +28,9 @@ class SyncDataInterface:
         This is a property to allow for lazy loading of the access token
         :return: The access token
         """
-        raise BaseModelNotImplemented('access_token property has to be implemented by the child class')
+        raise BaseModelNotImplemented(
+            'access_token property has to be implemented by the child class'
+        )
 
     @classmethod
     def load(cls: Type[BaseModelT], *args, **kwargs) -> BaseModelT:
@@ -34,7 +41,9 @@ class SyncDataInterface:
         :param kwargs: Named arguments
         :return: A single model instance
         """
-        raise BaseModelNotImplemented('load method has to be implemented by the child class')
+        raise BaseModelNotImplemented(
+            'load method has to be implemented by the child class'
+        )
 
     @classmethod
     def load_all(cls: Type[BaseModelT], *args, **kwargs) -> list[BaseModelT]:
@@ -47,7 +56,9 @@ class SyncDataInterface:
         :param kwargs: Named arguments
         :return: A list of model instances
         """
-        raise BaseModelNotImplemented('load_all method has to be implemented by the child class')
+        raise BaseModelNotImplemented(
+            'load_all method has to be implemented by the child class'
+        )
 
     def store(self, *args, **kwargs):
         """
@@ -57,17 +68,22 @@ class SyncDataInterface:
         :param kwargs: Named arguments
         :return:
         """
-        raise BaseModelNotImplemented('store method has to be implemented by the child class')
+        raise BaseModelNotImplemented(
+            'store method has to be implemented by the child class'
+        )
 
     def update(self, payload: dict):
         """
         Update the instance represented resource in the database
 
-        This method should implement check for the payload to ensure unmutatable fields are not updated
+        This method should implement check for the payload to ensure
+        unmutatable fields are not updated
         :param payload: The dictionary containing the new values
         :return: None
         """
-        raise BaseModelNotImplemented('update method has to be implemented by the child class')
+        raise BaseModelNotImplemented(
+            'update method has to be implemented by the child class'
+        )
 
     def delete(self, *args, **kwargs):
         """
@@ -77,7 +93,9 @@ class SyncDataInterface:
         :param kwargs: Named arguments
         :return: None
         """
-        raise BaseModelNotImplemented('delete method has to be implemented by the child class')
+        raise BaseModelNotImplemented(
+            'delete method has to be implemented by the child class'
+        )
 
 
 class BaseModel:
@@ -105,7 +123,9 @@ class BaseModel:
 
         :return: A dictionary representation of the instance
         """
-        raise BaseModelNotImplemented('to_dict method has to be implemented by the child class')
+        raise BaseModelNotImplemented(
+            'to_dict method has to be implemented by the child class'
+        )
 
     @classmethod
     def from_dict(cls: Type[BaseModelT], payload: dict) -> BaseModelT:
@@ -115,7 +135,9 @@ class BaseModel:
         :param payload: The data dictionary containing the instance data
         :return: An instance of the model
         """
-        raise BaseModelNotImplemented('from_dict method has to be implemented by the child class')
+        raise BaseModelNotImplemented(
+            'from_dict method has to be implemented by the child class'
+        )
 
     @classmethod
     def factory_from_id(cls: Type[BaseModelT], payload: dict, id_var: Enum):
@@ -140,10 +162,10 @@ class BaseModel:
         if mapping_target[1] is None:
             # Basic mapping, create the object by calling the from_dict method
             return mapping_target[0].from_dict(payload)
-        else:
-            # A deeper mapping function provided, get the new id_var and call factory again
-            new_id_var = mapping_target[1](payload)
-            return mapping_target[0].factory_from_id(payload, new_id_var)
+
+        # A deeper mapping function provided, get the new id_var and call factory again
+        new_id_var = mapping_target[1](payload)
+        return mapping_target[0].factory_from_id(payload, new_id_var)
 
     @classmethod
     def factory(cls, payload: dict):

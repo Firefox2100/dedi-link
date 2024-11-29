@@ -6,15 +6,16 @@ from dedi_link.etc.enums import AuthMessageType
 from ...node import Node, NodeT
 from ...network import NetworkT
 from ..network_message_header import NetworkMessageHeaderT
-from .network_auth_message import NetworkAuthMessage
+from .network_auth_message import NetworkAuthMessageB, NetworkAuthMessage
 
 
+AuthJoinBT = TypeVar('AuthJoinBT', bound='AuthJoinB')
 AuthJoinT = TypeVar('AuthJoinT', bound='AuthJoin')
 
 
-class AuthJoin(NetworkAuthMessage[NetworkMessageHeaderT, NetworkT],
-               Generic[NetworkMessageHeaderT, NetworkT, NodeT]
-               ):
+class AuthJoinB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT],
+                Generic[NetworkMessageHeaderT, NetworkT, NodeT]
+                ):
     NODE_CLASS = Node
 
     def __init__(self,
@@ -25,12 +26,7 @@ class AuthJoin(NetworkAuthMessage[NetworkMessageHeaderT, NetworkT],
                  timestamp: int | None = None,
                  ):
         """
-        Network Authorization Join Message
-
-        This message notifies the other nodes within the network about
-        a new node joining. The node information is only for the others
-        to record it initially, and they will synchronise with the new
-        node directly.
+        Base class for Network Authorization Join Message
 
         :param network_id: The network ID
         :param node_id: The node ID
@@ -70,7 +66,7 @@ class AuthJoin(NetworkAuthMessage[NetworkMessageHeaderT, NetworkT],
         return payload
 
     @classmethod
-    def from_dict(cls, payload: dict) -> 'AuthJoin':
+    def from_dict(cls, payload: dict) -> AuthJoinBT:
         return cls(
             message_id=payload[MESSAGE_ATTRIBUTES]['messageId'],
             network_id=payload[MESSAGE_ATTRIBUTES]['networkId'],
@@ -78,3 +74,17 @@ class AuthJoin(NetworkAuthMessage[NetworkMessageHeaderT, NetworkT],
             timestamp=payload['timestamp'],
             node=cls.NODE_CLASS.from_dict(payload[MESSAGE_DATA]['node']),
         )
+
+
+class AuthJoin(AuthJoinB[NetworkMessageHeaderT, NetworkT, NodeT],
+               NetworkAuthMessage[NetworkMessageHeaderT, NetworkT],
+               Generic[NetworkMessageHeaderT, NetworkT, NodeT]
+               ):
+    """
+    Network Authorization Join Message
+
+    This message notifies the other nodes within the network about
+    a new node joining. The node information is only for the others
+    to record it initially, and they will synchronise with the new
+    node directly.
+    """

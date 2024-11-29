@@ -1,21 +1,36 @@
 import json
-from typing import TypeVar, Generic
+from typing import TypeVar, Generic, Protocol, ClassVar, Type
 
 from ..base_model import AsyncDataInterface
 from ..network import Network, NetworkT
-from ...network_message.network_message_header import NetworkMessageHeaderT
+from ...network_message.network_message_header import NetworkMessageHeader, NetworkMessageHeaderT
 from ...network_message.network_message import NetworkMessageB
 
 
 NetworkMessageT = TypeVar('NetworkMessageT', bound='NetworkMessage')
 
 
-class NetworkMessage(NetworkMessageB[NetworkMessageHeaderT, NetworkT],
-                     AsyncDataInterface,
-                     Generic[NetworkMessageHeaderT, NetworkT],
-                     ):
-    NETWORK_CLASS = Network
+class AsyncNetworkMessageBP(Protocol):
+    NETWORK_MESSAGE_HEADER_CLASS: ClassVar[Type[NetworkMessageHeader]]
+    NETWORK_CLASS: ClassVar[Type[Network]]
 
+    network_id: str
+    node_id: str
+
+    def to_dict(self) -> dict:
+        ...
+
+    def _sign_payload(self,
+                      private_pem: str,
+                      payload: str,
+                      ) -> str:
+        ...
+
+
+class AsyncNetworkMessageInterface(AsyncDataInterface,
+                                  AsyncNetworkMessageBP,
+                                  Generic[NetworkMessageHeaderT, NetworkT]
+                                  ):
     @property
     async def signature(self) -> str:
         """
@@ -30,8 +45,8 @@ class NetworkMessage(NetworkMessageB[NetworkMessageHeaderT, NetworkT],
         return self._sign_payload(private_pem, payload)
 
     async def generate_headers(self,
-                         access_token: str | None = None,
-                         ) -> NetworkMessageHeaderT:
+                               access_token: str | None = None,
+                               ) -> NetworkMessageHeaderT:
         """
         Generate the headers for the message
 
@@ -49,3 +64,10 @@ class NetworkMessage(NetworkMessageB[NetworkMessageHeaderT, NetworkT],
             server_signature=server_signature,
             access_token=access_token,
         )
+
+
+class NetworkMessage(NetworkMessageB[NetworkMessageHeaderT, NetworkT],
+                     AsyncNetworkMessageInterface,
+                     Generic[NetworkMessageHeaderT, NetworkT],
+                     ):
+    NETWORK_CLASS = Network

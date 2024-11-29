@@ -1,3 +1,7 @@
+"""
+A placeholder class for data index.
+"""
+
 from typing import TypeVar
 
 from .base_model import BaseModel

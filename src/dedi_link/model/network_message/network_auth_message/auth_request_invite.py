@@ -10,15 +10,19 @@ from ...node import Node, NodeT
 from ...network import Network, NetworkT
 from ...config import DDLConfig
 from ..network_message_header import NetworkMessageHeaderT
-from .network_auth_message import NetworkAuthMessage
+from .network_auth_message import NetworkAuthMessageB, NetworkAuthMessage
 
 
+AuthRequestInviteBT = TypeVar('AuthRequestInviteBT', bound='AuthRequestInviteB')
 AuthRequestInviteT = TypeVar('AuthRequestInviteT', bound='AuthRequestInvite')
 
 
-class AuthRequestInvite(NetworkAuthMessage[NetworkMessageHeaderT, NetworkT],
-                        Generic[NetworkMessageHeaderT, NetworkT, NodeT]
-                        ):
+class AuthRequestInviteB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT],
+                         Generic[NetworkMessageHeaderT, NetworkT, NodeT]
+                         ):
+    """
+    Base model for Network Authorization Request or Invite Message
+    """
     NODE_CLASS = Node
     NETWORK_CLASS = Network
 
@@ -78,7 +82,7 @@ class AuthRequestInvite(NetworkAuthMessage[NetworkMessageHeaderT, NetworkT],
             raise ValueError('Network ID mismatch')
 
     def __eq__(self, other):
-        if not isinstance(other, AuthRequestInvite):
+        if not isinstance(other, AuthRequestInviteB):
             return NotImplemented
 
         if DeepDiff(
@@ -141,9 +145,12 @@ class AuthRequestInvite(NetworkAuthMessage[NetworkMessageHeaderT, NetworkT],
         return payload
 
     @classmethod
-    def from_dict(cls, payload: dict) -> 'AuthRequestInvite':
-        network = cls.NETWORK_CLASS.from_dict(payload[MESSAGE_DATA]['network']) if 'network' in payload[
+    def from_dict(cls, payload: dict) -> AuthRequestInviteBT:
+        network = cls.NETWORK_CLASS.from_dict(
+            payload[MESSAGE_DATA]['network']
+        ) if 'network' in payload[
             MESSAGE_DATA] else None
+
         if network:
             network.node_ids = []
 
@@ -184,3 +191,15 @@ class AuthRequestInvite(NetworkAuthMessage[NetworkMessageHeaderT, NetworkT],
         self.challenge = challenge
 
         return challenge
+
+
+class AuthRequestInvite(AuthRequestInviteB[NetworkMessageHeaderT, NetworkT, NodeT],
+                        NetworkAuthMessage[NetworkMessageHeaderT, NetworkT],
+                        Generic[NetworkMessageHeaderT, NetworkT, NodeT]
+                        ):
+    """
+    Network Authorization Request or Invite Message
+
+    This message is for requesting to join a network by asking a node,
+    or to invite a node to join a network that this node is in.
+    """
