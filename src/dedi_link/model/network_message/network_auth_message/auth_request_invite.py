@@ -7,7 +7,7 @@ from typing import TypeVar, Generic
 from dedi_link.etc.consts import MESSAGE_ATTRIBUTES, MESSAGE_DATA
 from dedi_link.etc.enums import AuthMessageType, AuthMessageStatus
 from ...node import Node, NodeT
-from ...network import Network, NetworkT
+from ...network import NetworkT
 from ...config import DDLConfig
 from ..network_message_header import NetworkMessageHeaderT
 from .network_auth_message import NetworkAuthMessageB, NetworkAuthMessage
@@ -24,7 +24,6 @@ class AuthRequestInviteB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT],
     Base model for Network Authorization Request or Invite Message
     """
     NODE_CLASS = Node
-    NETWORK_CLASS = Network
 
     def __init__(self,
                  network_id: str,
