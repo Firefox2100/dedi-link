@@ -5,16 +5,20 @@ from dedi_link.etc.consts import MESSAGE_ATTRIBUTES, MESSAGE_DATA
 from dedi_link.etc.enums import SyncTarget, MessageType
 from ..network import NetworkT
 from ..node import Node, NodeT
-from .network_message import NetworkMessage
+from .network_message import NetworkMessageB, NetworkMessage
 from .network_message_header import NetworkMessageHeaderT
 
 
+NetworkSyncMessageBT = TypeVar('NetworkSyncMessageBT', bound='NetworkSyncMessageB')
 NetworkSyncMessageT = TypeVar('NetworkSyncMessageT', bound='NetworkSyncMessage')
 
 
-class NetworkSyncMessage(NetworkMessage[NetworkMessageHeaderT, NetworkT],
-                         Generic[NetworkMessageHeaderT, NetworkT, NodeT],
-                         ):
+class NetworkSyncMessageB(NetworkMessageB[NetworkMessageHeaderT, NetworkT],
+                          Generic[NetworkMessageHeaderT, NetworkT, NodeT],
+                          ):
+    """
+    Base class for Network Synchronisation Messages
+    """
     NODE_CLASS = Node
 
     def __init__(self,
@@ -26,7 +30,7 @@ class NetworkSyncMessage(NetworkMessage[NetworkMessageHeaderT, NetworkT],
                  timestamp: int | None = None,
                  ):
         """
-        Network Synchronization Message
+        Network Synchronisation Message
 
         These messages are used to synchronise the state of nodes within a network.
 
@@ -48,8 +52,8 @@ class NetworkSyncMessage(NetworkMessage[NetworkMessageHeaderT, NetworkT],
         self.target_type = target_type
         self.data = data
 
-    def __eq__(self, other: 'NetworkSyncMessage'):
-        if not isinstance(other, NetworkSyncMessage):
+    def __eq__(self, other: NetworkSyncMessageBT):
+        if not isinstance(other, NetworkSyncMessageB):
             return NotImplemented
 
         return all([
@@ -91,7 +95,7 @@ class NetworkSyncMessage(NetworkMessage[NetworkMessageHeaderT, NetworkT],
         return payload
 
     @classmethod
-    def from_dict(cls, payload: dict) -> 'NetworkSyncMessage':
+    def from_dict(cls, payload: dict) -> NetworkSyncMessageBT:
         if MESSAGE_DATA in payload:
             message_data = []
 
@@ -113,3 +117,14 @@ class NetworkSyncMessage(NetworkMessage[NetworkMessageHeaderT, NetworkT],
             message_id=payload[MESSAGE_ATTRIBUTES]['messageId'],
             timestamp=payload['timestamp'],
         )
+
+
+class NetworkSyncMessage(NetworkSyncMessageB[NetworkMessageHeaderT, NetworkT, NodeT],
+                         NetworkMessage[NetworkMessageHeaderT, NetworkT],
+                         Generic[NetworkMessageHeaderT, NetworkT, NodeT],
+                         ):
+    """
+    Network Synchronisation Message
+
+    These messages are used to synchronise the state of nodes within a network.
+    """

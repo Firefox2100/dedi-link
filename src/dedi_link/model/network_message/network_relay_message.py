@@ -1,24 +1,27 @@
-import uuid
 from copy import deepcopy
-from typing import TypeVar
+from typing import TypeVar, Generic
 
 from dedi_link.etc.consts import MESSAGE_DATA, MESSAGE_ATTRIBUTES
 from dedi_link.etc.enums import MessageType
 from dedi_link.etc.exceptions import NetworkRelayMessageEnvelopeTooDeep, NetworkRelayMessageNotAlive
-from .network_message import NetworkMessage
-from .network_message_header import NetworkMessageHeader
+from ..network import NetworkT
+from .network_message import NetworkMessageB, NetworkMessage
+from .network_message_header import NetworkMessageHeader, NetworkMessageHeaderT
 
 
+NetworkRelayMessageBT = TypeVar('NetworkRelayMessageBT', bound='NetworkRelayMessageB')
 NetworkRelayMessageT = TypeVar('NetworkRelayMessageT', bound='NetworkRelayMessage')
 
 
-class NetworkRelayMessage(NetworkMessage):
+class NetworkRelayMessageB(NetworkMessageB[NetworkMessageHeaderT, NetworkT],
+                           Generic[NetworkMessageHeaderT, NetworkT]
+                           ):
     """
-    Network Relay Message
-
-    These messages are used to relay messages between nodes in a network.
+    Base class for Network Relay Messages
     """
     def __init__(self,
+                 network_id: str,
+                 node_id: str,
                  sender_id: str,
                  recipient_ids: list[str],
                  headers: NetworkMessageHeader,
@@ -27,9 +30,27 @@ class NetworkRelayMessage(NetworkMessage):
                  message_id: str = None,
                  timestamp: int | None = None,
                  ):
+        """
+        Network Relay Message
+
+        These messages are used to relay messages between nodes in a network.
+
+        :param network_id: The network ID
+        :param node_id: The node ID
+        :param sender_id: The sender ID
+        :param recipient_ids: The recipient IDs
+        :param headers: The message headers
+        :param message: The message to relay
+        :param ttl: The time-to-live of the relay message, in hops.
+                    Direct delivery counts as one hop.
+        :param message_id: The message ID
+        :param timestamp: The timestamp in seconds since epoch
+        """
         super().__init__(
             message_type=MessageType.RELAY_MESSAGE,
-            message_id=message_id or str(uuid.uuid4()),
+            network_id=network_id,
+            node_id=node_id,
+            message_id=message_id,
             timestamp=timestamp,
         )
 
@@ -45,8 +66,8 @@ class NetworkRelayMessage(NetworkMessage):
         if ttl <= 0:
             raise NetworkRelayMessageNotAlive('Relay message TTL must be greater than 0')
 
-    def __eq__(self, other: 'NetworkRelayMessage'):
-        if not isinstance(other, self.__class__):
+    def __eq__(self, other: NetworkRelayMessageBT):
+        if not isinstance(other, NetworkRelayMessageB):
             return NotImplemented
 
         return all([
@@ -75,8 +96,8 @@ class NetworkRelayMessage(NetworkMessage):
         payload = super().to_dict()
 
         payload[MESSAGE_ATTRIBUTES].update({
-            'senderID': self.sender_id,
-            'recipientIDs': self.recipient_ids,
+            'senderId': self.sender_id,
+            'recipientIds': self.recipient_ids,
             'ttl': self.ttl,
         })
 
@@ -88,15 +109,26 @@ class NetworkRelayMessage(NetworkMessage):
         return payload
 
     @classmethod
-    def from_dict(cls, payload: dict) -> 'NetworkRelayMessage':
-        enveloped_message_type = MessageType(payload[MESSAGE_DATA]['message']['messageType'])
-
+    def from_dict(cls, payload: dict) -> NetworkRelayMessageBT:
         return cls(
-            message_id=payload[MESSAGE_ATTRIBUTES]['messageID'],
-            sender_id=payload[MESSAGE_ATTRIBUTES]['senderID'],
-            recipient_ids=payload[MESSAGE_ATTRIBUTES]['recipientIDs'],
+            message_id=payload[MESSAGE_ATTRIBUTES]['messageId'],
+            network_id=payload[MESSAGE_ATTRIBUTES]['networkId'],
+            node_id=payload[MESSAGE_ATTRIBUTES]['nodeId'],
+            sender_id=payload[MESSAGE_ATTRIBUTES]['senderId'],
+            recipient_ids=payload[MESSAGE_ATTRIBUTES]['recipientIds'],
             timestamp=payload['timestamp'],
             ttl=payload[MESSAGE_ATTRIBUTES]['ttl'],
             headers=NetworkMessageHeader.from_headers(payload[MESSAGE_DATA]['headers']),
-            message=NetworkMessage.factory(payload[MESSAGE_DATA]['message'], enveloped_message_type),
+            message=NetworkMessage.factory(payload[MESSAGE_DATA]['message']),
         )
+
+
+class NetworkRelayMessage(NetworkRelayMessageB[NetworkMessageHeaderT, NetworkT],
+                          NetworkMessage[NetworkMessageHeaderT, NetworkT],
+                          Generic[NetworkMessageHeaderT, NetworkT],
+                          ):
+    """
+    Network Relay Message
+
+    These messages are used to relay messages between nodes in a network.
+    """
