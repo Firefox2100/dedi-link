@@ -9,18 +9,21 @@ from dedi_link.etc.exceptions import NetworkNotImplemented
 from .base_model import BaseModel, SyncDataInterface
 from .data_index import DataIndex, DataIndexT
 from .node import Node, NodeT
+from .user_mapping import UserMappingT
 
 
 NetworkBT = TypeVar('NetworkBT', bound='NetworkB')
 NetworkT = TypeVar('NetworkT', bound='Network')
 
 
-class NetworkB(BaseModel, Generic[DataIndexT, NodeT]):
+class NetworkB(BaseModel,
+               Generic[DataIndexT, UserMappingT, NodeT]
+               ):
     """
     A base model for a network.
     """
     DATA_INDEX_CLASS = DataIndex
-    NODE_CLASS = Node
+    NODE_CLASS = Node[DataIndexT, UserMappingT]
 
     def __init__(self,
                  network_id: str,
@@ -101,7 +104,10 @@ class NetworkB(BaseModel, Generic[DataIndexT, NodeT]):
         }
 
 
-class Network(NetworkB[DataIndexT, NodeT], SyncDataInterface, Generic[DataIndexT, NodeT]):
+class Network(NetworkB[DataIndexT, UserMappingT, NodeT],
+              SyncDataInterface,
+              Generic[DataIndexT, UserMappingT, NodeT ]
+              ):
     """
     A network that contains nodes which agreed to share data among each other.
 

@@ -118,6 +118,8 @@ class NetworkInterfaceB(Generic[SessionT, NetworkT, NodeT, RelayTargetT, Network
         if 'localhost' in url or '127.0.0.1' in url:
             return None
 
+        return url
+
     def _find_path_to_node(self,
                            network_graph: nx.DiGraph,
                            node_id: str,

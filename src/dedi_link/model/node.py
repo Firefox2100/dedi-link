@@ -151,3 +151,19 @@ class Node(NodeB[DataIndexT, UserMappingT],
         :return: The user key
         """
         raise NodeNotImplemented('get_user_key method not implemented')
+
+    def update_score(self,
+                     score: float,
+                     ):
+        """
+        Wrapper method to update only the score of a node
+
+        The score is updated with each request, so this method is
+        more convenient to use than the update() method.
+
+        :param score: New score to set
+        :return:
+        """
+        self.update({
+            'score': score,
+        })

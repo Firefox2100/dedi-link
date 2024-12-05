@@ -1,20 +1,21 @@
 from typing import TypeVar, Generic
 
 from dedi_link.etc.exceptions import NetworkNotImplemented
-from .base_model import AsyncDataInterface
-from .node import Node, NodeT
+from ..user_mapping import UserMappingT
 from ..data_index import DataIndexT
 from ..network import NetworkB
+from .base_model import AsyncDataInterface
+from .node import Node, NodeT
 
 
 NetworkT = TypeVar('NetworkT', bound='Network')
 
 
-class Network(NetworkB[DataIndexT, NodeT],
+class Network(NetworkB[DataIndexT, UserMappingT, NodeT],
               AsyncDataInterface,
-              Generic[DataIndexT, NodeT]
+              Generic[DataIndexT, UserMappingT, NodeT]
               ):
-    NODE_CLASS = Node
+    NODE_CLASS = Node[DataIndexT, UserMappingT]
 
     @property
     async def nodes(self) -> list[NodeT]:
