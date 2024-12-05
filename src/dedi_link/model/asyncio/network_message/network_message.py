@@ -28,9 +28,9 @@ class AsyncNetworkMessageBP(Protocol):
 
 
 class AsyncNetworkMessageInterface(AsyncDataInterface,
-                                  AsyncNetworkMessageBP,
-                                  Generic[NetworkMessageHeaderT, NetworkT]
-                                  ):
+                                   AsyncNetworkMessageBP,
+                                   Generic[NetworkMessageHeaderT, NetworkT]
+                                   ):
     @property
     async def signature(self) -> str:
         """

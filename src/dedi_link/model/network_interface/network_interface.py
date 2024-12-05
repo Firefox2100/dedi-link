@@ -1,28 +1,50 @@
 import math
+import time
+import uuid
+import base64
+import json
+import jwt
 import networkx as nx
-from typing import TypeVar, Any, List
+from typing import TypeVar, Any, List, Generic
 from collections import Counter
+from cryptography.exceptions import InvalidSignature
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import padding, rsa
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.backends import default_backend
+from copy import deepcopy
 from contextlib import contextmanager
 
-from dedi_link.etc.consts import LOGGER
+from dedi_link.etc.enums import MessageType
+from dedi_link.etc.exceptions import MessageSignatureInvalid, MessageTimestampInvalid, MessageAccessTokenInvalid, \
+                                     MessageUndeliverable, NodeAuthenticationStatusInvalid
 from dedi_link.etc.exceptions import NetworkRequestFailed, NetworkInterfaceNotImplemented
 from ..config import DDLConfig
-from ..network import Network
-from ..node import Node
-from ..network_message import NetworkMessage, NetworkMessageHeader, NetworkMessageT
-from .session import Session
-
+from ..network import Network, NetworkT
+from ..node import Node, NodeT
+from ..user_mapping import UserMappingT
+from ..network_message import NetworkMessage, RelayTarget, RelayTargetT, NetworkRelayMessage, NetworkMessageHeader, \
+                              NetworkMessageT, NetworkRelayMessageT, NetworkMessageHeaderT
+from .session import Session, SessionT
 
 T = TypeVar('T')
+NetworkInterfaceBT = TypeVar('NetworkInterfaceBT', bound='NetworkInterfaceB')
 NetworkInterfaceT = TypeVar('NetworkInterfaceT', bound='NetworkInterface')
 
 
-class NetworkInterface:
+class NetworkInterfaceB(Generic[SessionT, NetworkT, NodeT, RelayTargetT, NetworkRelayMessageT]):
+    SESSION_CLASS = Session
+    NETWORK_CLASS = Network
+    NODE_CLASS = Node
+    RELAY_TARGET_CLASS = RelayTarget
+    NETWORK_MESSAGE_CLASS = NetworkMessage
+    NETWORK_RELAY_MESSAGE_CLASS = NetworkRelayMessage
+
     def __init__(self,
                  network_id: str,
                  instance_id: str,
                  config: DDLConfig,
-                 session: Session | None = None,
+                 session: SessionT | None = None,
                  ):
         self.network_id = network_id
         self.instance_id = instance_id
@@ -31,28 +53,12 @@ class NetworkInterface:
         if session is not None:
             self.session = session
         else:
-            self.session = Session()
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.close()
-
-    @property
-    def network_graph(self) -> nx.DiGraph:
-        """
-        Get a networkx.DiGraph representation of the network
-        """
-        raise NetworkInterfaceNotImplemented('network_graph method needs to be implemented by an application')
-
-    def close(self):
-        self.session.close()
+            self.session = self.SESSION_CLASS()
 
     @classmethod
     def from_interface(cls,
-                       interface: 'NetworkInterface',
-                       ):
+                       interface: NetworkInterfaceBT,
+                       ) -> NetworkInterfaceBT:
         """
         Factory method to create a new interface from an existing one
         """
@@ -64,7 +70,11 @@ class NetworkInterface:
         )
 
     @staticmethod
-    def vote_from_responses(objects: List[List[T]], identifier: str, value_to_search: Any, obj_type=None) -> T:
+    def vote_from_responses(objects: List[List[T]],
+                            identifier: str,
+                            value_to_search: Any,
+                            obj_type=None,
+                            ) -> T:
         """
         Find the majority vote from a list of responses
 
@@ -93,49 +103,214 @@ class NetworkInterface:
 
         return majority_object
 
-    def check_connectivity(self,
-                           url: str | None = None,
-                           path: str = '/api'
-                           ) -> bool:
-        """
-        Check whether the URL is reachable from the current machine.
-
-        Note that this can only check the connectivity from the current machine.
-        For example, the node may appear online, but it may be behind a firewall or filter
-        that this machine can access while the others cannot
-
-        If there is specific method to make it reachable (like a custom DNS record),
-        it might still not be reachable from the outside, even if this method returns True.
-        :param url: URL to check, None to check for the current node
-        :param path: Path to check
-        :return:
-        """
-        LOGGER.debug(f'Checking connectivity to {url}')
-
+    def _check_connectivity_url(self,
+                                url: str | None = None,
+                                path: str = '/api'
+                                ) -> str | None:
         if url is None:
             url = self.config.url + path
         else:
-            # Ensure that this URL is different from the self URL
+            # Ensure that this URL is different from the self-URL
             if url == self.config.url + path:
-                LOGGER.info('A URL check discovered a self-reference')
+                return None
 
-                return False
-
-        # Check if URL contains "localhost" or "127.0.0.1"
+        # Check if the URL contains "localhost" or "127.0.0.1"
         if 'localhost' in url or '127.0.0.1' in url:
-            LOGGER.info('A URL check discovered a localhost reference')
+            return None
 
-            return False
+    def _find_path_to_node(self,
+                           network_graph: nx.DiGraph,
+                           node_id: str,
+                           ) -> list[list[str]]:
+        """
+        Find the shortest path to a node in the network
+
+        If there are no known paths to the node, return paths to all other nodes,
+        ordered by the path score. This is based on the assumption that nodes with
+        higher scores are more likely to be able to reach other nodes.
+
+        :param network_graph: The network graph
+        :param node_id: The node ID to find the path to
+        """
+        try:
+            paths = nx.all_shortest_paths(
+                network_graph,
+                source=self.instance_id,
+                target=node_id,
+            )
+
+            # Compare them with scores
+            max_score = -1
+            best_path = None
+
+            for path in paths:
+                path_score = sum([network_graph.nodes[n]['score'] for n in path])
+
+                if path_score > max_score:
+                    max_score = path_score
+                    best_path = path
+
+            return [best_path]
+        except nx.NetworkXNoPath:
+            # Not reachable, find the shortest path on all nodes that are reachable
+            all_shortest_paths = nx.single_source_shortest_path(
+                network_graph,
+                source=self.instance_id,
+            )
+
+            # Sort the paths by the score of the terminating node
+            # Because nodes with higher scores are more likely to be able to reach other nodes
+            paths = sorted(
+                all_shortest_paths.items(),
+                key=lambda x: network_graph.nodes[x[0]]['score'],
+            )
+
+            return paths
+
+    def _find_path_to_nodes(self,
+                            network_graph: nx.DiGraph,
+                            node_ids: list[str],
+                            ) -> list[str]:
+        """
+        Find a set of paths that can reach all nodes given
+
+        This is used to optimise the broadcasting feature, where if one node
+        can reach multiple other nodes faster, it should be used as a common
+        relaying point within the same request
+
+        :param network_graph: The network graph
+        :param node_ids: The node IDs to find the path to
+        """
+        paths = {}
+        paths_pending = {}
+
+        for node_id in node_ids:
+            node_paths = self._find_path_to_node(
+                network_graph=network_graph,
+                node_id=node_id,
+            )
+
+            if len(node_paths) == 1:
+                # Direct path, should be used
+                paths[node_id] = node_paths[0]
+            else:
+                paths_pending[node_id] = node_paths
+
+        for node_id in paths_pending.keys():
+            # The node is not directly reachable, see if any of the proposed
+            # paths are already in the list
+            existing_optimal = []
+
+            for path in paths_pending[node_id]:
+                if path[-1] in paths.keys():
+                    existing_optimal = path
+                    break
+
+            if existing_optimal:
+                paths[node_id] = existing_optimal
+            else:
+                # No existing optimal path found, this node has to be relayed
+                paths[node_id] = paths_pending[node_id][0]
+
+        relaying_nodes = []
+
+        for v in paths.values():
+            relaying_nodes.append(v[1])     # [0] should be the node itself, so [1] is the next hop
+
+        return relaying_nodes
+
+    @classmethod
+    async def _validate_signature(cls,
+                                  signature: str,
+                                  payload: bytes,
+                                  node_public_key: str,
+                                  timestamp: int | None = None,
+                                  ):
+        """
+        Validate the signature of a message from another node
+        """
+        # Check the timestamp
+        if timestamp is not None:
+            # One minute tolerance
+            if abs(timestamp - time.time()) > 60:
+                raise MessageTimestampInvalid('Timestamp is not within tolerance')
 
         try:
-            with Session() as session:
-                response = session.get(url)
-                return response['status'] == 'OK'
-        except NetworkRequestFailed:
-            return False
+            public_key = serialization.load_pem_public_key(
+                node_public_key.encode(),
+                backend=default_backend()
+            )
+
+            public_key.verify(
+                base64.b64decode(signature),
+                payload,
+                padding.PSS(
+                    mgf=padding.MGF1(hashes.SHA256()),
+                    salt_length=padding.PSS.MAX_LENGTH
+                ),
+                hashes.SHA256()
+            )
+        except InvalidSignature:
+            raise
         except Exception as e:
-            LOGGER.logger.debug(f'Connectivity check failed for {url}: {e}')
-            return False
+            raise MessageSignatureInvalid('Signature verification failed') from e
+
+    def _validate_access_token(self,
+                               node_client_id: str,
+                               access_token: str,
+                               signature_key: dict,
+                               user_mapping: UserMappingT,
+                               ) -> str:
+        """
+        Validate the access token against the original OIDC IdP
+
+        Note that this method decodes the token with the IdP's public key,
+        so the signature is validated, but it does not send the token for
+        introspection due to different implementation of the IdP connection.
+        In this case, if the access token is revoked before it expires, it
+        will still pass the validation.
+
+        If your implementation of the library includes a connection to the IdP,
+        consider using introspection instead.
+
+        :param node_client_id: The client ID sender node uses
+        :param access_token: The access token to validate
+        :return: The user ID if the token is valid
+        :raises MessageAccessTokenInvalid: If the token is invalid
+        """
+        # Construct the public key
+        def base64_decode_with_padding(data: str) -> bytes:
+            data += '=' * (4 - len(data) % 4)
+            return base64.urlsafe_b64decode(data)
+
+        public_number = rsa.RSAPublicNumbers(
+            e=int.from_bytes(base64_decode_with_padding(signature_key['e']), 'big'),
+            n=int.from_bytes(base64_decode_with_padding(signature_key['n']), 'big'),
+        )
+
+        public_key = public_number.public_key(default_backend())
+
+        # Decode the token
+        try:
+            decoded_token = jwt.decode(
+                jwt=access_token,
+                key=public_key,
+                audience='account',
+                algorithms=['RS256'],
+            )
+
+            if decoded_token['client_id'] != node_client_id:
+                raise MessageAccessTokenInvalid('Client ID mismatch')
+
+            user_id = decoded_token['sub']
+
+            if decoded_token['iss'] not in self.config.trusted_issuers:
+                # Issuer not trusted, remap the user ID
+                user_id = user_mapping.map(user_id)
+
+            return user_id
+        except jwt.exceptions.InvalidSignatureError:
+            raise MessageAccessTokenInvalid('Invalid signature in access token')
 
     def calculate_new_score(self,
                             time_elapsed: float,
@@ -166,48 +341,81 @@ class NetworkInterface:
         return self.config.time_score_weight * response_time_score + \
             (1 - self.config.time_score_weight) * response_quality_score
 
-    def find_path_to_node(self,
-                          node_id: str,
-                          ) -> list[list[str]]:
+
+class NetworkInterface(NetworkInterfaceB[SessionT],
+                       Generic[SessionT]
+                       ):
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+
+    @property
+    def network_graph(self) -> nx.DiGraph:
         """
-        Tries to find the shortest path to a node in the network
+        Get a networkx.DiGraph representation of the network
+        """
+        raise NetworkInterfaceNotImplemented('network_graph method needs to be implemented by an application')
+
+    def close(self):
+        self.session.close()
+
+    def check_connectivity(self,
+                           url: str | None = None,
+                           path: str = '/api'
+                           ) -> bool:
+        """
+        Check whether the URL is reachable from the current machine.
+
+        Note that this can only check the connectivity from the current machine.
+        For example, the node may appear online, but it may be behind a firewall or filter
+        that this machine can access while the others cannot
+
+        If there is specific method to make it reachable (like a custom DNS record),
+        it might still not be reachable from the outside, even if this method returns True.
+        :param url: URL to check, None to check for the current node
+        :param path: Path to check
+        :return:
+        """
+        url = self._check_connectivity_url(
+            url=url,
+            path=path,
+        )
+
+        if url is None:
+            return False
+
+        try:
+            with self.SESSION_CLASS() as session:
+                response = session.get(url)
+                return response['status'] == 'OK'
+        except NetworkRequestFailed:
+            return False
+
+    def find_path_to_nodes(self,
+                           node_ids: list[str],
+                           ) -> list[str]:
+        """
+        Tries to the optimal node to use for relaying a message
         """
         with self.network_graph as graph:
-            # Find all shortest paths to the given node
-            try:
-                paths = nx.all_shortest_paths(graph, source=self.instance_id, target=node_id)
-            except nx.NetworkXNoPath:
-                # Not reachable, find the shortest path on all nodes that are reachable
-                all_shortest_paths = nx.single_source_shortest_path(graph, source=self.instance_id)
-
-                # Sort the paths by the score of the terminating node
-                # Because nodes with higher scores are more likely to be able to reach other nodes
-                paths = sorted(all_shortest_paths.items(), key=lambda x: graph.nodes[x[0]]['score'])
-
-            # Compare them with scores
-            max_score = -1
-            best_path = None
-
-            for path in paths:
-                path_score = sum([graph.nodes[n]['score'] for n in path])
-
-                if path_score > max_score:
-                    max_score = path_score
-                    best_path = path
-
-            return [best_path]
+            return self._find_path_to_nodes(
+                network_graph=graph,
+                node_ids=node_ids,
+            )
 
     def send_message(self,
-                           node: Node,
-                           message: NetworkMessage,
-                           path: str = '/api',
-                           access_token: str | None = None,
-                           should_raise: bool = False,
-                           should_relay: bool = True,
-                           ) -> tuple[NetworkMessage |
-                                      None, NetworkMessageHeader | None]:
+                     node: NodeT,
+                     message: NetworkMessage,
+                     path: str = '/api',
+                     access_token: str | None = None,
+                     should_raise: bool = False,
+                     should_relay: bool = True,
+                     ) -> tuple[NetworkMessage | None, NetworkMessageHeader | None]:
         """
         Send a message to a node.
+
         :param node: Node to send the message to
         :param message: Message to send
         :param path: Path to send the message to
@@ -216,93 +424,57 @@ class NetworkInterface:
         :param should_relay: Whether to relay the message if the node is unreachable
         :return:
         """
-        LOGGER.debug(f'Sending message to {node.node_id} at {node.url}')
-
         target_reachable = self.check_connectivity(node.url + '/api')
 
         if target_reachable:
             url = node.url + path
 
-            payload = message.to_dict()
-            headers = message.generate_headers(
-                access_token=access_token,
-            ).headers
-
             start_time = time.monotonic()
 
-            response = await self.session.post(url, json=payload, headers=headers)
+            response_message, response_header = self.session.post(
+                url=url,
+                message=message,
+                access_token=access_token,
+            )
 
             finish_time = time.monotonic()
             time_elapsed = finish_time - start_time
 
             record_count = None
 
-            if message.message_type == NetworkMessageT.DATA_MESSAGE:
-                message: NetworkDataMessage
-                if message.data_type == NetworkDataMessageType.RECORD_QUERY:
-                    # The response should be a record response
-                    response_message, _ = await RecordDataResponse.from_response(response)
-                    record_count = 0
-
-                    for r in response_message.data:
-                        record_count += r.record_count
+            if message.message_type == MessageType.DATA_MESSAGE:
+                # Data message
+                # An instance will only actively send out a query
+                record_count = response_message.record_count
 
             new_score = self.calculate_new_score(
                 time_elapsed=time_elapsed,
                 record_count=record_count,
-                record_count_max=node.record_index.record_count or 0,
+                record_count_max=node.data_index.record_count or 0,
             )
 
-            await node.update_score(new_score)
+            node.update_score(new_score)
 
-            if should_raise:
-                response.raise_for_status()
+            self.validate_message(response_message, response_header)
 
-            CvConfig().logger.debug(f'Message sent to {node.node_id} got response: {response.status}')
-            if response.status != 200:
-                CvConfig().logger.debug(f'Message: {payload}; Headers: {headers}')
-                CvConfig().logger.debug(f'Response: {await response.text()}')
-
-            CvConfig().logger.debug(f'Message type: {response.content_type}')
-            CvConfig().logger.debug(f'Message body: {await response.text()}')
-
-            if response.content_type == 'application/json':
-                try:
-                    response_message, response_message_header = await NetworkMessage.from_response(response)
-                    json_response = await response.json()
-
-                    CvConfig().logger.debug(f'Message sent to {node.node_id} got response: {json_response}')
-
-                    try:
-                        await self.validate_message(response_message, response_message_header, json_response['timestamp'])
-                    except Exception as e:
-                        if should_raise:
-                            raise
-                        else:
-                            CvConfig().logger.debug(f'Validation failed for message sent to {node.node_id}: {e}')
-
-                    return response_message, response_message_header
-                except Exception as e:
-                    CvConfig().logger.exception(f'Error parsing response: {e}')
-                    return None, None
-            else:
-                return None, None
+            return response_message, response_header
         elif should_relay:
-            # Relay the message to the node
-            CvConfig().logger.info(f'Node {node.node_id} is unreachable, relaying the message')
-
-            relay_message = NetworkRelayMessage(
+            relay_message = self.NETWORK_RELAY_MESSAGE_CLASS(
                 sender_id=self.instance_id,
-                recipient_ids=[node.node_id],
-                headers=message.generate_headers(
-                    network_id=self.network_id,
-                    node_id=self.instance_id,
-                    access_token=access_token,
-                ),
-                message=message,
+                network_id=self.network_id,
+                node_id=node.node_id,
+                relay_targets=[
+                    self.RELAY_TARGET_CLASS(
+                        recipient_ids=[node.node_id],
+                        header=message.generate_headers(
+                            access_token=access_token,
+                        ),
+                        message=message,
+                    ),
+                ],
             )
 
-            response_message, response_message_header = await self.relay_message(
+            response_message, response_header = self.relay_message(
                 message=relay_message,
                 path=path,
                 access_token=access_token,
@@ -310,35 +482,52 @@ class NetworkInterface:
                 skipping_nodes=[node.node_id],
             )
 
-            if response_message_header is not None:
+            if response_header is not None:
                 # Message routing successful, unpack the response
-                assert isinstance(response_message, NetworkRelayMessage)
+                if not response_header.delivered:
+                    raise MessageUndeliverable('Relaying failed')
 
-                return response_message.message, response_message.headers
+                # This method is only used when relaying a message to a single node
+                # So the response should only contain one relay target
+                if len(response_message.relay_targets) != 1:
+                    raise ValueError('Relay message got unexpected response length')
+
+                return response_message.relay_targets[0].message, response_message.relay_targets[0].header
         else:
-            raise MessageUndeliverable('Message undeliverable')
+            raise MessageUndeliverable('No direct route to target node')
 
-    async def relay_message(self,
-                            message: NetworkRelayMessage,
-                            path: str = '/federation/federation/',
-                            access_token: str | None = None,
-                            should_raise: bool = False,
-                            skipping_nodes: list[str] = None,
-                            ) -> tuple[NetworkMessage | None, NetworkMessageHeader | None]:
-        CvConfig().logger.debug(f'Relaying message in network {self.network_id}')
+    def relay_message(self,
+                      message: NetworkRelayMessageT,
+                      path: str = '/federation/federation/',
+                      access_token: str | None = None,
+                      should_raise: bool = False,
+                      skipping_nodes: list[str] = None,
+                      ) -> tuple[NetworkRelayMessageT | None, NetworkMessageHeaderT | None]:
+        network = self.NETWORK_CLASS.load(self.network_id)
+        nodes = network.nodes_approved
 
-        network = await DiscoveryNetwork.load(self.network_id)
-        nodes = await network.nodes_approved
+        target_nodes = set()
+        for target in message.relay_targets:
+            target_nodes.update(target.recipient_ids)
+
+        # Find the optimal next hops
+        relay_nodes = set(self.find_path_to_nodes(
+            node_ids=list(target_nodes),
+        ))
+        existing_nodes = set([node.node_id for node in nodes])
 
         if skipping_nodes:
-            # Remove the skipping nodes from the list
-            nodes = [node for node in nodes if node.node_id not in skipping_nodes]
+            hops = list(relay_nodes & existing_nodes - set(skipping_nodes))
+        else:
+            hops = list(relay_nodes & existing_nodes)
+
+        nodes = [n for n in nodes if n.node_id in hops]
 
         # Because this only happens after a message sending failure,
         # there is no need to check connectivity again
         for node in nodes:
             # Send one after another because only one route is needed
-            response_message, response_message_header = await self.send_message(
+            response_message, response_message_header = self.send_message(
                 node=node,
                 message=message,
                 path=path,
@@ -349,175 +538,93 @@ class NetworkInterface:
 
             if response_message_header.delivered:
                 # Message routing succeeded
-                CvConfig().logger.debug(f'Message {message.message_id} route succeeded via node {node.node_id}')
+                if not isinstance(response_message, self.NETWORK_RELAY_MESSAGE_CLASS):
+                    # Relay message should only be responded with another relay message
+                    raise ValueError(f'Relay message got unexpected response type: {response_message.message_type}')
+
                 return response_message, response_message_header
 
         return None, None
 
-    @classmethod
-    async def _validate_signature(cls,
-                                  message: NetworkMessage,
-                                  headers: NetworkMessageHeader,
-                                  timestamp: int | None = None,
-                                  ):
-        """
-        Validate the signature of a message from another node
-        """
-        vault = Vault()
-
-        # Check the timestamp
-        if timestamp is not None:
-            # 1 minute tolerance
-            if abs(timestamp - time.time()) > 60:
-                CvConfig().logger.debug(f'Timestamp is not within tolerance: {timestamp} vs {time.time()}')
-
-                raise InvalidTimestamp('Timestamp is not within tolerance')
-
-        # Verify the signature
-        signature = headers.server_signature
-        node_id = headers.node_id
-        network_id = headers.network_id
-
-        if signature is None or node_id is None or network_id is None:
-            raise InvalidSignature('Signature or node ID or network ID is missing')
-
-        try:
-            public_key = vault.get_node_key(network_id, node_id)
-            vault.verify_signature(
-                public_pem=public_key,
-                signature=signature,
-                payload=json.dumps(message.to_dict()),
-            )
-        except Exception as e:
-            CvConfig().logger.debug(f'Signature verification failed: {signature}')
-            CvConfig().logger.exception(e)
-
-            raise InvalidSignature('Signature verification failed')
-
-    @classmethod
-    async def _validate_access_token(cls,
-                                     message: NetworkMessage,
-                                     headers: NetworkMessageHeader,
-                                     ) -> str | None:
-        keycloak = KeyCloak()
-        access_token = headers.access_token
-
-        if access_token is not None:
-            try:
-                node = await Node.load(headers.node_id)
-
-                # See if the client ID matches with the node
-                client_id = keycloak.get_client_id(
-                    access_token=access_token,
-                )
-                if client_id != node.client_id:
-                    raise InvalidAuthenticationStatus('Client ID mismatch')
-
-                user_info = keycloak.get_user_info(
-                    access_token=access_token,
-                )
-
-                # If the message is not data message, the user should be a service account
-                if message.message_type != NetworkMessageT.DATA_MESSAGE:
-                    if not user_info['preferred_username'].startswith('service-account-'):
-                        raise InvalidAuthenticationStatus('Service account required')
-                else:
-                    # If the message is a data message, the user should be a normal user
-                    if user_info['preferred_username'].startswith('service-account-'):
-                        raise InvalidAuthenticationStatus('Service account not allowed')
-
-                # Token validation passed, check if the node has authentication enabled
-                if not node.authentication_enabled:
-                    # Authentication is in place now
-                    await node.update({'authenticationEnabled': True})
-
-                user_id = user_info['sub']
-
-                return user_id
-            except InvalidAuthenticationStatus:
-                # This error is not to be ignored
-                raise
-            except Exception as e:
-                CvConfig().logger.debug(f'Access token validation failed: {access_token}, with {e}')
-                CvConfig().logger.exception(e)
-        else:
-            raise InvalidAccessToken('Access token is missing')
-
-    @classmethod
-    async def _remap_user_from_message(cls,
-                                       header: NetworkMessageHeader,
-                                       ):
-        keycloak = KeyCloak()
-        node = await Node.load(header.node_id)
-
-        if node.authentication_enabled:
-            raise InvalidAuthenticationStatus('Authentication enabled but validation failed')
-
-        try:
-            subject_id = keycloak.validate_token_external(
-                access_token=header.access_token,
-                client_id=node.client_id,
-            )
-            user_id = node.user_mapping.remap(subject_id)
-        except Exception as e:
-            CvConfig().logger.exception(e)
-            raise InvalidAuthenticationStatus('User mapping failed') from e
-
-        return user_id
-
-    @classmethod
-    async def validate_message(cls,
-                               message: NetworkMessage,
-                               headers: NetworkMessageHeader,
-                               timestamp: int | None = None,
-                               validate_signature: bool = True,
-                               validate_access_token: bool = True,
-                               ) -> str:
+    def validate_message(self,
+                         message: NetworkMessage,
+                         headers: NetworkMessageHeader,
+                         validate_signature: bool = True,
+                         validate_access_token: bool = True,
+                         ) -> str:
         """
         Validate a message from another node.
+
         :param message: The message from the other node
         :param headers: The headers from the other node
-        :param timestamp: The timestamp to check against; None to skip timestamp check
         :param validate_signature: Whether to validate the signature
         :param validate_access_token: Whether to validate the access token
         :return:
         """
         user_id = None
+        node = self.NODE_CLASS.load(headers.node_id)
 
         if validate_signature:
-            await cls._validate_signature(
-                message=message,
-                headers=headers,
-                timestamp=timestamp,
+            self._validate_signature(
+                signature=headers.server_signature,
+                payload=json.dumps(message.to_dict()).encode(),
+                node_public_key=node.public_key,
+                timestamp=message.timestamp,
             )
 
         # Validate the access token
         if validate_access_token:
-            user_id = await cls._validate_access_token(
-                message=message,
-                headers=headers,
+            decoded_token = jwt.decode(
+                jwt=headers.access_token,
+                options={
+                    'verify_signature': False,  # Disable verification for now
+                }
+            )
+            issuer_url = decoded_token['iss']
+            issuer_well_known = issuer_url + '/.well-known/openid-configuration'
+
+            well_known = self.session.get(issuer_well_known)
+            jwks_uri = well_known['jwks_uri']
+
+            jwks = self.session.get(jwks_uri)
+            signature_key = None
+
+            for key in jwks['keys']:
+                if key['use'] == 'sig':
+                    signature_key = key
+                    break
+
+            if signature_key is None:
+                raise MessageAccessTokenInvalid('No signature key found in JWKS')
+
+            user_id = self._validate_access_token(
+                node_client_id=node.client_id,
+                access_token=headers.access_token,
+                signature_key=signature_key,
+                user_mapping=node.user_mapping,
             )
 
         if user_id is None:
-            # Access token authentication failed or skipped, remap the user
-            user_id = await cls._remap_user_from_message(
-                header=headers,
-            )
+            if node.authentication_enabled:
+                raise NodeAuthenticationStatusInvalid('Authentication enabled but validation failed')
+
+            # Access token authentication skipped, remap the user
+            user_id = node.user_mapping.map()
 
         return user_id
 
-    async def broadcast_message(self,
-                                message: NetworkMessage,
-                                path: str = '/federation/federation/',
-                                access_token: str | None = None,
-                                should_raise: bool = False,
-                                skip_unreachable: bool = False,
-                                change_id: bool = False,
-                                skipping_nodes: List[str] = None,
-                                ) -> List[tuple[NetworkMessage |
-                                                NetworkSyncMessage, NetworkMessageHeader]]:
+    def broadcast_message(self,
+                          message: NetworkMessage,
+                          path: str = '/api',
+                          access_token: str | None = None,
+                          should_raise: bool = False,
+                          skip_unreachable: bool = False,
+                          change_id: bool = False,
+                          skipping_nodes: List[str] = None,
+                          ) -> dict[str, tuple[NetworkMessageT, NetworkMessageHeaderT]]:
         """
         Broadcast a message to all nodes in the network.
+
         :param message: The message to send
         :param path: The path to send the message to
         :param access_token: The access token to use; if None, the service account token will be used
@@ -527,10 +634,8 @@ class NetworkInterface:
         :param skipping_nodes: IDs of nodes to skip
         :return: A list of responses as NetworkMessage and NetworkMessageHeader tuples
         """
-        CvConfig().logger.debug(f'Broadcasting message to all nodes in {self.network_id}')
-
-        network = await DiscoveryNetwork.load(self.network_id)
-        nodes = await network.nodes_approved
+        network = self.NETWORK_CLASS.load(self.network_id)
+        nodes = network.nodes_approved
 
         if skipping_nodes:
             # Remove the skipping nodes from the list
@@ -540,86 +645,78 @@ class NetworkInterface:
         unreachable_nodes = []
 
         for node in nodes:
-            if await self.check_connectivity(node.url + '/federation/'):
+            if self.check_connectivity(node.url):
                 reachable_nodes.append(node)
             else:
                 unreachable_nodes.append(node)
 
-        CvConfig().logger.debug(f'{len(reachable_nodes)} nodes are reachable, '
-                                    f'{len(unreachable_nodes)} nodes are unreachable')
-
-        tasks = []
+        responses = {}
 
         for node in reachable_nodes:
             if change_id:
                 message.message_id = str(uuid.uuid4())
-            tasks.append(self.send_message(node, message, path, access_token, should_raise))
 
-        if message.message_type != NetworkMessageT.RELAY_MESSAGE:
-            relay_message = NetworkRelayMessage(
-                sender_id=self.instance_id,
-                recipient_ids=[node.node_id for node in unreachable_nodes],
-                headers=message.generate_headers(
-                    network_id=self.network_id,
-                    node_id=self.instance_id,
-                    access_token=access_token,
-                ),
+            response = self.send_message(
+                node=node,
                 message=message,
+                path=path,
+                access_token=access_token,
+                should_raise=should_raise,
             )
-        elif isinstance(message, NetworkRelayMessage):
-            # Repack the relay message
-            CvConfig().logger.debug(f'Repacking the relay message {message.message_id}, ttl={message.ttl}')
 
-            relay_message: NetworkRelayMessage = message
-        else:
-            raise ValueError('Invalid message type')
-
-        if not skip_unreachable:
-            CvConfig().logger.debug(f'Sending relay message to {len(unreachable_nodes)} unreachable nodes')
-
-            for node in unreachable_nodes:
-                tasks.append(
-                    self.send_message(
-                        node=node,
-                        message=relay_message,
-                        path=path,
-                        access_token=access_token,
-                        should_raise=should_raise,
-                        should_relay=False,  # Prevent infinite recursion
-                    )
-                )
+            responses[node.node_id] = response
 
         if len(unreachable_nodes) > 0:
-            # In case any node cannot be reached, no matter what
-            # Store the message as a special one
-            CvConfig().logger.debug(f'Storing the relay message {relay_message.message_id} for polling')
+            if message.message_type != NetworkMessageT.RELAY_MESSAGE:
+                relay_message = self.NETWORK_RELAY_MESSAGE_CLASS(
+                    sender_id=self.instance_id,
+                    network_id=self.network_id,
+                    node_id=self.instance_id,
+                    relay_targets=[
+                        self.RELAY_TARGET_CLASS(
+                            recipient_ids=[node.node_id for node in unreachable_nodes],
+                            header=message.generate_headers(access_token),
+                            message=message,
+                        ),
+                    ],
+                )
+            elif isinstance(message, self.NETWORK_RELAY_MESSAGE_CLASS):
+                # Repack the relay message
+                relay_message = self.NETWORK_RELAY_MESSAGE_CLASS(
+                    sender_id=self.instance_id,
+                    network_id=self.network_id,
+                    node_id=self.instance_id,
+                    relay_targets=message.relay_targets,
+                )
+            else:
+                raise ValueError('Invalid message type')
 
-            relay_message.message_id = f'p-{relay_message.message_id}'
+            polling_message = deepcopy(relay_message)
+            polling_message.message_id = f'p-{polling_message.message_id}'
 
-            await relay_message.store()
+            polling_message.store()
 
-        results = await asyncio.gather(*tasks, return_exceptions=True)
+            if not skip_unreachable:
+                response, response_header = self.relay_message(
+                    message=relay_message,
+                    path=path,
+                    access_token=access_token,
+                    should_raise=should_raise,
+                    skipping_nodes=[node.node_id for node in reachable_nodes],
+                )
 
-        responses = []
-
-        for result in results:
-            if isinstance(result, Exception):
-                CvConfig().logger.error(f'Message broadcast failed: {result}')
-                CvConfig().logger.error(f'Stack trace: {traceback.format_exception(result)}')
-
-                if should_raise:
-                    raise result
-            elif isinstance(result, tuple):
-                responses.append(result)
+                if response_header.delivered:
+                    for relay_target in response.relay_targets:
+                        if self.instance_id in relay_target.recipient_ids:
+                            responses[relay_target.message.node_id] = (relay_target.message, relay_target.header)
 
         return responses
 
     async def receive_message(self,
-                              message: NetworkMessage | NetworkSyncMessage | NetworkRelayMessage |
-                              NetworkAuthMessage | NetworkDataMessage,
-                              headers: NetworkMessageHeader,
+                              message: NetworkMessageT,
+                              headers: NetworkMessageHeaderT,
                               should_raise: bool = False,
-                              ) -> Response | None:
+                              ) -> NetworkMessageT | None:
         """
         The general interface to receive a message and act upon it
         :param message: The message to process
@@ -632,31 +729,28 @@ class NetworkInterface:
         from .data_interface import DataInterface
 
         try:
-            CvConfig().logger.info(f'Received message {message.message_id} of type {message.message_type}')
-            CvConfig().logger.debug(f'Message received: {message.to_dict()}')
-
-            if isinstance(message, NetworkAuthMessage):
+            if message.message_type == MessageType.AUTH_MESSAGE:
                 auth_interface = AuthInterface.from_interface(self)
                 result = await auth_interface.receive_message(
                     message=message,
                     headers=headers,
                     should_raise=should_raise,
                 )
-            elif isinstance(message, NetworkSyncMessage):
+            elif message.message_type == MessageType.SYNC_MESSAGE:
                 sync_interface = SyncInterface.from_interface(self)
                 result = await sync_interface.receive_message(
                     message=message,
                     headers=headers,
                     should_raise=should_raise,
                 )
-            elif isinstance(message, NetworkRelayMessage):
+            elif message.message_type == MessageType.RELAY_MESSAGE:
                 relay_interface = RelayInterface.from_interface(self)
                 result = await relay_interface.receive_message(
                     message=message,
                     headers=headers,
                     should_raise=should_raise,
                 )
-            elif isinstance(message, NetworkDataMessage):
+            elif message.message_type == MessageType.DATA_MESSAGE:
                 data_interface = DataInterface.from_interface(self)
                 result = await data_interface.receive_message(
                     message=message,
@@ -666,20 +760,9 @@ class NetworkInterface:
             else:
                 raise ValueError(f'Unknown message type: {message.message_type}')
 
-            CvConfig().logger.debug(f'Response is {result} of type {type(result)}')
-
-            if isinstance(result, NetworkMessage):
+            if isinstance(result, self.NETWORK_MESSAGE_CLASS):
                 # A response is required immediately
-                response = result.to_response(
-                    network_id=self.network_id,
-                    node_id=self.instance_id,
-                )
-
-                CvConfig().logger.info(f'Responding to message {message.message_id} with type {result.message_type}')
-                CvConfig().logger.debug(f'Response: {result.to_dict()}')
-
-                return response
+                return result
         except Exception as e:
-            CvConfig().logger.exception(f'Error processing message {message.message_id}: {e}')
             if should_raise:
                 raise e

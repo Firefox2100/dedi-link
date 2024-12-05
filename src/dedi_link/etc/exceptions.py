@@ -70,3 +70,27 @@ class NetworkInterfaceNotImplemented(DeDiLinkNotImplemented):
 
 class NetworkRequestFailed(DeDiLinkException):
     pass
+
+
+class NetworkInterfaceException(DeDiLinkException):
+    pass
+
+
+class MessageSignatureInvalid(NetworkInterfaceException):
+    pass
+
+
+class MessageAccessTokenInvalid(NetworkInterfaceException):
+    pass
+
+
+class MessageTimestampInvalid(NetworkInterfaceException):
+    pass
+
+
+class MessageUndeliverable(NetworkInterfaceException):
+    pass
+
+
+class NodeAuthenticationStatusInvalid(NetworkInterfaceException):
+    pass

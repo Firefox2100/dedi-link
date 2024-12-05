@@ -19,6 +19,7 @@ class DDLConfig:
                  allow_non_client_authenticated: bool = False,
                  auto_user_registration: bool = False,
                  anonymous_access: bool = False,
+                 trusted_issuers: list[str] = None,
                  default_ttl: int = 5,
                  optimal_record_percentage: float = 0.5,
                  time_score_weight: float = 0.5,
@@ -38,6 +39,7 @@ class DDLConfig:
                                                token that cannot be introspected
         :param auto_user_registration: Whether to automatically register users
         :param anonymous_access: Whether to allow anonymous access
+        :param trusted_issuers: A list of trusted issuers for OIDC access tokens
         :param default_ttl: The default hops to relay a message
         :param optimal_record_percentage: The percentage of records to grant maximum score
         :param time_score_weight: The weight of time-based score in final score
@@ -49,6 +51,7 @@ class DDLConfig:
         self.allow_non_client_authenticated = allow_non_client_authenticated
         self.auto_user_registration = auto_user_registration
         self.anonymous_access = anonymous_access
+        self.trusted_issuers = trusted_issuers or []
         self.default_ttl = default_ttl
         self.optimal_record_percentage = optimal_record_percentage
         self.time_score_weight = time_score_weight

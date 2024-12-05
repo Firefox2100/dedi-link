@@ -1,18 +1,23 @@
 import requests
+from typing import TypeVar, Generic
 
-from dedi_link.etc.enums import MessageType
 from dedi_link.etc.exceptions import NetworkRequestFailed
-from ..network_message import NetworkMessageT, NetworkMessageHeader
+from ..network_message import NetworkMessageT, NetworkMessageHeader, NetworkMessageHeaderT
 
 
-class Session:
+SessionT = TypeVar('SessionT', bound='Session')
+
+
+class Session(Generic[NetworkMessageT, NetworkMessageHeaderT]):
+    NETWORK_MESSAGE_HEADER_CLASS = NetworkMessageHeader
+
     def __init__(self):
         self._session = requests.Session()
 
     def __enter__(self):
         return self
 
-    def __exit__(self, *args):
+    def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
 
     def close(self):
@@ -32,7 +37,7 @@ class Session:
              url: str,
              message: NetworkMessageT,
              access_token: str | None = None,
-             ) -> tuple[NetworkMessageT, NetworkMessageHeader]:
+             ) -> tuple[NetworkMessageT, NetworkMessageHeaderT]:
         payload = message.to_dict()
         headers = message.generate_headers(
             access_token=access_token,
@@ -50,9 +55,7 @@ class Session:
         response_payload = response.json()
         response_headers = response.headers
 
-        message_type = MessageType(response_payload['messageType'])
-
-        response_message = message.factory(response_payload, message_type)
-        response_header = NetworkMessageHeader.from_headers(response_headers)
+        response_message = message.factory(response_payload)
+        response_header = self.NETWORK_MESSAGE_HEADER_CLASS.from_headers(response_headers)
 
         return response_message, response_header

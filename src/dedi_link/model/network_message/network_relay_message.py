@@ -1,31 +1,84 @@
 from copy import deepcopy
+from deepdiff import DeepDiff
 from typing import TypeVar, Generic
 
 from dedi_link.etc.consts import MESSAGE_DATA, MESSAGE_ATTRIBUTES
 from dedi_link.etc.enums import MessageType
 from dedi_link.etc.exceptions import NetworkRelayMessageEnvelopeTooDeep, NetworkRelayMessageNotAlive
+from ..base_model import BaseModel
 from ..network import NetworkT
-from .network_message import NetworkMessageB, NetworkMessage
+from .network_message import NetworkMessageB, NetworkMessage, NetworkMessageT
 from .network_message_header import NetworkMessageHeader, NetworkMessageHeaderT
 
 
+RelayTargetT = TypeVar('RelayTargetT', bound='RelayTarget')
 NetworkRelayMessageBT = TypeVar('NetworkRelayMessageBT', bound='NetworkRelayMessageB')
 NetworkRelayMessageT = TypeVar('NetworkRelayMessageT', bound='NetworkRelayMessage')
 
 
+class RelayTarget(BaseModel,
+                  Generic[NetworkMessageHeaderT, NetworkMessageT]
+                  ):
+    """
+    Relay Target
+
+    A data structure to hold the recipient ID, header, and message of
+    a message being relayed.
+    """
+    NETWORK_MESSAGE_HEADER_CLASS = NetworkMessageHeader
+    NETWORK_MESSAGE_CLASS = NetworkMessage
+
+    def __init__(self,
+                 recipient_ids: list[str],
+                 header: NetworkMessageHeaderT,
+                 message: NetworkMessageT,
+                 ):
+        """
+        Relay Target
+
+        A data structure to hold the recipient ID, header, and message of
+        a message being relayed.
+
+        :param recipient_ids: The recipient IDs
+        :param header: The header of the message
+        :param message: The message being relayed
+        """
+        self.recipient_ids = recipient_ids
+        self.header = header
+        self.message = message
+
+        if message.message_type == MessageType.RELAY_MESSAGE:
+            raise NetworkRelayMessageEnvelopeTooDeep('Relay message cannot be sent in another relay message')
+
+    def to_dict(self) -> dict:
+        return {
+            'recipientIds': self.recipient_ids,
+            'header': self.header.headers,
+            'message': self.message.to_dict(),
+        }
+
+    @classmethod
+    def from_dict(cls, payload: dict) -> RelayTargetT:
+        return cls(
+            recipient_ids=payload['recipientIds'],
+            header=cls.NETWORK_MESSAGE_HEADER_CLASS.from_headers(payload['header']),
+            message=cls.NETWORK_MESSAGE_CLASS.factory(payload['message']),
+        )
+
+
 class NetworkRelayMessageB(NetworkMessageB[NetworkMessageHeaderT, NetworkT],
-                           Generic[NetworkMessageHeaderT, NetworkT]
+                           Generic[NetworkMessageHeaderT, NetworkT, RelayTargetT]
                            ):
     """
     Base class for Network Relay Messages
     """
+    RELAY_TARGET_CLASS = RelayTarget
+
     def __init__(self,
                  network_id: str,
                  node_id: str,
                  sender_id: str,
-                 recipient_ids: list[str],
-                 headers: NetworkMessageHeader,
-                 message: NetworkMessage,
+                 relay_targets: list[RelayTargetT],
                  ttl: int = 3,
                  message_id: str = None,
                  timestamp: int | None = None,
@@ -38,9 +91,7 @@ class NetworkRelayMessageB(NetworkMessageB[NetworkMessageHeaderT, NetworkT],
         :param network_id: The network ID
         :param node_id: The node ID
         :param sender_id: The sender ID
-        :param recipient_ids: The recipient IDs
-        :param headers: The message headers
-        :param message: The message to relay
+        :param relay_targets: A list of RelayTarget instances
         :param ttl: The time-to-live of the relay message, in hops.
                     Direct delivery counts as one hop.
         :param message_id: The message ID
@@ -55,13 +106,8 @@ class NetworkRelayMessageB(NetworkMessageB[NetworkMessageHeaderT, NetworkT],
         )
 
         self.sender_id = sender_id
-        self.recipient_ids = recipient_ids
-        self.headers = headers
-        self.message = message
+        self.relay_targets = relay_targets
         self.ttl = ttl
-
-        if message.message_type == MessageType.RELAY_MESSAGE:
-            raise NetworkRelayMessageEnvelopeTooDeep('Relay message cannot be sent in another relay message')
 
         if ttl <= 0:
             raise NetworkRelayMessageNotAlive('Relay message TTL must be greater than 0')
@@ -73,22 +119,19 @@ class NetworkRelayMessageB(NetworkMessageB[NetworkMessageHeaderT, NetworkT],
         return all([
             super().__eq__(other),
             self.sender_id == other.sender_id,
-            self.recipient_ids == other.recipient_ids,
-            self.headers == other.headers,
-            self.message == other.message,
+            not DeepDiff(self.relay_targets, other.relay_targets, ignore_order=True),
             self.ttl == other.ttl,
         ])
 
     def __hash__(self):
-        recipient_ids = deepcopy(self.recipient_ids)
-        recipient_ids.sort()
+        # Sort the relay targets by recipient ID to ensure the hash is consistent
+        relay_targets = deepcopy(self.relay_targets)
+        relay_targets.sort(key=lambda x: x.recipient_id)
 
         return hash((
             super().__hash__(),
             self.sender_id,
-            tuple(recipient_ids),
-            self.headers,
-            self.message,
+            tuple(relay_targets),
             self.ttl,
         ))
 
@@ -97,13 +140,11 @@ class NetworkRelayMessageB(NetworkMessageB[NetworkMessageHeaderT, NetworkT],
 
         payload[MESSAGE_ATTRIBUTES].update({
             'senderId': self.sender_id,
-            'recipientIds': self.recipient_ids,
             'ttl': self.ttl,
         })
 
         payload[MESSAGE_DATA] = {
-            'headers': self.headers.headers,
-            'message': self.message.to_dict(),
+            'relayTargets': [target.to_dict() for target in self.relay_targets],
         }
 
         return payload
@@ -115,17 +156,17 @@ class NetworkRelayMessageB(NetworkMessageB[NetworkMessageHeaderT, NetworkT],
             network_id=payload[MESSAGE_ATTRIBUTES]['networkId'],
             node_id=payload[MESSAGE_ATTRIBUTES]['nodeId'],
             sender_id=payload[MESSAGE_ATTRIBUTES]['senderId'],
-            recipient_ids=payload[MESSAGE_ATTRIBUTES]['recipientIds'],
             timestamp=payload['timestamp'],
             ttl=payload[MESSAGE_ATTRIBUTES]['ttl'],
-            headers=NetworkMessageHeader.from_headers(payload[MESSAGE_DATA]['headers']),
-            message=NetworkMessage.factory(payload[MESSAGE_DATA]['message']),
+            relay_targets=[
+                cls.RELAY_TARGET_CLASS.from_dict(target) for target in payload[MESSAGE_DATA]['relayTargets']
+            ],
         )
 
 
-class NetworkRelayMessage(NetworkRelayMessageB[NetworkMessageHeaderT, NetworkT],
+class NetworkRelayMessage(NetworkRelayMessageB[NetworkMessageHeaderT, NetworkT, RelayTargetT],
                           NetworkMessage[NetworkMessageHeaderT, NetworkT],
-                          Generic[NetworkMessageHeaderT, NetworkT],
+                          Generic[NetworkMessageHeaderT, NetworkT, RelayTargetT],
                           ):
     """
     Network Relay Message
