@@ -1,7 +1,7 @@
 import pytest
 
 from dedi_link.etc.enums import MessageType, AuthMessageType, AuthMessageStatus, SyncTarget
-from dedi_link.model import Network, Node, UserMapping, DataIndex
+from dedi_link.model import Network, Node, UserMapping, DataIndex, DDLConfig
 from dedi_link.model.network_message.network_message_header import NetworkMessageHeader
 from dedi_link.model.network_message.network_auth_message import AuthRequestInvite, AuthResponse, AuthJoin, AuthLeave, \
     AuthStatus
@@ -104,6 +104,22 @@ def mock_node_dict_2():
         'dataIndex': {},
         'score': 0,
     }
+
+
+@pytest.fixture
+def mock_ddl_config_1():
+    return DDLConfig(
+        name='Test instance',
+        description='This is a test instance',
+        url='https://test-node.example.com',
+        allow_non_client_authenticated=True,
+        auto_user_registration=True,
+        anonymous_access=True,
+        default_ttl=5,
+        optimal_record_percentage=0.5,
+        time_score_weight=0.5,
+        ema_factor=0.5,
+    )
 
 
 @pytest.fixture

@@ -1,22 +1,4 @@
-import pytest
-
 from dedi_link.model import DDLConfig
-
-
-@pytest.fixture
-def mock_ddl_config_1():
-    return DDLConfig(
-        name='Test instance',
-        description='This is a test instance',
-        url='https://test-node.example.com',
-        allow_non_client_authenticated=True,
-        auto_user_registration=True,
-        anonymous_access=True,
-        default_ttl=5,
-        optimal_record_percentage=0.5,
-        time_score_weight=0.5,
-        ema_factor=0.5,
-    )
 
 
 class TestDDLConfig:

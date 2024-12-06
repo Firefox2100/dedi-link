@@ -3,9 +3,10 @@ import time
 import uuid
 import base64
 import json
+
 import jwt
 import networkx as nx
-from typing import TypeVar, Any, List, Generic
+from typing import TypeVar, Any, List, Generic, Type
 from collections import Counter
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives import serialization
@@ -22,6 +23,7 @@ from dedi_link.etc.exceptions import NetworkRequestFailed, NetworkInterfaceNotIm
 from ..config import DDLConfig
 from ..network import Network, NetworkT
 from ..node import Node, NodeT
+from ..data_index import DataIndexT
 from ..user_mapping import UserMappingT
 from ..network_message import NetworkMessage, RelayTarget, RelayTargetT, NetworkRelayMessage, NetworkMessageHeader, \
                               NetworkMessageT, NetworkRelayMessageT, NetworkMessageHeaderT
@@ -32,42 +34,24 @@ NetworkInterfaceBT = TypeVar('NetworkInterfaceBT', bound='NetworkInterfaceB')
 NetworkInterfaceT = TypeVar('NetworkInterfaceT', bound='NetworkInterface')
 
 
-class NetworkInterfaceB(Generic[SessionT, NetworkT, NodeT, RelayTargetT, NetworkRelayMessageT]):
-    SESSION_CLASS = Session
-    NETWORK_CLASS = Network
-    NODE_CLASS = Node
-    RELAY_TARGET_CLASS = RelayTarget
-    NETWORK_MESSAGE_CLASS = NetworkMessage
-    NETWORK_RELAY_MESSAGE_CLASS = NetworkRelayMessage
+class NetworkInterfaceB(Generic[
+                            NetworkT, NodeT, RelayTargetT, NetworkMessageHeaderT,
+                            NetworkRelayMessageT, DataIndexT, UserMappingT
+                        ]):
+    NETWORK_CLASS = Network[DataIndexT, UserMappingT, NodeT]
+    NODE_CLASS = Node[DataIndexT, UserMappingT]
+    RELAY_TARGET_CLASS = RelayTarget[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]
+    NETWORK_MESSAGE_CLASS = NetworkMessage[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]
+    NETWORK_RELAY_MESSAGE_CLASS = NetworkRelayMessage[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT, RelayTargetT]
 
     def __init__(self,
                  network_id: str,
                  instance_id: str,
                  config: DDLConfig,
-                 session: SessionT | None = None,
                  ):
         self.network_id = network_id
         self.instance_id = instance_id
         self.config = config
-
-        if session is not None:
-            self.session = session
-        else:
-            self.session = self.SESSION_CLASS()
-
-    @classmethod
-    def from_interface(cls,
-                       interface: NetworkInterfaceBT,
-                       ) -> NetworkInterfaceBT:
-        """
-        Factory method to create a new interface from an existing one
-        """
-        return cls(
-            network_id=interface.network_id,
-            instance_id=interface.instance_id,
-            session=interface.session,
-            config=interface.config,
-        )
 
     @staticmethod
     def vote_from_responses(objects: List[List[T]],
@@ -111,7 +95,7 @@ class NetworkInterfaceB(Generic[SessionT, NetworkT, NodeT, RelayTargetT, Network
             url = self.config.url + path
         else:
             # Ensure that this URL is different from the self-URL
-            if url == self.config.url + path:
+            if url == self.config.url:
                 return None
 
         # Check if the URL contains "localhost" or "127.0.0.1"
@@ -123,6 +107,8 @@ class NetworkInterfaceB(Generic[SessionT, NetworkT, NodeT, RelayTargetT, Network
     def _find_path_to_node(self,
                            network_graph: nx.DiGraph,
                            node_id: str,
+                           route_through: list[str] | None = None,
+                           route_length: int = None,
                            ) -> list[list[str]]:
         """
         Find the shortest path to a node in the network
@@ -133,6 +119,11 @@ class NetworkInterfaceB(Generic[SessionT, NetworkT, NodeT, RelayTargetT, Network
 
         :param network_graph: The network graph
         :param node_id: The node ID to find the path to
+        :param route_through: Nodes that should be prioritised in the path. If present,
+        the path will try to go through the nodes requested, as many as possible, unless
+        there are shorter routes. These nodes override the score-based routing, but not
+        the length-based routing.
+        :param route_length: The maximum length of the route
         """
         try:
             paths = nx.all_shortest_paths(
@@ -143,38 +134,59 @@ class NetworkInterfaceB(Generic[SessionT, NetworkT, NodeT, RelayTargetT, Network
 
             # Compare them with scores
             max_score = -1
+            max_going_through = -1
             best_path = None
+            route_through = set(route_through) if route_through is not None else set()
+            route_length = route_length or self.config.default_ttl + 1
 
             for path in paths:
+                if len(path) > route_length:
+                    # Path too long
+                    continue
+
                 path_score = sum([network_graph.nodes[n]['score'] for n in path])
 
-                if path_score > max_score:
-                    max_score = path_score
-                    best_path = path
+                # See how many nodes are in the route_through list
+                going_through = len(set(path) & route_through)
 
-            return [best_path]
-        except nx.NetworkXNoPath:
+                if going_through > max_going_through:
+                    best_path = path
+                    max_going_through = going_through
+                    max_score = path_score
+                elif going_through == max_going_through:
+                    if path_score > max_score:
+                        best_path = path
+                        max_score = path_score
+
+            return [best_path] if best_path is not None else []
+        except (nx.NetworkXNoPath, nx.NodeNotFound):
             # Not reachable, find the shortest path on all nodes that are reachable
             all_shortest_paths = nx.single_source_shortest_path(
                 network_graph,
                 source=self.instance_id,
             )
 
-            # Sort the paths by the score of the terminating node
+            # Remove the path ending with the origin itself
+            all_shortest_paths.pop(self.instance_id)
+
+            # Sort the paths by the score of the terminating node, then by length
             # Because nodes with higher scores are more likely to be able to reach other nodes
-            paths = sorted(
-                all_shortest_paths.items(),
-                key=lambda x: network_graph.nodes[x[0]]['score'],
+            sorted_keys = sorted(
+                all_shortest_paths.keys(),
+                key=lambda x: (network_graph.nodes[x]['score'], -1 * len(all_shortest_paths[x])),
+                reverse=True,
             )
+
+            paths = [all_shortest_paths[k] for k in sorted_keys if len(all_shortest_paths[k]) <= route_length]
 
             return paths
 
-    def _find_path_to_nodes(self,
-                            network_graph: nx.DiGraph,
-                            node_ids: list[str],
-                            ) -> list[str]:
+    def _find_relay_nodes(self,
+                          network_graph: nx.DiGraph,
+                          node_ids: list[str],
+                          ) -> list[str]:
         """
-        Find a set of paths that can reach all nodes given
+        Find a set of starting nodes that, once reached, can reach all the target nodes
 
         This is used to optimise the broadcasting feature, where if one node
         can reach multiple other nodes faster, it should be used as a common
@@ -183,51 +195,60 @@ class NetworkInterfaceB(Generic[SessionT, NetworkT, NodeT, RelayTargetT, Network
         :param network_graph: The network graph
         :param node_ids: The node IDs to find the path to
         """
-        paths = {}
-        paths_pending = {}
+        starting_nodes = set()
+        paths = []
+        broadcast = False
+
+        neighbors = network_graph.neighbors(self.instance_id)
 
         for node_id in node_ids:
-            node_paths = self._find_path_to_node(
-                network_graph=network_graph,
-                node_id=node_id,
-            )
-
-            if len(node_paths) == 1:
-                # Direct path, should be used
-                paths[node_id] = node_paths[0]
+            if node_id in neighbors:
+                # Find the ones that can be delivered directly
+                # These are the nodes that must appear in the final result
+                starting_nodes.add(node_id)
             else:
-                paths_pending[node_id] = node_paths
+                exist = False
 
-        for node_id in paths_pending.keys():
-            # The node is not directly reachable, see if any of the proposed
-            # paths are already in the list
-            existing_optimal = []
+                for path in paths:
+                    if node_id in path:
+                        # Already found a path to the node
+                        exist = True
+                        break
 
-            for path in paths_pending[node_id]:
-                if path[-1] in paths.keys():
-                    existing_optimal = path
-                    break
+                if not exist:
+                    shortest_paths = self._find_path_to_node(
+                        network_graph=network_graph,
+                        node_id=node_id,
+                        route_through=list(starting_nodes) if starting_nodes else None,
+                    )
 
-            if existing_optimal:
-                paths[node_id] = existing_optimal
-            else:
-                # No existing optimal path found, this node has to be relayed
-                paths[node_id] = paths_pending[node_id][0]
+                    if len(shortest_paths) == 0:
+                        # Completely not reachable, skip this node
+                        continue
+                    elif len(shortest_paths) == 1:
+                        # Routing found, add the path
+                        paths.append(shortest_paths[0])
+                    else:
+                        # No direct path found, broadcast to all nodes
+                        broadcast = True
+                        break
 
-        relaying_nodes = []
+        if broadcast:
+            # Return all neighbours
+            return list(neighbors)
+        else:
+            path_starting = [path[0] for path in paths]
+            starting_nodes.update(path_starting)
 
-        for v in paths.values():
-            relaying_nodes.append(v[1])     # [0] should be the node itself, so [1] is the next hop
-
-        return relaying_nodes
+            return list(starting_nodes)
 
     @classmethod
-    async def _validate_signature(cls,
-                                  signature: str,
-                                  payload: bytes,
-                                  node_public_key: str,
-                                  timestamp: int | None = None,
-                                  ):
+    def _validate_signature(cls,
+                            signature: str,
+                            payload: bytes,
+                            node_public_key: str,
+                            timestamp: int | None = None,
+                            ):
         """
         Validate the signature of a message from another node
         """
@@ -344,9 +365,34 @@ class NetworkInterfaceB(Generic[SessionT, NetworkT, NodeT, RelayTargetT, Network
             (1 - self.config.time_score_weight) * response_quality_score
 
 
-class NetworkInterface(NetworkInterfaceB[SessionT],
-                       Generic[SessionT]
+class NetworkInterface(NetworkInterfaceB[
+                           NetworkT, NodeT, RelayTargetT, NetworkMessageHeaderT,
+                           NetworkRelayMessageT, DataIndexT, UserMappingT
+                       ],
+                       Generic[
+                           NetworkT, NodeT, RelayTargetT, NetworkMessageHeaderT,
+                           NetworkRelayMessageT, DataIndexT, UserMappingT, SessionT
+                       ]
                        ):
+    SESSION_CLASS = Session[NetworkMessageT, NetworkMessageHeaderT]
+
+    def __init__(self,
+                 network_id: str,
+                 instance_id: str,
+                 config: DDLConfig,
+                 session: SessionT | None = None,
+                 ):
+        super().__init__(
+            network_id=network_id,
+            instance_id=instance_id,
+            config=config,
+        )
+
+        if session is not None:
+            self.session: SessionT = session
+        else:
+            self.session: SessionT = self.SESSION_CLASS()
+
     def __enter__(self):
         return self
 
@@ -354,6 +400,7 @@ class NetworkInterface(NetworkInterfaceB[SessionT],
         self.close()
 
     @property
+    @contextmanager
     def network_graph(self) -> nx.DiGraph:
         """
         Get a networkx.DiGraph representation of the network
@@ -362,6 +409,20 @@ class NetworkInterface(NetworkInterfaceB[SessionT],
 
     def close(self):
         self.session.close()
+
+    @classmethod
+    def from_interface(cls: Type[NetworkInterfaceT],
+                       interface: NetworkInterfaceT,
+                       ) -> NetworkInterfaceT:
+        """
+        Factory method to create a new interface from an existing one
+        """
+        return cls(
+            network_id=interface.network_id,
+            instance_id=interface.instance_id,
+            session=interface.session,
+            config=interface.config,
+        )
 
     def check_connectivity(self,
                            url: str | None = None,
@@ -395,158 +456,17 @@ class NetworkInterface(NetworkInterfaceB[SessionT],
         except NetworkRequestFailed:
             return False
 
-    def find_path_to_nodes(self,
-                           node_ids: list[str],
-                           ) -> list[str]:
+    def find_relay_nodes(self,
+                         node_ids: list[str],
+                         ) -> list[str]:
         """
         Tries to the optimal node to use for relaying a message
         """
         with self.network_graph as graph:
-            return self._find_path_to_nodes(
+            return self._find_relay_nodes(
                 network_graph=graph,
                 node_ids=node_ids,
             )
-
-    def send_message(self,
-                     node: NodeT,
-                     message: NetworkMessage,
-                     path: str = '/api',
-                     access_token: str | None = None,
-                     should_raise: bool = False,
-                     should_relay: bool = True,
-                     ) -> tuple[NetworkMessage | None, NetworkMessageHeader | None]:
-        """
-        Send a message to a node.
-
-        :param node: Node to send the message to
-        :param message: Message to send
-        :param path: Path to send the message to
-        :param access_token: A custom access token; if None, the service account token will be used
-        :param should_raise: Whether to raise an exception if the request fails
-        :param should_relay: Whether to relay the message if the node is unreachable
-        :return:
-        """
-        target_reachable = self.check_connectivity(node.url + '/api')
-
-        if target_reachable:
-            url = node.url + path
-
-            start_time = time.monotonic()
-
-            response_message, response_header = self.session.post(
-                url=url,
-                message=message,
-                access_token=access_token,
-            )
-
-            finish_time = time.monotonic()
-            time_elapsed = finish_time - start_time
-
-            record_count = None
-
-            if message.message_type == MessageType.DATA_MESSAGE:
-                # Data message
-                # An instance will only actively send out a query
-                record_count = response_message.record_count
-
-            new_score = self.calculate_new_score(
-                time_elapsed=time_elapsed,
-                record_count=record_count,
-                record_count_max=node.data_index.record_count or 0,
-            )
-
-            node.update_score(new_score)
-
-            self.validate_message(response_message, response_header)
-
-            return response_message, response_header
-        elif should_relay:
-            relay_message = self.NETWORK_RELAY_MESSAGE_CLASS(
-                sender_id=self.instance_id,
-                network_id=self.network_id,
-                node_id=node.node_id,
-                relay_targets=[
-                    self.RELAY_TARGET_CLASS(
-                        recipient_ids=[node.node_id],
-                        header=message.generate_headers(
-                            access_token=access_token,
-                        ),
-                        message=message,
-                    ),
-                ],
-            )
-
-            response_message, response_header = self.relay_message(
-                message=relay_message,
-                path=path,
-                access_token=access_token,
-                should_raise=should_raise,
-                skipping_nodes=[node.node_id],
-            )
-
-            if response_header is not None:
-                # Message routing successful, unpack the response
-                if not response_header.delivered:
-                    raise MessageUndeliverable('Relaying failed')
-
-                # This method is only used when relaying a message to a single node
-                # So the response should only contain one relay target
-                if len(response_message.relay_targets) != 1:
-                    raise ValueError('Relay message got unexpected response length')
-
-                return response_message.relay_targets[0].message, response_message.relay_targets[0].header
-        else:
-            raise MessageUndeliverable('No direct route to target node')
-
-    def relay_message(self,
-                      message: NetworkRelayMessageT,
-                      path: str = '/federation/federation/',
-                      access_token: str | None = None,
-                      should_raise: bool = False,
-                      skipping_nodes: list[str] = None,
-                      ) -> tuple[NetworkRelayMessageT | None, NetworkMessageHeaderT | None]:
-        network = self.NETWORK_CLASS.load(self.network_id)
-        nodes = network.nodes_approved
-
-        target_nodes = set()
-        for target in message.relay_targets:
-            target_nodes.update(target.recipient_ids)
-
-        # Find the optimal next hops
-        relay_nodes = set(self.find_path_to_nodes(
-            node_ids=list(target_nodes),
-        ))
-        existing_nodes = set([node.node_id for node in nodes])
-
-        if skipping_nodes:
-            hops = list(relay_nodes & existing_nodes - set(skipping_nodes))
-        else:
-            hops = list(relay_nodes & existing_nodes)
-
-        nodes = [n for n in nodes if n.node_id in hops]
-
-        # Because this only happens after a message sending failure,
-        # there is no need to check connectivity again
-        for node in nodes:
-            # Send one after another because only one route is needed
-            response_message, response_message_header = self.send_message(
-                node=node,
-                message=message,
-                path=path,
-                access_token=access_token,
-                should_raise=should_raise,
-                should_relay=False,
-            )
-
-            if response_message_header.delivered:
-                # Message routing succeeded
-                if not isinstance(response_message, self.NETWORK_RELAY_MESSAGE_CLASS):
-                    # Relay message should only be responded with another relay message
-                    raise ValueError(f'Relay message got unexpected response type: {response_message.message_type}')
-
-                return response_message, response_message_header
-
-        return None, None
 
     def validate_message(self,
                          message: NetworkMessage,
@@ -615,6 +535,147 @@ class NetworkInterface(NetworkInterfaceB[SessionT],
 
         return user_id
 
+    def send_message(self,
+                     node: NodeT,
+                     message: NetworkMessage,
+                     path: str = '/api',
+                     access_token: str | None = None,
+                     should_raise: bool = False,
+                     should_relay: bool = True,
+                     ) -> tuple[NetworkMessage | None, NetworkMessageHeader | None]:
+        """
+        Send a message to a node.
+
+        :param node: Node to send the message to
+        :param message: Message to send
+        :param path: Path to send the message to
+        :param access_token: A custom access token; if None, the service account token will be used
+        :param should_raise: Whether to raise an exception if the request fails
+        :param should_relay: Whether to relay the message if the node is unreachable
+        :return:
+        """
+        target_reachable = self.check_connectivity(node.url + '/api')
+
+        if target_reachable:
+            url = node.url + path
+
+            start_time = time.monotonic()
+
+            response_message, response_header = self.session.post(
+                url=url,
+                message=message,
+                access_token=access_token,
+            )
+
+            finish_time = time.monotonic()
+            time_elapsed = finish_time - start_time
+
+            record_count = None
+
+            if message.message_type == MessageType.DATA_MESSAGE:
+                # Data message
+                # An instance will only actively send out a query
+                # so this should be a data response
+                record_count = response_message.record_count
+
+            new_score = self.calculate_new_score(
+                time_elapsed=time_elapsed,
+                record_count=record_count,
+                record_count_max=node.data_index.record_count or 0,
+            )
+
+            node.update_score(new_score)
+
+            self.validate_message(response_message, response_header)
+
+            return response_message, response_header
+        elif should_relay:
+            relay_message = self.NETWORK_RELAY_MESSAGE_CLASS(
+                network_id=self.network_id,
+                node_id=self.instance_id,
+                relay_targets=[
+                    self.RELAY_TARGET_CLASS(
+                        recipient_ids=[node.node_id],
+                        header=message.generate_headers(
+                            access_token=access_token,
+                        ),
+                        message=message,
+                    ),
+                ],
+            )
+
+            response_message, response_header = self.relay_message(
+                message=relay_message,
+                path=path,
+                access_token=access_token,
+                should_raise=should_raise,
+                skipping_nodes=[node.node_id],
+            )
+
+            if response_header is not None:
+                # Message routing successful, unpack the response
+                if not response_header.delivered:
+                    raise MessageUndeliverable('Relaying failed')
+
+                # This method is only used when relaying a message to a single node
+                # So the response should only contain one relay target
+                if len(response_message.relay_targets) != 1:
+                    raise ValueError('Relay message got unexpected response length')
+
+                return response_message.relay_targets[0].message, response_message.relay_targets[0].header
+        else:
+            raise MessageUndeliverable('No direct route to target node')
+
+    def relay_message(self,
+                      message: NetworkRelayMessageT,
+                      path: str = '/federation/federation/',
+                      access_token: str | None = None,
+                      should_raise: bool = False,
+                      skipping_nodes: list[str] = None,
+                      ) -> tuple[NetworkRelayMessageT | None, NetworkMessageHeaderT | None]:
+        network = self.NETWORK_CLASS.load(self.network_id)
+        nodes = network.nodes_approved
+
+        target_nodes = set()
+        for target in message.relay_targets:
+            target_nodes.update(target.recipient_ids)
+
+        # Find the optimal next hops
+        relay_nodes = set(self.find_relay_nodes(
+            node_ids=list(target_nodes),
+        ))
+        existing_nodes = set([node.node_id for node in nodes])
+
+        if skipping_nodes:
+            hops = list(relay_nodes & existing_nodes - set(skipping_nodes))
+        else:
+            hops = list(relay_nodes & existing_nodes)
+
+        nodes = [n for n in nodes if n.node_id in hops]
+
+        # Because this only happens after a message sending failure,
+        # there is no need to check connectivity again
+        for node in nodes:
+            # Send one after another because only one route is needed
+            response_message, response_message_header = self.send_message(
+                node=node,
+                message=message,
+                path=path,
+                access_token=access_token,
+                should_raise=should_raise,
+                should_relay=False,
+            )
+
+            if response_message_header.delivered:
+                # Message routing succeeded
+                if not isinstance(response_message, NetworkRelayMessage):
+                    # Relay message should only be responded with another relay message
+                    raise ValueError(f'Relay message got unexpected response type: {response_message.message_type}')
+
+                return response_message, response_message_header
+
+        return None, None
+
     def broadcast_message(self,
                           message: NetworkMessage,
                           path: str = '/api',
@@ -622,7 +683,7 @@ class NetworkInterface(NetworkInterfaceB[SessionT],
                           should_raise: bool = False,
                           skip_unreachable: bool = False,
                           change_id: bool = False,
-                          skipping_nodes: List[str] = None,
+                          skipping_nodes: list[str] = None,
                           ) -> dict[str, tuple[NetworkMessageT, NetworkMessageHeaderT]]:
         """
         Broadcast a message to all nodes in the network.
@@ -671,7 +732,6 @@ class NetworkInterface(NetworkInterfaceB[SessionT],
         if len(unreachable_nodes) > 0:
             if message.message_type != NetworkMessageT.RELAY_MESSAGE:
                 relay_message = self.NETWORK_RELAY_MESSAGE_CLASS(
-                    sender_id=self.instance_id,
                     network_id=self.network_id,
                     node_id=self.instance_id,
                     relay_targets=[
@@ -682,10 +742,9 @@ class NetworkInterface(NetworkInterfaceB[SessionT],
                         ),
                     ],
                 )
-            elif isinstance(message, self.NETWORK_RELAY_MESSAGE_CLASS):
+            elif isinstance(message, NetworkRelayMessage):
                 # Repack the relay message
                 relay_message = self.NETWORK_RELAY_MESSAGE_CLASS(
-                    sender_id=self.instance_id,
                     network_id=self.network_id,
                     node_id=self.instance_id,
                     relay_targets=message.relay_targets,
@@ -714,11 +773,11 @@ class NetworkInterface(NetworkInterfaceB[SessionT],
 
         return responses
 
-    async def receive_message(self,
-                              message: NetworkMessageT,
-                              headers: NetworkMessageHeaderT,
-                              should_raise: bool = False,
-                              ) -> NetworkMessageT | None:
+    def receive_message(self,
+                        message: NetworkMessageT,
+                        headers: NetworkMessageHeaderT,
+                        should_raise: bool = False,
+                        ) -> NetworkMessageT | None:
         """
         The general interface to receive a message and act upon it
         :param message: The message to process
@@ -733,28 +792,28 @@ class NetworkInterface(NetworkInterfaceB[SessionT],
         try:
             if message.message_type == MessageType.AUTH_MESSAGE:
                 auth_interface = AuthInterface.from_interface(self)
-                result = await auth_interface.receive_message(
+                result = auth_interface.receive_message(
                     message=message,
                     headers=headers,
                     should_raise=should_raise,
                 )
             elif message.message_type == MessageType.SYNC_MESSAGE:
                 sync_interface = SyncInterface.from_interface(self)
-                result = await sync_interface.receive_message(
+                result = sync_interface.receive_message(
                     message=message,
                     headers=headers,
                     should_raise=should_raise,
                 )
             elif message.message_type == MessageType.RELAY_MESSAGE:
                 relay_interface = RelayInterface.from_interface(self)
-                result = await relay_interface.receive_message(
+                result = relay_interface.receive_message(
                     message=message,
                     headers=headers,
                     should_raise=should_raise,
                 )
             elif message.message_type == MessageType.DATA_MESSAGE:
                 data_interface = DataInterface.from_interface(self)
-                result = await data_interface.receive_message(
+                result = data_interface.receive_message(
                     message=message,
                     headers=headers,
                     should_raise=should_raise,
@@ -762,7 +821,7 @@ class NetworkInterface(NetworkInterfaceB[SessionT],
             else:
                 raise ValueError(f'Unknown message type: {message.message_type}')
 
-            if isinstance(result, self.NETWORK_MESSAGE_CLASS):
+            if isinstance(result, NetworkMessage):
                 # A response is required immediately
                 return result
         except Exception as e:
