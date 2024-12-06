@@ -1,0 +1,43 @@
+strict digraph {
+    // This graph contains most possible connections between nodes
+    layout=neato;
+    edge [len=1.5];
+
+    // Source Node
+    O [label="Source", shape=circle, fixedsize=true, width=1.0];
+
+    A [label="A: 0.3", shape=circle, fixedsize=true, width=1.0];
+    B [label="B: 0.5", shape=circle, fixedsize=true, width=1.0];
+    C [label="C: 0.4", shape=circle, fixedsize=true, width=1.0];
+    D [label="D: 0.6", shape=circle, fixedsize=true, width=1.0];
+    E [label="E: 0.7", shape=circle, fixedsize=true, width=1.0];
+    F [label="F: 0.2", shape=circle, fixedsize=true, width=1.0];
+    G [label="G: 0.3", shape=circle, fixedsize=true, width=1.0];
+    H [label="H: 0.5", shape=circle, fixedsize=true, width=1.0];
+    I [label="I: 0.6", shape=circle, fixedsize=true, width=1.0];
+
+    Z [label="Z", shape=circle, fixedsize=true, width=1.0];
+
+    // Connections
+    // 1 hop
+    O -> A;
+    A -> O;
+    O -> B;
+    C -> O;
+    O -> F;
+
+    // 2 hops
+    B -> D;
+    D -> C;
+    C -> D;
+    B -> E;
+    A -> E;
+    E -> A;
+    F -> G;
+    F -> H;
+    H -> G;
+
+    // 3 hops
+    H -> I;
+
+}
