@@ -1,8 +1,11 @@
-from typing import TypeVar, Generic
+from typing import TypeVar, Generic, Type
 
 from dedi_link.etc.consts import MESSAGE_ATTRIBUTES
 from dedi_link.etc.enums import AuthMessageType, AuthMessageStatus
 from ...network import NetworkT
+from ...node import NodeT
+from ...data_index import DataIndexT
+from ...user_mapping import UserMappingT
 from ..network_message_header import NetworkMessageHeaderT
 from .network_auth_message import NetworkAuthMessageB, NetworkAuthMessage
 
@@ -11,9 +14,9 @@ AuthStatusBT = TypeVar('AuthStatusBT', bound='AuthStatusB')
 AuthStatusT = TypeVar('AuthStatusT', bound='AuthStatus')
 
 
-class AuthStatusB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT],
-                 Generic[NetworkMessageHeaderT, NetworkT]
-                 ):
+class AuthStatusB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
+                  Generic[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]
+                  ):
     """
     Base model for Auth Status
     """
@@ -70,7 +73,7 @@ class AuthStatusB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT],
         return payload
 
     @classmethod
-    def from_dict(cls, payload: dict) -> AuthStatusBT:
+    def from_dict(cls: Type[AuthStatusBT], payload: dict) -> AuthStatusBT:
         status = None
 
         if 'status' in payload[MESSAGE_ATTRIBUTES]:
@@ -85,9 +88,9 @@ class AuthStatusB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT],
         )
 
 
-class AuthStatus(AuthStatusB[NetworkMessageHeaderT, NetworkT],
-                 NetworkAuthMessage[NetworkMessageHeaderT, NetworkT],
-                 Generic[NetworkMessageHeaderT, NetworkT]
+class AuthStatus(AuthStatusB[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
+                 NetworkAuthMessage[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
+                 Generic[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]
                  ):
     """
     Auth Status Message

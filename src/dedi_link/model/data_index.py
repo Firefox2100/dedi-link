@@ -2,7 +2,7 @@
 A placeholder class for data index.
 """
 
-from typing import TypeVar
+from typing import TypeVar, Type
 
 from .base_model import BaseModel
 
@@ -36,5 +36,5 @@ class DataIndex(BaseModel):
         return {}
 
     @classmethod
-    def from_dict(cls, payload: dict) -> 'DataIndex':
+    def from_dict(cls: Type[DataIndexT], payload: dict) -> DataIndexT:
         return DataIndex()

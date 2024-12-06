@@ -1,10 +1,12 @@
 from deepdiff import DeepDiff
-from typing import TypeVar, Generic
+from typing import TypeVar, Generic, Type
 
 from dedi_link.etc.consts import MESSAGE_ATTRIBUTES, MESSAGE_DATA
 from dedi_link.etc.enums import SyncTarget, MessageType
 from ..network import NetworkT
 from ..node import Node, NodeT
+from ..data_index import DataIndexT
+from ..user_mapping import UserMappingT
 from .network_message import NetworkMessageB, NetworkMessage
 from .network_message_header import NetworkMessageHeaderT
 
@@ -13,13 +15,13 @@ NetworkSyncMessageBT = TypeVar('NetworkSyncMessageBT', bound='NetworkSyncMessage
 NetworkSyncMessageT = TypeVar('NetworkSyncMessageT', bound='NetworkSyncMessage')
 
 
-class NetworkSyncMessageB(NetworkMessageB[NetworkMessageHeaderT, NetworkT],
-                          Generic[NetworkMessageHeaderT, NetworkT, NodeT],
+class NetworkSyncMessageB(NetworkMessageB[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
+                          Generic[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
                           ):
     """
     Base class for Network Synchronisation Messages
     """
-    NODE_CLASS = Node
+    NODE_CLASS = Node[DataIndexT, UserMappingT]
 
     def __init__(self,
                  network_id: str,
@@ -85,7 +87,7 @@ class NetworkSyncMessageB(NetworkMessageB[NetworkMessageHeaderT, NetworkT],
             for data_item in self.data:
                 if isinstance(data_item, dict):
                     message_data.append(data_item)
-                elif isinstance(data_item, self.NODE_CLASS):
+                elif isinstance(data_item, Node):
                     message_data.append(data_item.to_dict(key=True))
                 else:
                     message_data.append(data_item.to_dict())
@@ -95,7 +97,7 @@ class NetworkSyncMessageB(NetworkMessageB[NetworkMessageHeaderT, NetworkT],
         return payload
 
     @classmethod
-    def from_dict(cls, payload: dict) -> NetworkSyncMessageBT:
+    def from_dict(cls: Type[NetworkSyncMessageBT], payload: dict) -> NetworkSyncMessageBT:
         if MESSAGE_DATA in payload:
             message_data = []
 
@@ -119,9 +121,9 @@ class NetworkSyncMessageB(NetworkMessageB[NetworkMessageHeaderT, NetworkT],
         )
 
 
-class NetworkSyncMessage(NetworkSyncMessageB[NetworkMessageHeaderT, NetworkT, NodeT],
-                         NetworkMessage[NetworkMessageHeaderT, NetworkT],
-                         Generic[NetworkMessageHeaderT, NetworkT, NodeT],
+class NetworkSyncMessage(NetworkSyncMessageB[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
+                         NetworkMessage[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
+                         Generic[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
                          ):
     """
     Network Synchronisation Message

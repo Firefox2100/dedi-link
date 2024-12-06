@@ -5,66 +5,6 @@ from dedi_link.etc.enums import MessageType, SyncTarget
 from dedi_link.model.network_message import NetworkSyncMessage
 
 
-@pytest.fixture
-def mock_network_sync_message_1(mock_node_1):
-    return NetworkSyncMessage(
-        network_id='62d13013-d80c-4539-adc1-61862bdd65cb',
-        node_id='f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
-        target_type=SyncTarget.NODE,
-        data=[mock_node_1],
-        message_id='afc42b81-68ab-472b-8489-8bede573a4b7',
-        timestamp=1704067200,
-    )
-
-
-@pytest.fixture
-def mock_network_sync_message_dict_1(mock_node_dict_1):
-    return {
-        'messageType': 'syncMessage',
-        'messageAttributes': {
-            'messageId': 'afc42b81-68ab-472b-8489-8bede573a4b7',
-            'networkId': '62d13013-d80c-4539-adc1-61862bdd65cb',
-            'nodeId': 'f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
-            'targetType': 'node',
-        },
-        'messageData': [mock_node_dict_1],
-        'timestamp': 1704067200,
-    }
-
-
-@pytest.fixture
-def mock_network_sync_message_2(mock_node_1):
-    return NetworkSyncMessage(
-        network_id='62d13013-d80c-4539-adc1-61862bdd65cb',
-        node_id='f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
-        target_type=SyncTarget.USER,
-        data=[{
-            'userId': '19a80cb0-7861-42c9-9212-c2e0cbe8dcfb',
-            'publicKey': 'test_public_key',
-        }],
-        message_id='11bd629c-2d90-48f2-b176-6b9e10a4dcc5',
-        timestamp=1704067200,
-    )
-
-
-@pytest.fixture
-def mock_network_sync_message_dict_2():
-    return {
-        'messageType': 'syncMessage',
-        'messageAttributes': {
-            'messageId': '11bd629c-2d90-48f2-b176-6b9e10a4dcc5',
-            'networkId': '62d13013-d80c-4539-adc1-61862bdd65cb',
-            'nodeId': 'f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
-            'targetType': 'user',
-        },
-        'messageData': [{
-            'userId': '19a80cb0-7861-42c9-9212-c2e0cbe8dcfb',
-            'publicKey': 'test_public_key',
-        }],
-        'timestamp': 1704067200,
-    }
-
-
 class TestNetworkSyncMessage:
     def test_init(self, mock_node_1):
         network_sync_message = NetworkSyncMessage(

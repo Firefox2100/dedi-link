@@ -4,30 +4,6 @@ from deepdiff import DeepDiff
 from dedi_link.model.network_message import NetworkMessageHeader
 
 
-@pytest.fixture
-def mock_network_message_header_1():
-    return NetworkMessageHeader(
-        node_id='f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
-        network_id='62d13013-d80c-4539-adc1-61862bdd65cb',
-        server_signature='server_signature',
-        access_token='access_token',
-        user_id='19a80cb0-7861-42c9-9212-c2e0cbe8dcfb',
-        delivered=True,
-    )
-
-
-@pytest.fixture
-def mock_network_message_header_2():
-    return NetworkMessageHeader(
-        node_id='428fa5a2-132f-4a9e-981a-cad16ae702db',
-        network_id='1560cbf8-29e4-4fee-af31-b88ebe61e440',
-        server_signature='server_signature',
-        access_token='access_token',
-        user_id='9a05d3e5-7014-4416-ac2d-442cca395555',
-        delivered=True,
-    )
-
-
 class TestNetworkMessageHeader:
     def test_init(self):
         network_message_header = NetworkMessageHeader(
@@ -65,34 +41,20 @@ class TestNetworkMessageHeader:
 
         assert isinstance(message_hash, int)
 
-    def test_headers(self, mock_network_message_header_1):
-        payload = {
-            'Content-Type': 'application/json',
-            'X-Node-ID': 'f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
-            'X-Network-ID': '62d13013-d80c-4539-adc1-61862bdd65cb',
-            'X-Server-Signature': 'server_signature',
-            'Authorization': 'Bearer access_token',
-            'X-User-ID': '19a80cb0-7861-42c9-9212-c2e0cbe8dcfb',
-            'X-Delivered': 'true',
-        }
-
+    def test_headers(self,
+                     mock_network_message_header_1,
+                     mock_network_message_header_dict_1,
+                     ):
         assert not DeepDiff(
             mock_network_message_header_1.headers,
-            payload,
+            mock_network_message_header_dict_1,
             ignore_order=True,
         )
 
-    def test_from_headers(self, mock_network_message_header_1):
-        payload = {
-            'Content-Type': 'application/json',
-            'X-Node-ID': 'f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
-            'X-Network-ID': '62d13013-d80c-4539-adc1-61862bdd65cb',
-            'X-Server-Signature': 'server_signature',
-            'Authorization': 'Bearer access_token',
-            'X-User-ID': '19a80cb0-7861-42c9-9212-c2e0cbe8dcfb',
-            'X-Delivered': 'true',
-        }
-
-        network_message_header = NetworkMessageHeader.from_headers(payload)
+    def test_from_headers(self,
+                          mock_network_message_header_1,
+                          mock_network_message_header_dict_1,
+                          ):
+        network_message_header = NetworkMessageHeader.from_headers(mock_network_message_header_dict_1)
 
         assert network_message_header == mock_network_message_header_1

@@ -3,7 +3,7 @@ Network model.
 """
 
 import uuid
-from typing import Generic, TypeVar
+from typing import Generic, TypeVar, Type
 
 from dedi_link.etc.exceptions import NetworkNotImplemented
 from .base_model import BaseModel, SyncDataInterface
@@ -77,7 +77,7 @@ class NetworkB(BaseModel,
         )
 
     @classmethod
-    def from_dict(cls, payload: dict[str, str | list[str] | bool | dict]) -> NetworkBT:
+    def from_dict(cls: Type[NetworkBT], payload: dict) -> NetworkBT:
         if 'networkId' not in payload or not payload['networkId']:
             payload['networkId'] = str(uuid.uuid4())
 

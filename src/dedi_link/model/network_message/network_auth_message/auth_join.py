@@ -1,10 +1,12 @@
 import uuid
-from typing import TypeVar, Generic
+from typing import TypeVar, Generic, Type
 
 from dedi_link.etc.consts import MESSAGE_DATA, MESSAGE_ATTRIBUTES
 from dedi_link.etc.enums import AuthMessageType
 from ...node import Node, NodeT
 from ...network import NetworkT
+from ...data_index import DataIndexT
+from ...user_mapping import UserMappingT
 from ..network_message_header import NetworkMessageHeaderT
 from .network_auth_message import NetworkAuthMessageB, NetworkAuthMessage
 
@@ -13,10 +15,10 @@ AuthJoinBT = TypeVar('AuthJoinBT', bound='AuthJoinB')
 AuthJoinT = TypeVar('AuthJoinT', bound='AuthJoin')
 
 
-class AuthJoinB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT],
-                Generic[NetworkMessageHeaderT, NetworkT, NodeT]
+class AuthJoinB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
+                Generic[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]
                 ):
-    NODE_CLASS = Node
+    NODE_CLASS = Node[DataIndexT, UserMappingT]
 
     def __init__(self,
                  network_id: str,
@@ -66,7 +68,7 @@ class AuthJoinB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT],
         return payload
 
     @classmethod
-    def from_dict(cls, payload: dict) -> AuthJoinBT:
+    def from_dict(cls: Type[AuthJoinBT], payload: dict) -> AuthJoinBT:
         return cls(
             message_id=payload[MESSAGE_ATTRIBUTES]['messageId'],
             network_id=payload[MESSAGE_ATTRIBUTES]['networkId'],
@@ -76,9 +78,9 @@ class AuthJoinB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT],
         )
 
 
-class AuthJoin(AuthJoinB[NetworkMessageHeaderT, NetworkT, NodeT],
-               NetworkAuthMessage[NetworkMessageHeaderT, NetworkT],
-               Generic[NetworkMessageHeaderT, NetworkT, NodeT]
+class AuthJoin(AuthJoinB[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
+               NetworkAuthMessage[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
+               Generic[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]
                ):
     """
     Network Authorization Join Message

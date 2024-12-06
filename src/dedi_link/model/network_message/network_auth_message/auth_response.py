@@ -1,9 +1,11 @@
-from typing import TypeVar, Generic
+from typing import TypeVar, Generic, Type
 
 from dedi_link.etc.consts import MESSAGE_ATTRIBUTES, MESSAGE_DATA
 from dedi_link.etc.enums import AuthMessageType
 from ...node import Node, NodeT
 from ...network import NetworkT
+from ...data_index import DataIndexT
+from ...user_mapping import UserMappingT
 from ..network_message_header import NetworkMessageHeaderT
 from .network_auth_message import NetworkAuthMessageB, NetworkAuthMessage
 
@@ -12,13 +14,13 @@ AuthResponseBT = TypeVar('AuthResponseBT', bound='AuthResponseB')
 AuthResponseT = TypeVar('AuthResponseT', bound='AuthResponse')
 
 
-class AuthResponseB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT],
-                    Generic[NetworkMessageHeaderT, NetworkT, NodeT]
+class AuthResponseB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
+                    Generic[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]
                     ):
     """
     The base model for Auth Response
     """
-    NODE_CLASS = Node
+    NODE_CLASS = Node[DataIndexT, UserMappingT]
 
     def __init__(self,
                  message_id: str,
@@ -69,7 +71,7 @@ class AuthResponseB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT],
                 if self.network.network_id != self.network_id:
                     raise ValueError('Network ID must match the Network object')
 
-    def __eq__(self, other: 'AuthResponse'):
+    def __eq__(self, other):
         if not isinstance(other, AuthResponseB):
             return NotImplemented
 
@@ -88,7 +90,12 @@ class AuthResponseB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT],
         ])
 
     def __hash__(self):
-        return hash((super().__hash__(), self.approved, self.node, self.network))
+        return hash((
+            super().__hash__(),
+            self.approved,
+            self.node,
+            self.network
+        ))
 
     def to_dict(self) -> dict:
         payload = super().to_dict()
@@ -111,7 +118,7 @@ class AuthResponseB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT],
         return payload
 
     @classmethod
-    def from_dict(cls, payload: dict) -> AuthResponseBT:
+    def from_dict(cls: Type[AuthResponseBT], payload: dict) -> AuthResponseBT:
         node = None
         network = None
 
@@ -133,9 +140,9 @@ class AuthResponseB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT],
         )
 
 
-class AuthResponse(AuthResponseB[NetworkMessageHeaderT, NetworkT, NodeT],
-                   NetworkAuthMessage[NetworkMessageHeaderT, NetworkT],
-                   Generic[NetworkMessageHeaderT, NetworkT, NodeT]
+class AuthResponse(AuthResponseB[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
+                   NetworkAuthMessage[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
+                   Generic[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]
                    ):
     """
     Network Authorisation Response Message

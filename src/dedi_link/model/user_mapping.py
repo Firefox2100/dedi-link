@@ -8,7 +8,7 @@ one instance may not be able to correctly accept the credentials
 from another one.
 """
 
-from typing import TypeVar
+from typing import TypeVar, Type
 from deepdiff import DeepDiff
 
 from dedi_link.etc.enums import MappingType
@@ -85,7 +85,7 @@ class UserMapping(BaseModel):
         return payload
 
     @classmethod
-    def from_dict(cls, payload: dict[str, str | dict]) -> 'UserMapping':
+    def from_dict(cls: Type[UserMappingT], payload: dict) -> 'UserMapping':
         mapping_type = MappingType(payload.get('mappingType', MappingType.NO_MAPPING.value))
         static_id = payload.get('staticId')
         dynamic_mapping = payload.get('dynamicMapping')

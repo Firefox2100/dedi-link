@@ -2,7 +2,7 @@
 Node model
 """
 
-from typing import Generic, TypeVar
+from typing import Generic, TypeVar, Type
 
 from dedi_link.etc.enums import MappingType
 from dedi_link.etc.exceptions import NodeNotImplemented
@@ -91,7 +91,7 @@ class NodeB(BaseModel, Generic[DataIndexT, UserMappingT]):
         )
 
     @classmethod
-    def from_dict(cls, payload: dict) -> NodeBT:
+    def from_dict(cls: Type[NodeBT], payload: dict) -> NodeBT:
         return cls(
             node_id=payload['nodeId'],
             node_name=payload['nodeName'],

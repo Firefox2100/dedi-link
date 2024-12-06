@@ -1,59 +1,8 @@
-import pytest
 from deepdiff import DeepDiff
 
-from dedi_link.etc.enums import AuthMessageType, MessageType, AuthMessageStatus
+from dedi_link.etc.enums import AuthMessageType, MessageType
 from dedi_link.model.network_message import NetworkMessage, NetworkAuthMessage
 from dedi_link.model.network_message.network_auth_message import AuthStatus
-
-
-@pytest.fixture
-def mock_auth_status_1():
-    return AuthStatus(
-        message_id='fbdd4729-2a0d-4f99-8b6c-3ce08bafa091',
-        network_id='62d13013-d80c-4539-adc1-61862bdd65cb',
-        node_id='f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
-        timestamp=1704067200,
-    )
-
-
-@pytest.fixture
-def mock_auth_status_dict_1():
-    return {
-        'messageType': 'authMessage',
-        'messageAttributes': {
-            'messageId': 'fbdd4729-2a0d-4f99-8b6c-3ce08bafa091',
-            'networkId': '62d13013-d80c-4539-adc1-61862bdd65cb',
-            'nodeId': 'f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
-            'authType': 'status',
-        },
-        'timestamp': 1704067200,
-    }
-
-
-@pytest.fixture
-def mock_auth_status_2():
-    return AuthStatus(
-        message_id='b75c30a2-f7bd-46a3-87eb-bf871c48e0e9',
-        network_id='62d13013-d80c-4539-adc1-61862bdd65cb',
-        node_id='f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
-        status=AuthMessageStatus.ACCEPTED,
-        timestamp=1704067200,
-    )
-
-
-@pytest.fixture
-def mock_auth_status_dict_2():
-    return {
-        'messageType': 'authMessage',
-        'messageAttributes': {
-            'messageId': 'b75c30a2-f7bd-46a3-87eb-bf871c48e0e9',
-            'networkId': '62d13013-d80c-4539-adc1-61862bdd65cb',
-            'nodeId': 'f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
-            'authType': 'status',
-            'status': 'accepted',
-        },
-        'timestamp': 1704067200,
-    }
 
 
 class TestAuthStatus:

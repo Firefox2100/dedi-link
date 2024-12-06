@@ -33,7 +33,7 @@ class SyncDataInterface:
         )
 
     @classmethod
-    def load(cls: Type[BaseModelT], *args, **kwargs) -> BaseModelT:
+    def load(cls: Type[SyncDataInterfaceT], *args, **kwargs) -> SyncDataInterfaceT:
         """
         Load a model from the database
 
@@ -46,7 +46,7 @@ class SyncDataInterface:
         )
 
     @classmethod
-    def load_all(cls: Type[BaseModelT], *args, **kwargs) -> list[BaseModelT]:
+    def load_all(cls: Type[SyncDataInterfaceT], *args, **kwargs) -> list[SyncDataInterfaceT]:
         """
         Load all models from the database
 

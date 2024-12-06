@@ -18,6 +18,9 @@ from dedi_link.etc.enums import MessageType, AuthMessageType, DataMessageType
 from dedi_link.etc.exceptions import NetworkMessageNotImplemented
 from ..base_model import BaseModel, SyncDataInterface
 from ..network import Network, NetworkT
+from ..node import NodeT
+from ..data_index import DataIndexT
+from ..user_mapping import UserMappingT
 from .network_message_header import NetworkMessageHeader, NetworkMessageHeaderT
 
 
@@ -45,12 +48,14 @@ class SyncNetworkMessageBP(Protocol):
         ...
 
 
-class NetworkMessageB(BaseModel, Generic[NetworkMessageHeaderT, NetworkT]):
+class NetworkMessageB(BaseModel,
+                      Generic[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]
+                      ):
     """
     Base class for a Network Message
     """
     NETWORK_MESSAGE_HEADER_CLASS = NetworkMessageHeader
-    NETWORK_CLASS = Network
+    NETWORK_CLASS = Network[DataIndexT, UserMappingT, NodeT]
 
     def __init__(self,
                  message_type: MessageType,
@@ -96,8 +101,8 @@ class NetworkMessageB(BaseModel, Generic[NetworkMessageHeaderT, NetworkT]):
         ))
 
     @classmethod
-    def _child_mapping(cls
-                       ) -> dict[Enum, tuple[Type[NetworkMessageT], Callable[[dict], Enum] | None]]:
+    def _child_mapping(cls) -> dict[Enum,tuple[Type[NetworkMessageT],
+                                    Callable[[dict], Enum] | None]]:
         from .network_auth_message import NetworkAuthMessage
         from .network_sync_message import NetworkSyncMessage
         from .network_data_message import NetworkDataMessage
@@ -130,7 +135,7 @@ class NetworkMessageB(BaseModel, Generic[NetworkMessageHeaderT, NetworkT]):
         return payload
 
     @classmethod
-    def from_dict(cls, payload: dict) -> NetworkMessageBT:
+    def from_dict(cls: Type[NetworkMessageBT], payload: dict) -> NetworkMessageBT:
         """
         Build an instance from a dictionary
 
@@ -144,7 +149,7 @@ class NetworkMessageB(BaseModel, Generic[NetworkMessageHeaderT, NetworkT]):
         raise NetworkMessageNotImplemented('from_dict method not implemented')
 
     @classmethod
-    def factory(cls, payload: dict):
+    def factory(cls: Type[NetworkMessageBT], payload: dict) -> NetworkMessageBT:
         id_var = MessageType(payload['messageType'])
 
         return cls.factory_from_id(
@@ -156,7 +161,7 @@ class NetworkMessageB(BaseModel, Generic[NetworkMessageHeaderT, NetworkT]):
     def _sign_payload(cls,
                       private_pem: str,
                       payload: str,
-                      ):
+                      ) -> str:
         private_key = serialization.load_pem_private_key(
             private_pem.encode(),
             password=None,
@@ -214,9 +219,9 @@ class SyncNetworkMessageInterface(SyncDataInterface,
         )
 
 
-class NetworkMessage(NetworkMessageB[NetworkMessageHeaderT, NetworkT],
+class NetworkMessage(NetworkMessageB[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
                      SyncNetworkMessageInterface[NetworkMessageHeaderT, NetworkT],
-                     Generic[NetworkMessageHeaderT, NetworkT]
+                     Generic[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]
                      ):
     """
     A generic network message structure

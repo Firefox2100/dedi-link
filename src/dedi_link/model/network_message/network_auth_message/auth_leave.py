@@ -4,6 +4,9 @@ from typing import TypeVar, Generic
 from dedi_link.etc.consts import MESSAGE_ATTRIBUTES
 from dedi_link.etc.enums import AuthMessageType
 from ...network import NetworkT
+from ...node import NodeT
+from ...data_index import DataIndexT
+from ...user_mapping import UserMappingT
 from ..network_message_header import NetworkMessageHeaderT
 from .network_auth_message import NetworkAuthMessageB, NetworkAuthMessage
 
@@ -12,8 +15,8 @@ AuthLeaveBT = TypeVar('AuthLeaveBT', bound='AuthLeaveB')
 AuthLeaveT = TypeVar('AuthLeaveT', bound='AuthLeave')
 
 
-class AuthLeaveB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT],
-                Generic[NetworkMessageHeaderT, NetworkT]
+class AuthLeaveB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
+                Generic[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]
                 ):
     def __init__(self,
                  node_id: str,
@@ -47,9 +50,9 @@ class AuthLeaveB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT],
         )
 
 
-class AuthLeave(AuthLeaveB[NetworkMessageHeaderT, NetworkT],
-                NetworkAuthMessage[NetworkMessageHeaderT, NetworkT],
-                Generic[NetworkMessageHeaderT, NetworkT]
+class AuthLeave(AuthLeaveB[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
+                NetworkAuthMessage[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
+                Generic[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]
                 ):
     """
     Network Authorization Leave Message

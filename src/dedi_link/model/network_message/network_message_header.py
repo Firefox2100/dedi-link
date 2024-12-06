@@ -1,4 +1,4 @@
-from typing import TypeVar
+from typing import TypeVar, Type
 
 
 NetworkMessageHeaderT = TypeVar('NetworkMessageHeaderT', bound='NetworkMessageHeader')
@@ -70,7 +70,7 @@ class NetworkMessageHeader:
         return headers
 
     @classmethod
-    def from_headers(cls, headers) -> 'NetworkMessageHeader':
+    def from_headers(cls: Type[NetworkMessageHeaderT], headers) -> NetworkMessageHeaderT:
         """
         Generate a NetworkMessageHeader object from a set of headers.
         :param headers: A header object that implements the get() method,

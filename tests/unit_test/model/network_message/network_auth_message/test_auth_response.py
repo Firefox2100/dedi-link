@@ -6,68 +6,6 @@ from dedi_link.model.network_message import NetworkMessage, NetworkAuthMessage
 from dedi_link.model.network_message.network_auth_message import AuthResponse
 
 
-@pytest.fixture
-def mock_auth_response_1(mock_node_2, mock_network_1):
-    return AuthResponse(
-        message_id='a63c273c-bad2-4521-a7ce-5c9a4c07682d',
-        approved=True,
-        network_id='62d13013-d80c-4539-adc1-61862bdd65cb',
-        node_id='d3398f33-e621-465c-846f-f7f79dff6a87',
-        node=mock_node_2,
-        timestamp=1704067200,
-        network=mock_network_1,
-    )
-
-
-@pytest.fixture
-def mock_auth_response_dict_1(mock_node_dict_2, mock_network_dict_1):
-    network_dict = mock_network_dict_1.copy()
-    network_dict.pop('nodeIds')
-    network_dict.pop('instanceId')
-
-    return {
-        'messageType': 'authMessage',
-        'messageAttributes': {
-            'messageId': 'a63c273c-bad2-4521-a7ce-5c9a4c07682d',
-            'networkId': '62d13013-d80c-4539-adc1-61862bdd65cb',
-            'nodeId': 'd3398f33-e621-465c-846f-f7f79dff6a87',
-            'authType': 'response',
-            'approved': True,
-        },
-        'messageData': {
-            'node': mock_node_dict_2,
-            'network': network_dict,
-        },
-        'timestamp': 1704067200,
-    }
-
-
-@pytest.fixture
-def mock_auth_response_2():
-    return AuthResponse(
-        message_id='6669a5d8-7802-42a1-99a4-a303c0a4253c',
-        approved=False,
-        network_id='62d13013-d80c-4539-adc1-61862bdd65cb',
-        node_id='d3398f33-e621-465c-846f-f7f79dff6a87',
-        timestamp=1704067200,
-    )
-
-
-@pytest.fixture
-def mock_auth_response_dict_2():
-    return {
-        'messageType': 'authMessage',
-        'messageAttributes': {
-            'messageId': '6669a5d8-7802-42a1-99a4-a303c0a4253c',
-            'networkId': '62d13013-d80c-4539-adc1-61862bdd65cb',
-            'nodeId': 'd3398f33-e621-465c-846f-f7f79dff6a87',
-            'authType': 'response',
-            'approved': False,
-        },
-        'timestamp': 1704067200,
-    }
-
-
 class TestAuthResponse:
     def test_init(self, mock_node_2, mock_network_1):
         auth_response = AuthResponse(

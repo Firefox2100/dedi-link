@@ -5,16 +5,19 @@ from typing import Type, TypeVar, Callable, Generic
 from dedi_link.etc.consts import MESSAGE_ATTRIBUTES
 from dedi_link.etc.enums import MessageType, AuthMessageType
 from ...network import NetworkT
+from ...node import NodeT
+from ...data_index import DataIndexT
+from ...user_mapping import UserMappingT
 from ..network_message import NetworkMessageB, NetworkMessage
 from ..network_message_header import NetworkMessageHeaderT
 
 
-
+NetworkAuthMessageBT = TypeVar('NetworkAuthMessageBT', bound='NetworkAuthMessageB')
 NetworkAuthMessageT = TypeVar('NetworkAuthMessageT', bound='NetworkAuthMessage')
 
 
-class NetworkAuthMessageB(NetworkMessageB[NetworkMessageHeaderT, NetworkT],
-                          Generic[NetworkMessageHeaderT, NetworkT]
+class NetworkAuthMessageB(NetworkMessageB[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
+                          Generic[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]
                           ):
     def __init__(self,
                  network_id: str,
@@ -75,7 +78,7 @@ class NetworkAuthMessageB(NetworkMessageB[NetworkMessageHeaderT, NetworkT],
         }
 
     @classmethod
-    def factory(cls, payload: dict):
+    def factory(cls: Type[NetworkAuthMessageBT], payload: dict) -> NetworkAuthMessageBT:
         id_var = AuthMessageType(payload[MESSAGE_ATTRIBUTES]['authType'])
 
         return cls.factory_from_id(
@@ -91,8 +94,8 @@ class NetworkAuthMessageB(NetworkMessageB[NetworkMessageHeaderT, NetworkT],
         return payload
 
 
-class NetworkAuthMessage(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT],
-                         NetworkMessage[NetworkMessageHeaderT, NetworkT],
-                         Generic[NetworkMessageHeaderT, NetworkT]
+class NetworkAuthMessage(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
+                         NetworkMessage[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
+                         Generic[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]
                          ):
     pass

@@ -2,7 +2,7 @@
 User model.
 """
 
-from typing import TypeVar
+from typing import TypeVar, Type
 
 from dedi_link.etc.exceptions import UserNotImplemented
 from .base_model import BaseModel, SyncDataInterface
@@ -46,7 +46,7 @@ class UserB(BaseModel):
         }
 
     @classmethod
-    def from_dict(cls, payload: dict) -> UserBT:
+    def from_dict(cls: Type[UserBT], payload: dict) -> UserBT:
         return cls(
             user_id=payload['userId'],
         )

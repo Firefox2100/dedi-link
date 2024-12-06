@@ -2,12 +2,14 @@ import uuid
 import secrets
 from deepdiff import DeepDiff
 from copy import deepcopy
-from typing import TypeVar, Generic
+from typing import TypeVar, Generic, Type
 
 from dedi_link.etc.consts import MESSAGE_ATTRIBUTES, MESSAGE_DATA
 from dedi_link.etc.enums import AuthMessageType, AuthMessageStatus
 from ...node import Node, NodeT
 from ...network import NetworkT
+from ...data_index import DataIndexT
+from ...user_mapping import UserMappingT
 from ...config import DDLConfig
 from ..network_message_header import NetworkMessageHeaderT
 from .network_auth_message import NetworkAuthMessageB, NetworkAuthMessage
@@ -17,13 +19,13 @@ AuthRequestInviteBT = TypeVar('AuthRequestInviteBT', bound='AuthRequestInviteB')
 AuthRequestInviteT = TypeVar('AuthRequestInviteT', bound='AuthRequestInvite')
 
 
-class AuthRequestInviteB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT],
-                         Generic[NetworkMessageHeaderT, NetworkT, NodeT]
+class AuthRequestInviteB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
+                         Generic[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]
                          ):
     """
     Base model for Network Authorization Request or Invite Message
     """
-    NODE_CLASS = Node
+    NODE_CLASS = Node[DataIndexT, UserMappingT]
 
     def __init__(self,
                  network_id: str,
@@ -144,7 +146,7 @@ class AuthRequestInviteB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT],
         return payload
 
     @classmethod
-    def from_dict(cls, payload: dict) -> AuthRequestInviteBT:
+    def from_dict(cls: Type[AuthRequestInviteBT], payload: dict) -> AuthRequestInviteBT:
         network = cls.NETWORK_CLASS.from_dict(
             payload[MESSAGE_DATA]['network']
         ) if 'network' in payload[
@@ -192,9 +194,9 @@ class AuthRequestInviteB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT],
         return challenge
 
 
-class AuthRequestInvite(AuthRequestInviteB[NetworkMessageHeaderT, NetworkT, NodeT],
-                        NetworkAuthMessage[NetworkMessageHeaderT, NetworkT],
-                        Generic[NetworkMessageHeaderT, NetworkT, NodeT]
+class AuthRequestInvite(AuthRequestInviteB[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
+                        NetworkAuthMessage[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
+                        Generic[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]
                         ):
     """
     Network Authorization Request or Invite Message
