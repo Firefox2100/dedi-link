@@ -21,7 +21,7 @@ class DDLConfig:
     auto_user_registration: bool = False
     anonymous_access: bool = False
     trusted_issuers: list[str] = field(default_factory=list)
-    default_ttl: int = 5
+    default_ttl: int = 3
     optimal_record_percentage: float = 0.5
     time_score_weight: float = 0.5
     ema_factor: float = 0.5

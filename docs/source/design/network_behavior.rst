@@ -27,7 +27,8 @@ Within it:
 * **G** requires 1 hops via `S -> F -> G`, however it may also be reached with 2 hops, via `S -> F -> H -> G`.
 * **H** requires 1 hops via `S -> F -> H`.
 * **I** requires 2 hops via `S -> F -> H -> I`.
-* **Z** is a node that is not reachable from the source. It may be free floating completely (behind a firewall and do not poll), or further away than the TTL so a message never propogates to it. By default, TTL is 3, so maximum 2 hops are allowed.
+* **J** requires 3 hops via `S -> F -> H -> I -> J`. At current configuration, this exceeds the TTL, so it is unreachable.
+* **Z** is a node that is not reachable from the source. It may be free floating completely (behind a firewall and do not poll), or further away than the TTL so a message never propagates to it. By default, TTL is 3, so maximum 2 hops are allowed.
 
 
 Network states, reachability and routing

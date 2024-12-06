@@ -199,7 +199,7 @@ class NetworkInterfaceB(Generic[
         paths = []
         broadcast = False
 
-        neighbors = network_graph.neighbors(self.instance_id)
+        neighbors = list(network_graph.neighbors(self.instance_id))
 
         for node_id in node_ids:
             if node_id in neighbors:
@@ -235,12 +235,25 @@ class NetworkInterfaceB(Generic[
 
         if broadcast:
             # Return all neighbours
-            return list(neighbors)
+            neighbors = sorted(
+                neighbors,
+                key=lambda x: network_graph.nodes[x]['score'],
+                reverse=True,
+            )
+
+            return neighbors
         else:
-            path_starting = [path[0] for path in paths]
+            path_starting = [path[1] for path in paths]
             starting_nodes.update(path_starting)
 
-            return list(starting_nodes)
+            starting_list = list(starting_nodes)
+            starting_list = sorted(
+                starting_list,
+                key=lambda x: network_graph.nodes[x]['score'],
+                reverse=True,
+            )
+
+            return starting_list
 
     @classmethod
     def _validate_signature(cls,
