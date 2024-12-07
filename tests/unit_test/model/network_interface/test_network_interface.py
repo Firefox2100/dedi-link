@@ -3,6 +3,7 @@ import pytest
 import networkx as nx
 from cryptography.exceptions import InvalidSignature
 
+from dedi_link.etc.exceptions import NetworkInterfaceNotImplemented
 from dedi_link.model import Session, NetworkInterface
 
 
@@ -299,3 +300,75 @@ class TestNetworkInterface:
                 payload=json.dumps(mock_network_message_dict_1).encode(),
                 node_public_key=mock_public_key,
             )
+
+    def test_calculate_new_score(self,
+                                 mock_network_interface,
+                                 ):
+        new_score = mock_network_interface.calculate_new_score(
+            time_elapsed=-1,
+        )
+
+        assert new_score == -1.0
+
+        new_score = mock_network_interface.calculate_new_score(
+            time_elapsed=10,
+        )
+
+        assert pytest.approx(new_score, 1e-4) == 0.6667
+
+        new_score = mock_network_interface.calculate_new_score(
+            time_elapsed=10,
+            record_count=50,
+            record_count_max=100,
+        )
+
+        assert pytest.approx(new_score, 1e-4) == 0.8333
+
+        new_score = mock_network_interface.calculate_new_score(
+            time_elapsed=10,
+            record_count=95,
+            record_count_max=100,
+        )
+
+        assert pytest.approx(new_score, 1e-4) == -0.15667
+
+        with pytest.raises(ValueError):
+            mock_network_interface.calculate_new_score(
+                time_elapsed=10,
+                record_count=150,
+                record_count_max=100,
+            )
+
+    def test_context_manager(self,
+                             mock_ddl_config_1,
+                             ):
+        with NetworkInterface(
+            network_id='62d13013-d80c-4539-adc1-61862bdd65cb',
+            instance_id='f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
+            config=mock_ddl_config_1,
+        ) as network_interface:
+            assert network_interface.network_id == '62d13013-d80c-4539-adc1-61862bdd65cb'
+            assert network_interface.instance_id == 'f3bb816f-608b-4dd7-ac74-8e0d0a0979ad'
+            assert network_interface.config == mock_ddl_config_1
+            assert network_interface.session is not None
+            assert isinstance(network_interface.session, Session)
+
+    def test_network_graph(self,
+                           mock_network_interface,
+                           ):
+        with pytest.raises(NetworkInterfaceNotImplemented):
+            _ = mock_network_interface.network_graph
+
+        with pytest.raises(NetworkInterfaceNotImplemented):
+            with mock_network_interface.network_graph:
+                pass
+
+    def test_from_interface(self,
+                            mock_network_interface,
+                            ):
+        new_interface = NetworkInterface.from_interface(mock_network_interface)
+
+        assert new_interface.network_id == mock_network_interface.network_id
+        assert new_interface.instance_id == mock_network_interface.instance_id
+        assert new_interface.config == mock_network_interface.config
+        assert new_interface.session == mock_network_interface.session

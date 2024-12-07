@@ -363,16 +363,18 @@ class NetworkInterfaceB(Generic[
 
         optimal_record_count = math.floor(self.config.optimal_record_percentage * record_count_max)
 
-        if record_count <= record_count_max:
+        if record_count <= optimal_record_count:
             sqr_param = (2 - (4 / optimal_record_count + 4 / (record_count_max - optimal_record_count)) *
                          optimal_record_count) / optimal_record_count ** 2
 
             sgl_param = 4 / optimal_record_count + 4 / (record_count_max - optimal_record_count)
 
             response_quality_score = sqr_param * record_count ** 2 + sgl_param * record_count - 1
-        else:
+        elif record_count <= record_count_max:
             response_quality_score = (2 / (record_count_max - optimal_record_count) ** 2) * (record_count -
                                                                                              record_count_max) ** 2 - 1
+        else:
+            raise ValueError('Record count exceeds maximum')
 
         return self.config.time_score_weight * response_time_score + \
             (1 - self.config.time_score_weight) * response_quality_score

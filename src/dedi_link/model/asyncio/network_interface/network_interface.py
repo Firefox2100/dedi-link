@@ -1,7 +1,7 @@
 import time
 import json
-import jwt
 import uuid
+import jwt
 import networkx as nx
 from copy import deepcopy
 from typing import TypeVar, Generic, Type
@@ -412,7 +412,7 @@ class NetworkInterface(NetworkInterfaceB[SessionT, NetworkT, NodeT, RelayTargetT
             polling_message = deepcopy(relay_message)
             polling_message.message_id = f'p-{polling_message.message_id}'
 
-            polling_message.store()
+            await polling_message.store()
 
             if not skip_unreachable:
                 response, response_header = await self.relay_message(

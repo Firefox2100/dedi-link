@@ -2,13 +2,14 @@ import requests
 from typing import TypeVar, Generic
 
 from dedi_link.etc.exceptions import NetworkRequestFailed
-from ..network_message import NetworkMessageT, NetworkMessageHeader, NetworkMessageHeaderT
+from ..network_message import NetworkMessage, NetworkMessageT, NetworkMessageHeader, NetworkMessageHeaderT
 
 
 SessionT = TypeVar('SessionT', bound='Session')
 
 
 class Session(Generic[NetworkMessageT, NetworkMessageHeaderT]):
+    NETWORK_MESSAGE_CLASS = NetworkMessage
     NETWORK_MESSAGE_HEADER_CLASS = NetworkMessageHeader
 
     def __init__(self):
@@ -37,7 +38,7 @@ class Session(Generic[NetworkMessageT, NetworkMessageHeaderT]):
              url: str,
              message: NetworkMessageT,
              access_token: str | None = None,
-             ) -> tuple[NetworkMessageT, NetworkMessageHeaderT]:
+             ) -> tuple[NetworkMessageT | None, NetworkMessageHeaderT | None]:
         payload = message.to_dict()
         headers = message.generate_headers(
             access_token=access_token,
@@ -52,10 +53,13 @@ class Session(Generic[NetworkMessageT, NetworkMessageHeaderT]):
         if response.status_code != 200:
             raise NetworkRequestFailed(response.status_code)
 
-        response_payload = response.json()
-        response_headers = response.headers
+        if response.headers.get('Content-Type') == 'application/json':
+            response_payload = response.json()
+            response_headers = response.headers
 
-        response_message = message.factory(response_payload)
-        response_header = self.NETWORK_MESSAGE_HEADER_CLASS.from_headers(response_headers)
+            response_message = self.NETWORK_MESSAGE_CLASS.factory(response_payload)
+            response_header = self.NETWORK_MESSAGE_HEADER_CLASS.from_headers(response_headers)
 
-        return response_message, response_header
+            return response_message, response_header
+        else:
+            return None, None
