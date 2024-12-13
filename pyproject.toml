@@ -34,7 +34,7 @@ dynamic = [
 [project.optional-dependencies]
 test = [
     "pytest~=8.3",
-    "pytest-asyncio~=0.24",
+    "pytest-asyncio~=0.25",
     "pytest-cov~=6.0",
     "pylint~=3.3",
 ]
@@ -156,3 +156,7 @@ callbacks = ["cb_", "_cb"]
 dummy-variables-rgx = "_+$|(_[a-zA-Z0-9_]*[a-zA-Z0-9]+?$)|dummy|^ignored_|^unused_"
 ignored-argument-names = "_.*|^ignored_|^unused_"
 redefining-builtins-modules = ["six.moves", "past.builtins", "future.builtins", "builtins", "io"]
+
+[tool.pytest.ini_options]
+asyncio_default_fixture_loop_scope = "function"
+asyncio_mode = "auto"

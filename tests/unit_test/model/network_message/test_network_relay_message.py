@@ -4,13 +4,16 @@ from deepdiff import DeepDiff
 from dedi_link.etc.enums import MessageType
 from dedi_link.model.network_message.network_relay_message import RelayTarget, NetworkRelayMessage
 
+from unit_test.consts import NODE_IDS, NETWORK_IDS
+
 
 @pytest.fixture
 def mock_relay_target_1(mock_network_message_header_1,
                         mock_auth_join_1,
                         ):
     return RelayTarget(
-        recipient_ids=['7961f714-421d-41b1-9ce5-08ef99bc4005'],
+        recipient_ids=[NODE_IDS[5]],
+        route=[NODE_IDS[0]],
         header=mock_network_message_header_1,
         message=mock_auth_join_1,
     )
@@ -21,7 +24,8 @@ def mock_relay_target_dict_1(mock_network_message_header_dict_1,
                              mock_auth_join_dict_1,
                              ):
     return {
-        'recipientIds': ['7961f714-421d-41b1-9ce5-08ef99bc4005'],
+        'recipientIds': [NODE_IDS[5]],
+        'route': [NODE_IDS[0]],
         'header': mock_network_message_header_dict_1,
         'message': mock_auth_join_dict_1,
     }
@@ -32,7 +36,8 @@ def mock_relay_target_2(mock_network_message_header_1,
                         mock_auth_join_2,
                         ):
     return RelayTarget(
-        recipient_ids=['d3398f33-e621-465c-846f-f7f79dff6a87'],
+        recipient_ids=[NODE_IDS[9]],
+        route=[NODE_IDS[0], NODE_IDS[6], NODE_IDS[8]],
         header=mock_network_message_header_1,
         message=mock_auth_join_2,
     )
@@ -41,8 +46,8 @@ def mock_relay_target_2(mock_network_message_header_1,
 @pytest.fixture
 def mock_network_relay_message_1(mock_relay_target_1):
     return NetworkRelayMessage(
-        network_id='62d13013-d80c-4539-adc1-61862bdd65cb',
-        node_id='f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
+        network_id=NETWORK_IDS[0],
+        node_id=NODE_IDS[0],
         relay_targets=[mock_relay_target_1],
         message_id='d8ded57b-1dc4-477c-9ada-b8d63c094846',
         timestamp=1704067200,
@@ -56,8 +61,8 @@ def mock_network_relay_message_dict_1(mock_relay_target_dict_1):
         'messageType': 'relayMessage',
         'messageAttributes': {
             'messageId': 'd8ded57b-1dc4-477c-9ada-b8d63c094846',
-            'networkId': '62d13013-d80c-4539-adc1-61862bdd65cb',
-            'nodeId': 'f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
+            'networkId': NETWORK_IDS[0],
+            'nodeId': NODE_IDS[0],
             'ttl': 3,
         },
         'messageData':{
@@ -70,8 +75,8 @@ def mock_network_relay_message_dict_1(mock_relay_target_dict_1):
 @pytest.fixture
 def mock_network_relay_message_2(mock_relay_target_2):
     return NetworkRelayMessage(
-        network_id='62d13013-d80c-4539-adc1-61862bdd65cb',
-        node_id='f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
+        network_id=NETWORK_IDS[0],
+        node_id=NODE_IDS[0],
         relay_targets=[mock_relay_target_2],
         message_id='f49d6dc4-3577-4d46-ac5b-781ae0fbf191',
         timestamp=1704067200,
@@ -85,23 +90,28 @@ class TestRelayTarget:
                   mock_auth_join_1,
                   ):
         relay_target = RelayTarget(
-            recipient_ids=['7961f714-421d-41b1-9ce5-08ef99bc4005'],
+            recipient_ids=[NODE_IDS[5]],
+            route=[NODE_IDS[0]],
             header=mock_network_message_header_1,
             message=mock_auth_join_1,
         )
 
-        assert relay_target.recipient_ids == ['7961f714-421d-41b1-9ce5-08ef99bc4005']
+        assert relay_target.recipient_ids == [NODE_IDS[5]]
+        assert relay_target.route == [NODE_IDS[0]]
         assert relay_target.header == mock_network_message_header_1
         assert relay_target.message == mock_auth_join_1
 
     def test_equality(self,
+                      mock_network_message_header_1,
+                      mock_auth_join_1,
                       mock_relay_target_1,
                       mock_relay_target_2,
                       ):
         assert mock_relay_target_1 == RelayTarget(
-            recipient_ids=['7961f714-421d-41b1-9ce5-08ef99bc4005'],
-            header=mock_relay_target_1.header,
-            message=mock_relay_target_1.message,
+            recipient_ids=[NODE_IDS[5]],
+            route=[NODE_IDS[0]],
+            header=mock_network_message_header_1,
+            message=mock_auth_join_1,
         )
 
         assert mock_relay_target_1 != mock_relay_target_2
@@ -114,7 +124,8 @@ class TestRelayTarget:
                   mock_relay_target_1,
                   ):
         assert hash(mock_relay_target_1) == hash(RelayTarget(
-            recipient_ids=['7961f714-421d-41b1-9ce5-08ef99bc4005'],
+            recipient_ids=[NODE_IDS[5]],
+            route=[NODE_IDS[0]],
             header=mock_network_message_header_1,
             message=mock_auth_join_1,
         ))
@@ -203,4 +214,3 @@ class TestNetworkRelayMessage:
                        mock_network_relay_message_dict_1,
                        ):
         assert NetworkRelayMessage.from_dict(mock_network_relay_message_dict_1) == mock_network_relay_message_1
-

@@ -7,6 +7,7 @@ from typing import Generic, TypeVar, Type
 
 from dedi_link.etc.exceptions import NetworkNotImplemented
 from .base_model import BaseModel, SyncDataInterface
+from .config import DDLConfig
 from .data_index import DataIndex, DataIndexT
 from .node import Node, NodeT
 from .user_mapping import UserMappingT
@@ -187,6 +188,15 @@ class Network(NetworkB[DataIndexT, UserMappingT, NodeT],
         return data_index
 
     @property
+    def public_key(self) -> str:
+        """
+        Get the network public key.
+
+        :return: Public key in PEM string format
+        """
+        raise NetworkNotImplemented('public_key property not implemented')
+
+    @property
     def private_key(self) -> str:
         """
         Get the network private key.
@@ -194,3 +204,22 @@ class Network(NetworkB[DataIndexT, UserMappingT, NodeT],
         :return: Private key in PEM string format
         """
         raise NetworkNotImplemented('private_key property not implemented')
+
+    def get_self_node(self, config: DDLConfig) -> NodeT:
+        """
+        Get the node object of the instance itself.
+        """
+        return self.NODE_CLASS(
+            node_id=self.instance_id,
+            node_name=config.name,
+            url=config.url,
+            description=config.description,
+            client_id=config.client_id,
+            public_key=self.public_key,
+        )
+
+    def generate_keys(self):
+        """
+        Generate public and private keys for the network.
+        """
+        raise NetworkNotImplemented('generate_keys method not implemented')

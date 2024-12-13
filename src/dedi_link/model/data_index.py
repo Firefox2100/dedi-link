@@ -17,14 +17,23 @@ class DataIndex(BaseModel):
     Extend it if your system stores or uses some type of
     index related to querying data.
     """
-    def __init__(self):
-        self.record_count = 0
+    def __init__(self,
+                 record_count: int = 0,
+                 ):
+        self.record_count = record_count
+
+    def __bool__(self):
+        return any([
+            bool(self.record_count),
+        ])
 
     def __eq__(self, other):
         if not isinstance(other, DataIndex):
             return NotImplemented
 
-        return True
+        return all([
+            self.record_count == other.record_count,
+        ])
 
     def __add__(self, other):
         if not isinstance(other, DataIndex):
@@ -33,8 +42,15 @@ class DataIndex(BaseModel):
         return DataIndex()
 
     def to_dict(self) -> dict:
-        return {}
+        payload = {}
+
+        if self.record_count:
+            payload['recordCount'] = self.record_count
+
+        return payload
 
     @classmethod
     def from_dict(cls: Type[DataIndexT], payload: dict) -> DataIndexT:
-        return DataIndex()
+        return DataIndex(
+            record_count=payload.get('recordCount', 0),
+        )

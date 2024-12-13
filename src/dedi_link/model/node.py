@@ -59,8 +59,8 @@ class NodeB(BaseModel, Generic[DataIndexT, UserMappingT]):
         self.url = url
         self.public_key = public_key
         self.description = description
-        self.authentication_enabled = authentication_enabled
-        self.user_mapping = user_mapping
+        self.authentication_enabled = authentication_enabled or False
+        self.user_mapping = user_mapping or self.USER_MAPPING_CLASS()
         self.client_id = client_id
         self.data_index = data_index or self.DATA_INDEX_CLASS()
         self.score = score
@@ -122,9 +122,9 @@ class NodeB(BaseModel, Generic[DataIndexT, UserMappingT]):
             payload['userMapping'] = self.user_mapping.to_dict()
         if self.public_key is not None and key:
             payload['publicKey'] = self.public_key
-        if self.data_index is not None:
+        if self.data_index:
             payload['dataIndex'] = self.data_index.to_dict()
-        if self.score is not None:
+        if self.score:
             payload['score'] = self.score
 
         return payload

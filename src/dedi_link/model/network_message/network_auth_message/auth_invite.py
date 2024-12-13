@@ -62,6 +62,12 @@ class AuthInviteB(AuthRequestB[NetworkMessageHeaderT, NetworkT, DataIndexT, User
 
         self.network = network
 
+        if self.network_id != self.network.network_id:
+            raise ValueError('Network ID mismatch')
+
+        if self.node_id != self.network.instance_id:
+            raise ValueError('Node ID must match the instance ID of the network')
+
     def __eq__(self, other):
         if not isinstance(other, AuthInviteB):
             return NotImplemented

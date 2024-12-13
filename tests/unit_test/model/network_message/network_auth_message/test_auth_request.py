@@ -6,15 +6,17 @@ from dedi_link.etc.enums import AuthMessageType, AuthMessageStatus, MessageType
 from dedi_link.model.network_message import NetworkMessage, NetworkAuthMessage
 from dedi_link.model.network_message.network_auth_message import AuthRequest
 
+from unit_test.consts import NETWORK_IDS, NODE_IDS
+
 
 class TestAuthRequest:
-    def test_init(self, mock_node_1):
+    def test_init(self, mock_self_node_1):
         auth_request = AuthRequest(
-            network_id='62d13013-d80c-4539-adc1-61862bdd65cb',
-            node_id='f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
+            network_id=NETWORK_IDS[0],
+            node_id=NODE_IDS[0],
             status=AuthMessageStatus.SENT,
-            node=mock_node_1,
-            target_url='https://node2.example.com',
+            node=mock_self_node_1,
+            target_url='https://node1.example.com',
             challenge=['accident', 'flip', 'royal'],
             justification='This is a test',
             message_id='a63c273c-bad2-4521-a7ce-5c9a4c07682d',
@@ -24,22 +26,22 @@ class TestAuthRequest:
         assert auth_request.message_type == MessageType.AUTH_MESSAGE
         assert auth_request.auth_type == AuthMessageType.REQUEST
         assert auth_request.status == AuthMessageStatus.SENT
-        assert auth_request.network_id == '62d13013-d80c-4539-adc1-61862bdd65cb'
-        assert auth_request.node_id == 'f3bb816f-608b-4dd7-ac74-8e0d0a0979ad'
-        assert auth_request.node == mock_node_1
-        assert auth_request.target_url == 'https://node2.example.com'
+        assert auth_request.network_id == NETWORK_IDS[0]
+        assert auth_request.node_id == NODE_IDS[0]
+        assert auth_request.node == mock_self_node_1
+        assert auth_request.target_url == 'https://node1.example.com'
         assert auth_request.challenge == ['accident', 'flip', 'royal']
         assert auth_request.justification == 'This is a test'
         assert auth_request.message_id == 'a63c273c-bad2-4521-a7ce-5c9a4c07682d'
         assert auth_request.timestamp == 1704067200
 
-    def test_init_generate_challenge(self, mock_node_1):
+    def test_init_generate_challenge(self, mock_self_node_1):
         auth_request = AuthRequest(
-            network_id='62d13013-d80c-4539-adc1-61862bdd65cb',
-            node_id='f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
+            network_id=NETWORK_IDS[0],
+            node_id=NODE_IDS[0],
             status=AuthMessageStatus.SENT,
-            node=mock_node_1,
-            target_url='https://node2.example.com',
+            node=mock_self_node_1,
+            target_url='https://node1.example.com',
             justification='This is a test',
             message_id='a63c273c-bad2-4521-a7ce-5c9a4c07682d',
             timestamp=1704067200,
@@ -50,8 +52,8 @@ class TestAuthRequest:
         assert auth_request.status == AuthMessageStatus.SENT
         assert auth_request.network_id == '62d13013-d80c-4539-adc1-61862bdd65cb'
         assert auth_request.node_id == 'f3bb816f-608b-4dd7-ac74-8e0d0a0979ad'
-        assert auth_request.node == mock_node_1
-        assert auth_request.target_url == 'https://node2.example.com'
+        assert auth_request.node == mock_self_node_1
+        assert auth_request.target_url == 'https://node1.example.com'
         assert auth_request.justification == 'This is a test'
         assert auth_request.message_id == 'a63c273c-bad2-4521-a7ce-5c9a4c07682d'
         assert auth_request.timestamp == 1704067200
@@ -67,16 +69,16 @@ class TestAuthRequest:
         ))
 
     def test_equality(self,
-                      mock_node_1,
+                      mock_self_node_1,
                       mock_auth_request_1,
                       mock_auth_request_2,
                       ):
         assert mock_auth_request_1 == AuthRequest(
-            network_id='62d13013-d80c-4539-adc1-61862bdd65cb',
-            node_id='f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
+            network_id=NETWORK_IDS[0],
+            node_id=NODE_IDS[0],
             status=AuthMessageStatus.SENT,
-            node=mock_node_1,
-            target_url='https://node2.example.com',
+            node=mock_self_node_1,
+            target_url='https://node1.example.com',
             challenge=['accident', 'flip', 'royal'],
             justification='This is a test',
             message_id='a63c273c-bad2-4521-a7ce-5c9a4c07682d',
@@ -88,15 +90,15 @@ class TestAuthRequest:
         assert mock_auth_request_1 != 'Random String'
 
     def test_hash(self,
-                  mock_node_1,
+                  mock_self_node_1,
                   mock_auth_request_1,
                   mock_auth_request_2,):
         assert hash(mock_auth_request_1) == hash(AuthRequest(
-            network_id='62d13013-d80c-4539-adc1-61862bdd65cb',
-            node_id='f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
+            network_id=NETWORK_IDS[0],
+            node_id=NODE_IDS[0],
             status=AuthMessageStatus.SENT,
-            node=mock_node_1,
-            target_url='https://node2.example.com',
+            node=mock_self_node_1,
+            target_url='https://node1.example.com',
             challenge=['accident', 'flip', 'royal'],
             justification='This is a test',
             message_id='a63c273c-bad2-4521-a7ce-5c9a4c07682d',

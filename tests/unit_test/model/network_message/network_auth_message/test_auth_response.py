@@ -5,24 +5,26 @@ from dedi_link.etc.enums import AuthMessageType, MessageType
 from dedi_link.model.network_message import NetworkMessage, NetworkAuthMessage
 from dedi_link.model.network_message.network_auth_message import AuthResponse
 
+from unit_test.consts import NETWORK_IDS, NODE_IDS
+
 
 class TestAuthResponse:
-    def test_init(self, mock_node_2, mock_network_1):
+    def test_init(self, mock_node_1, mock_network_1):
         auth_response = AuthResponse(
             message_id='a63c273c-bad2-4521-a7ce-5c9a4c07682d',
             approved=True,
-            network_id='62d13013-d80c-4539-adc1-61862bdd65cb',
-            node_id='d3398f33-e621-465c-846f-f7f79dff6a87',
-            node=mock_node_2,
+            network_id=NETWORK_IDS[0],
+            node_id=NODE_IDS[1],
+            node=mock_node_1,
             timestamp=1704067200,
             network=mock_network_1,
         )
 
         assert auth_response.message_id == 'a63c273c-bad2-4521-a7ce-5c9a4c07682d'
         assert auth_response.approved == True
-        assert auth_response.network_id == '62d13013-d80c-4539-adc1-61862bdd65cb'
-        assert auth_response.node_id == 'd3398f33-e621-465c-846f-f7f79dff6a87'
-        assert auth_response.node == mock_node_2
+        assert auth_response.network_id == NETWORK_IDS[0]
+        assert auth_response.node_id == NODE_IDS[1]
+        assert auth_response.node == mock_node_1
         assert auth_response.timestamp == 1704067200
         assert auth_response.network == mock_network_1
         assert auth_response.auth_type == AuthMessageType.RESPONSE
@@ -33,8 +35,8 @@ class TestAuthResponse:
             _ = AuthResponse(
                 message_id='a63c273c-bad2-4521-a7ce-5c9a4c07682d',
                 approved=True,
-                network_id='62d13013-d80c-4539-adc1-61862bdd65cb',
-                node_id='d3398f33-e621-465c-846f-f7f79dff6a87',
+                network_id=NETWORK_IDS[0],
+                node_id=NODE_IDS[1],
                 timestamp=1704067200,
                 network=mock_network_1,
             )
@@ -42,29 +44,29 @@ class TestAuthResponse:
     def test_init_node_id_mismatch(self, mock_node_2, mock_network_1):
         with pytest.raises(ValueError):
             _ = AuthResponse(
-            message_id='a63c273c-bad2-4521-a7ce-5c9a4c07682d',
-            approved=True,
-            network_id='62d13013-d80c-4539-adc1-61862bdd65cb',
-            node_id='1c2a77f6-f5fe-4750-861c-c8cde5e66e74',
-            node=mock_node_2,
-            timestamp=1704067200,
-            network=mock_network_1,
-        )
+                message_id='a63c273c-bad2-4521-a7ce-5c9a4c07682d',
+                approved=True,
+                network_id=NETWORK_IDS[0],
+                node_id=NODE_IDS[1],
+                node=mock_node_2,
+                timestamp=1704067200,
+                network=mock_network_1,
+            )
 
-    def test_init_network_id_mismatch(self, mock_node_2, mock_network_1):
+    def test_init_network_id_mismatch(self, mock_node_1, mock_network_1):
         with pytest.raises(ValueError):
             _ = AuthResponse(
-            message_id='a63c273c-bad2-4521-a7ce-5c9a4c07682d',
-            approved=True,
-            network_id='e6405c8e-6d78-4a9f-abc4-db23af1e771c',
-            node_id='d3398f33-e621-465c-846f-f7f79dff6a87',
-            node=mock_node_2,
-            timestamp=1704067200,
-            network=mock_network_1,
-        )
+                message_id='a63c273c-bad2-4521-a7ce-5c9a4c07682d',
+                approved=True,
+                network_id=NETWORK_IDS[1],
+                node_id=NODE_IDS[1],
+                node=mock_node_1,
+                timestamp=1704067200,
+                network=mock_network_1,
+            )
 
     def test_equality(self,
-                      mock_node_2,
+                      mock_node_1,
                       mock_network_1,
                       mock_auth_response_1,
                       mock_auth_response_2,
@@ -72,9 +74,9 @@ class TestAuthResponse:
         assert mock_auth_response_1 == AuthResponse(
             message_id='a63c273c-bad2-4521-a7ce-5c9a4c07682d',
             approved=True,
-            network_id='62d13013-d80c-4539-adc1-61862bdd65cb',
-            node_id='d3398f33-e621-465c-846f-f7f79dff6a87',
-            node=mock_node_2,
+            network_id=NETWORK_IDS[0],
+            node_id=NODE_IDS[1],
+            node=mock_node_1,
             timestamp=1704067200,
             network=mock_network_1,
         )

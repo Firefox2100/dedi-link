@@ -56,7 +56,6 @@ class TestNetworkMessage:
 
     def test_to_dict(self,
                      mock_network_message_1,
-                     mock_network_message_dict_1,
                      ):
         with pytest.raises(AttributeError):
             mock_network_message_1.to_dict()

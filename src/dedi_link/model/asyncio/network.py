@@ -4,6 +4,7 @@ from dedi_link.etc.exceptions import NetworkNotImplemented
 from ..user_mapping import UserMappingT
 from ..data_index import DataIndexT
 from ..network import NetworkB
+from ..config import DDLConfig
 from .base_model import AsyncDataInterface
 from .node import Node, NodeT
 
@@ -59,6 +60,15 @@ class Network(NetworkB[DataIndexT, UserMappingT, NodeT],
         return payload
 
     @property
+    async def public_key(self) -> str:
+        """
+        Get the network public key.
+
+        :return: Public key in PEM string format
+        """
+        raise NetworkNotImplemented('public_key property not implemented')
+
+    @property
     async def private_key(self) -> str:
         """
         Get the network private key.
@@ -66,3 +76,22 @@ class Network(NetworkB[DataIndexT, UserMappingT, NodeT],
         :return: Private key in PEM string format
         """
         raise NetworkNotImplemented('private_key property not implemented')
+
+    async def get_self_node(self, config: DDLConfig) -> NodeT:
+        """
+        Get the node object of the instance itself.
+        """
+        return self.NODE_CLASS(
+            node_id=self.instance_id,
+            node_name=config.name,
+            url=config.url,
+            description=config.description,
+            client_id=config.client_id,
+            public_key=await self.public_key,
+        )
+
+    async def generate_keys(self):
+        """
+        Generate public and private keys for the network.
+        """
+        raise NetworkNotImplemented('generate_keys method not implemented')

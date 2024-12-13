@@ -4,7 +4,6 @@ from dedi_link.etc.exceptions import BaseModelNotImplemented
 from dedi_link.model.asyncio import AsyncDataInterface
 
 
-@pytest.mark.asyncio
 class TestAsyncDataInterface:
     async def test_access_token(self):
         async_interface_instance = AsyncDataInterface()

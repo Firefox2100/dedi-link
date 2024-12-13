@@ -69,6 +69,9 @@ class AuthRequestB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT, DataInde
         if self.challenge is None:
             self.generate_challenge()
 
+        if self.node_id != self.node.node_id:
+            raise ValueError('Node ID mismatch')
+
     def __eq__(self, other):
         if not isinstance(other, AuthRequestB):
             return NotImplemented
@@ -116,14 +119,6 @@ class AuthRequestB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT, DataInde
 
     @classmethod
     def from_dict(cls: Type[AuthRequestBT], payload: dict) -> AuthRequestBT:
-        network = cls.NETWORK_CLASS.from_dict(
-            payload[MESSAGE_DATA]['network']
-        ) if 'network' in payload[
-            MESSAGE_DATA] else None
-
-        if network:
-            network.node_ids = []
-
         return cls(
             message_id=payload[MESSAGE_ATTRIBUTES]['messageId'],
             network_id=payload[MESSAGE_ATTRIBUTES]['networkId'],

@@ -5,33 +5,35 @@ from deepdiff import DeepDiff
 from dedi_link.etc.exceptions import NetworkNotImplemented
 from dedi_link.model import Network, DataIndex
 
+from unit_test.consts import NETWORK_IDS, NODE_IDS
+
 
 class TestNetwork:
     def test_init(self):
         network = Network(
-            network_id='62d13013-d80c-4539-adc1-61862bdd65cb',
+            network_id=NETWORK_IDS[0],
             network_name='Test Network',
             description='Test Description',
-            node_ids=['86b0331a-c92a-44f9-9d3d-23b60e203838'],
+            node_ids=[NODE_IDS[1]],
             visible=True,
-            instance_id='f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
+            instance_id=NODE_IDS[0],
         )
 
-        assert network.network_id == '62d13013-d80c-4539-adc1-61862bdd65cb'
+        assert network.network_id == NETWORK_IDS[0]
         assert network.network_name == 'Test Network'
         assert network.description == 'Test Description'
-        assert network.node_ids == ['86b0331a-c92a-44f9-9d3d-23b60e203838']
+        assert network.node_ids == [NODE_IDS[1]]
         assert network.visible is True
-        assert network.instance_id == 'f3bb816f-608b-4dd7-ac74-8e0d0a0979ad'
+        assert network.instance_id == NODE_IDS[0]
 
     def test_equality(self, mock_network_1, mock_network_2):
         assert mock_network_1 == Network(
-            network_id='62d13013-d80c-4539-adc1-61862bdd65cb',
+            network_id=NETWORK_IDS[0],
             network_name='Test Network',
             description='Test Description',
-            node_ids=['86b0331a-c92a-44f9-9d3d-23b60e203838'],
+            node_ids=[NODE_IDS[1]],
             visible=True,
-            instance_id='f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
+            instance_id=NODE_IDS[0],
         )
         assert mock_network_1 != mock_network_2
 
@@ -107,6 +109,26 @@ class TestNetwork:
 
                 assert isinstance(mock_network_1.network_data_index, DataIndex)
 
+    def test_public_key(self, mock_network_1):
+        with pytest.raises(NetworkNotImplemented):
+            _ = mock_network_1.public_key
+
     def test_private_key(self, mock_network_1):
         with pytest.raises(NetworkNotImplemented):
             _ = mock_network_1.private_key
+
+    def test_generate_keys(self, mock_network_1):
+        with pytest.raises(NetworkNotImplemented):
+            mock_network_1.generate_keys()
+
+    def test_get_self_node(self,
+                           mock_ddl_config_1,
+                           mock_network_1,
+                           mock_self_node_1,
+                           ):
+        with patch('dedi_link.model.network.Network.public_key', new_callable=PropertyMock) as mock_pub_key:
+            mock_pub_key.return_value = 'test-public-key'
+
+            self_node = mock_network_1.get_self_node(mock_ddl_config_1)
+
+            assert self_node == mock_self_node_1

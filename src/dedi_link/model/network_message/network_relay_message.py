@@ -34,6 +34,7 @@ class RelayTarget(BaseModel,
 
     def __init__(self,
                  recipient_ids: list[str],
+                 route: list[str],
                  header: NetworkMessageHeaderT,
                  message: NetworkMessageT,
                  ):
@@ -44,15 +45,26 @@ class RelayTarget(BaseModel,
         a message being relayed.
 
         :param recipient_ids: The recipient IDs
+        :param route: A list of node IDs from the sender to the last relay,
+        storing route information
         :param header: The header of the message
         :param message: The message being relayed
         """
         self.recipient_ids = recipient_ids
+        self.route = route
         self.header = header
         self.message = message
 
         if message.message_type == MessageType.RELAY_MESSAGE:
             raise NetworkRelayMessageEnvelopeTooDeep('Relay message cannot be sent in another relay message')
+
+        if self.header.node_id != self.message.node_id:
+            raise ValueError('Header node ID does not match message node ID')
+
+        if not self.route:
+            self.route.extend([self.header.node_id])
+        elif self.route[0] != self.header.node_id:
+            raise ValueError('Route does not start with header node ID')
 
     def __eq__(self, other):
         if not isinstance(other, RelayTarget):
@@ -60,6 +72,7 @@ class RelayTarget(BaseModel,
 
         return all([
             not DeepDiff(self.recipient_ids, other.recipient_ids, ignore_order=True),
+            self.route == other.route,
             self.header == other.header,
             self.message == other.message,
         ])
@@ -70,6 +83,7 @@ class RelayTarget(BaseModel,
 
         return hash((
             tuple(recipient_ids),
+            tuple(self.route),
             self.header,
             self.message,
         ))
@@ -77,6 +91,7 @@ class RelayTarget(BaseModel,
     def to_dict(self) -> dict:
         return {
             'recipientIds': self.recipient_ids,
+            'route': self.route,
             'header': self.header.headers,
             'message': self.message.to_dict(),
         }
@@ -85,6 +100,7 @@ class RelayTarget(BaseModel,
     def from_dict(cls: Type[RelayTargetT], payload: dict) -> RelayTargetT:
         return cls(
             recipient_ids=payload['recipientIds'],
+            route=payload['route'],
             header=cls.NETWORK_MESSAGE_HEADER_CLASS.from_headers(payload['header']),
             message=cls.NETWORK_MESSAGE_CLASS.factory(payload['message']),
         )
