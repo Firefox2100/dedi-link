@@ -1,18 +1,27 @@
 import uuid
 import json
-from typing import TypeVar
+from typing import TypeVar, Generic
 
 from dedi_link.etc.enums import DataMessageType
-from ...network import Network
-from ...node import Node
+from ...network import NetworkT
+from ...node import Node, NodeT
 from ...user import User
-from .network_data_message import NetworkDataMessage
+from ...data_index import DataIndexT
+from ...user_mapping import UserMappingT
+from ..network_message_header import NetworkMessageHeaderT
+from .network_data_message import NetworkDataMessage, NetworkDataMessageB
 
 
+DataResponseBT = TypeVar('DataResponseBT', bound='DataResponseB')
 DataResponseT = TypeVar('DataResponseT', bound='DataResponse')
 
 
-class DataResponse(NetworkDataMessage):
+class DataResponseB(NetworkDataMessageB[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
+                    Generic[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]
+                    ):
+    NODE_CLASS = Node
+    USER_CLASS = User
+
     def __init__(self,
                  network_id: str,
                  node_id: str,
@@ -31,6 +40,10 @@ class DataResponse(NetworkDataMessage):
 
         self.user_id = user_id
 
+    @property
+    def record_count(self) -> int:
+        raise NotImplementedError
+
     def to_dict(self) -> dict:
         payload = super().to_dict()
 
@@ -39,19 +52,13 @@ class DataResponse(NetworkDataMessage):
         return payload
 
     @classmethod
-    def from_dict(cls, payload: dict) -> 'DataResponse':
-        message_id = payload['messageAttributes']['messageID']
-        network_id = payload['messageAttributes']['networkID']
-        node_id = payload['messageAttributes']['nodeID']
-        user_id = payload['messageAttributes']['userID']
-        responses = payload['messageData']
-
+    def from_dict(cls, payload: dict) -> DataResponseBT:
         return cls(
-            message_id=message_id,
-            network_id=network_id,
-            node_id=node_id,
-            user_id=user_id,
-            responses=responses,
+            message_id=payload['messageAttributes']['messageId'],
+            network_id=payload['messageAttributes']['networkId'],
+            node_id=payload['messageAttributes']['nodeId'],
+            user_id=payload['messageAttributes']['userId'],
+            responses=payload['messageData'],
         )
 
     def encrypt(self) -> list[dict]:
@@ -60,14 +67,14 @@ class DataResponse(NetworkDataMessage):
 
         :return: List of encrypted responses
         """
-        network = Network.load(self.network_id)
+        network = self.NETWORK_CLASS.load(self.network_id)
 
         if self.node_id == network.instance_id:
             # The user is with this instance
-            user = User.load(self.user_id)
+            user = self.USER_CLASS.load(self.user_id)
             user_public_key = user.public_key
         else:
-            node = Node.load(self.node_id)
+            node = self.NODE_CLASS.load(self.node_id)
             user_public_key = node.get_user_key(self.user_id)
 
         encrypted_responses = []
@@ -96,14 +103,14 @@ class DataResponse(NetworkDataMessage):
         :return: List of decrypted responses
         """
         decrypted_responses = []
-        network = Network.load(self.network_id)
+        network = self.NETWORK_CLASS.load(self.network_id)
 
         if self.node_id == network.instance_id:
             # The user is with this instance
-            user = User.load(self.user_id)
+            user = self.USER_CLASS.load(self.user_id)
             user_public_key = user.public_key
         else:
-            node = Node.load(self.node_id)
+            node = self.NODE_CLASS.load(self.node_id)
             user_public_key = node.get_user_key(self.user_id)
 
         for encrypted_response in encrypted_responses:
@@ -118,3 +125,10 @@ class DataResponse(NetworkDataMessage):
             decrypted_responses.append(json.loads(response_str))
 
         return decrypted_responses
+
+
+class DataResponse(DataResponseB[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
+                   NetworkDataMessage[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
+                   Generic[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]
+                   ):
+    pass

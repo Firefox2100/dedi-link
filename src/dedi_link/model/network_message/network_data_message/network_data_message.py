@@ -1,14 +1,24 @@
 import uuid
 from enum import Enum
-from typing import TypeVar, Type, Callable, TYPE_CHECKING
+from typing import TypeVar, Type, Callable, Generic
 
+from dedi_link.etc.consts import MESSAGE_ATTRIBUTES
 from dedi_link.etc.enums import DataMessageType, MessageType
-from ..network_message import NetworkMessage, NetworkMessageT
+from ...network import NetworkT
+from ...node import NodeT
+from ...data_index import DataIndexT
+from ...user_mapping import UserMappingT
+from ..network_message import NetworkMessageB, NetworkMessage
+from ..network_message_header import NetworkMessageHeaderT
 
+
+NetworkDataMessageBT = TypeVar('NetworkDataMessageBT', bound='NetworkDataMessageB')
 NetworkDataMessageT = TypeVar('NetworkDataMessageT', bound='NetworkDataMessage')
 
 
-class NetworkDataMessage(NetworkMessage):
+class NetworkDataMessageB(NetworkMessageB[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
+                          Generic[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]
+                          ):
     def __init__(self,
                  network_id: str,
                  node_id: str,
@@ -20,18 +30,18 @@ class NetworkDataMessage(NetworkMessage):
                  ):
         super().__init__(
             message_type=MessageType.DATA_MESSAGE,
+            network_id=network_id,
+            node_id=node_id,
             message_id=message_id or str(uuid.uuid4()),
             timestamp=timestamp,
         )
 
-        self.network_id = network_id
-        self.node_id = node_id
         self.data_type = data_type
         self.data = data
         self.should_relay = should_relay
 
     @classmethod
-    def _child_mapping(cls) -> dict[Enum, tuple[Type['NetworkMessageT'], Callable[[dict], Enum] | None]]:
+    def _child_mapping(cls) -> dict[Enum, tuple[Type[NetworkDataMessageBT], Callable[[dict], Enum] | None]]:
         from .data_query import DataQuery
         from .data_response import DataResponse
 
@@ -40,12 +50,19 @@ class NetworkDataMessage(NetworkMessage):
             DataMessageType.RESPONSE: (DataResponse, None),
         }
 
+    @classmethod
+    def factory(cls: Type[NetworkDataMessageBT], payload: dict) -> NetworkDataMessageBT:
+        id_var = DataMessageType(payload[MESSAGE_ATTRIBUTES]['dataType'])
+
+        return cls.factory_from_id(
+            payload=payload,
+            id_var=id_var,
+        )
+
     def to_dict(self) -> dict:
         payload = super().to_dict()
 
         payload['messageAttributes'].update({
-            'networkID': self.network_id,
-            'nodeID': self.node_id,
             'dataType': self.data_type.value,
             'shouldRelay': self.should_relay,
         })
@@ -68,3 +85,10 @@ class NetworkDataMessage(NetworkMessage):
                          public_key: str,
                          ) -> str:
         raise NotImplementedError('NetworkDataMessage._decrypt_payload() must be implemented by subclasses')
+
+
+class NetworkDataMessage(NetworkDataMessageB[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
+                         NetworkMessage[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
+                         Generic[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]
+                         ):
+    pass

@@ -1,9 +1,9 @@
 import pytest
 
-from dedi_link.etc.enums import MessageType, AuthMessageType, AuthMessageStatus, SyncTarget
+from dedi_link.etc.enums import AuthMessageStatus, SyncTarget
 from dedi_link.model import Network, Node, UserMapping, DataIndex, DDLConfig, NetworkMessage
 from dedi_link.model.network_message.network_message_header import NetworkMessageHeader
-from dedi_link.model.network_message.network_auth_message import AuthRequestInvite, AuthResponse, AuthJoin, AuthLeave, \
+from dedi_link.model.network_message.network_auth_message import AuthRequest, AuthInvite, AuthResponse, AuthJoin, AuthLeave, \
     AuthStatus
 from dedi_link.model.network_message.network_sync_message import NetworkSyncMessage
 
@@ -162,7 +162,6 @@ def mock_network_message_header_2():
 @pytest.fixture
 def mock_network_message_1():
     return NetworkMessage(
-        message_type=MessageType.AUTH_MESSAGE,
         network_id='62d13013-d80c-4539-adc1-61862bdd65cb',
         node_id='f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
         message_id='ef893ef0-1d29-4cae-ac61-0891f346fed3',
@@ -186,7 +185,6 @@ def mock_network_message_dict_1():
 @pytest.fixture
 def mock_network_message_2():
     return NetworkMessage(
-        message_type=MessageType.AUTH_MESSAGE,
         network_id='62d13013-d80c-4539-adc1-61862bdd65cb',
         node_id='f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
         message_id='41b0a563-d0fe-46f4-ae43-813a36914a65',
@@ -195,11 +193,10 @@ def mock_network_message_2():
 
 
 @pytest.fixture
-def mock_auth_request_invite_1(mock_node_1):
-    return AuthRequestInvite(
+def mock_auth_request_1(mock_node_1):
+    return AuthRequest(
         network_id='62d13013-d80c-4539-adc1-61862bdd65cb',
         node_id='f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
-        auth_type=AuthMessageType.REQUEST,
         status=AuthMessageStatus.SENT,
         node=mock_node_1,
         target_url='https://node2.example.com',
@@ -211,7 +208,7 @@ def mock_auth_request_invite_1(mock_node_1):
 
 
 @pytest.fixture
-def mock_auth_request_invite_dict_1(mock_node_dict_1):
+def mock_auth_request_dict_1(mock_node_dict_1):
     return {
         'messageType': 'authMessage',
         'messageAttributes': {
@@ -232,11 +229,10 @@ def mock_auth_request_invite_dict_1(mock_node_dict_1):
 
 
 @pytest.fixture
-def mock_auth_request_invite_2(mock_node_1, mock_network_1):
-    return AuthRequestInvite(
+def mock_auth_request_2(mock_node_1, mock_network_1):
+    return AuthRequest(
         network_id='62d13013-d80c-4539-adc1-61862bdd65cb',
         node_id='f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
-        auth_type=AuthMessageType.INVITE,
         status=AuthMessageStatus.SENT,
         node=mock_node_1,
         target_url='https://node2.example.com',
@@ -244,29 +240,23 @@ def mock_auth_request_invite_2(mock_node_1, mock_network_1):
         justification='This is a test',
         message_id='6669a5d8-7802-42a1-99a4-a303c0a4253c',
         timestamp=1704067200,
-        network=mock_network_1,
     )
 
 
 @pytest.fixture
-def mock_auth_request_invite_dict_2(mock_node_dict_1, mock_network_dict_1):
-    network_dict = mock_network_dict_1.copy()
-    network_dict.pop('nodeIds')
-    network_dict.pop('instanceId')
-
+def mock_auth_request_dict_2(mock_node_dict_1):
     return {
         'messageType': 'authMessage',
         'messageAttributes': {
             'messageId': '6669a5d8-7802-42a1-99a4-a303c0a4253c',
             'networkId': '62d13013-d80c-4539-adc1-61862bdd65cb',
             'nodeId': 'f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
-            'authType': 'invite',
+            'authType': 'request',
             'targetUrl': 'https://node2.example.com',
             'status': 'sent',
         },
         'messageData': {
             'node': mock_node_dict_1,
-            'network': network_dict,
             'challenge': ['pluck', 'humor', 'music'],
             'justification': 'This is a test',
         },

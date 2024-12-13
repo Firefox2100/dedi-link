@@ -21,6 +21,7 @@ class AuthResponseB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT, DataInd
     The base model for Auth Response
     """
     NODE_CLASS = Node[DataIndexT, UserMappingT]
+    auth_type = AuthMessageType.RESPONSE
 
     def __init__(self,
                  message_id: str,
@@ -51,7 +52,6 @@ class AuthResponseB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT, DataInd
         super().__init__(
             network_id=network_id,
             node_id=node_id,
-            auth_type=AuthMessageType.RESPONSE,
             message_id=message_id,
             timestamp=timestamp,
         )

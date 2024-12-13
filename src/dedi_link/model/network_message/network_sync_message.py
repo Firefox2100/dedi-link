@@ -22,6 +22,7 @@ class NetworkSyncMessageB(NetworkMessageB[NetworkMessageHeaderT, NetworkT, DataI
     Base class for Network Synchronisation Messages
     """
     NODE_CLASS = Node[DataIndexT, UserMappingT]
+    message_type = MessageType.SYNC_MESSAGE
 
     def __init__(self,
                  network_id: str,
@@ -44,7 +45,6 @@ class NetworkSyncMessageB(NetworkMessageB[NetworkMessageHeaderT, NetworkT, DataI
         :param timestamp: The timestamp in seconds since epoch
         """
         super().__init__(
-            message_type=MessageType.SYNC_MESSAGE,
             network_id=network_id,
             node_id=node_id,
             message_id=message_id,

@@ -19,6 +19,7 @@ class AuthJoinB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT, DataIndexT,
                 Generic[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]
                 ):
     NODE_CLASS = Node[DataIndexT, UserMappingT]
+    auth_type = AuthMessageType.JOIN
 
     def __init__(self,
                  network_id: str,
@@ -39,14 +40,13 @@ class AuthJoinB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT, DataIndexT,
         super().__init__(
             network_id=network_id,
             node_id=node_id,
-            auth_type=AuthMessageType.JOIN,
             message_id=message_id or str(uuid.uuid4()),
             timestamp=timestamp,
         )
 
         self.node = node
 
-    def __eq__(self, other: 'AuthJoin'):
+    def __eq__(self, other):
         if not isinstance(other, AuthJoin):
             return NotImplemented
 
@@ -83,7 +83,7 @@ class AuthJoin(AuthJoinB[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappin
                Generic[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]
                ):
     """
-    Network Authorization Join Message
+    Network Authorisation Join Message
 
     This message notifies the other nodes within the network about
     a new node joining. The node information is only for the others

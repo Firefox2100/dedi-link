@@ -20,6 +20,8 @@ class AuthStatusB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT, DataIndex
     """
     Base model for Auth Status
     """
+    auth_type = AuthMessageType.STATUS
+
     def __init__(self,
                  message_id: str,
                  network_id: str,
@@ -42,7 +44,6 @@ class AuthStatusB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT, DataIndex
         super().__init__(
             network_id=network_id,
             node_id=node_id,
-            auth_type=AuthMessageType.STATUS,
             message_id=message_id,
             timestamp=timestamp,
         )

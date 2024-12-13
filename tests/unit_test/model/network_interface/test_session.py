@@ -51,8 +51,8 @@ class TestSession:
 
     def test_post(self,
                   mock_session,
-                  mock_auth_request_invite_1,
-                  mock_auth_request_invite_dict_1,
+                  mock_auth_request_1,
+                  mock_auth_request_dict_1,
                   mock_auth_response_1,
                   mock_auth_response_dict_1,
                   mock_network_message_header_1,
@@ -73,7 +73,7 @@ class TestSession:
             session = Session()
             response = session.post(
                 url='https://example.com',
-                message=mock_auth_request_invite_1,
+                message=mock_auth_request_1,
                 access_token='access_token',
             )
 
@@ -82,13 +82,13 @@ class TestSession:
 
             assert mock_session.return_value.post.called_once_with(
                 'https://example.com',
-                json=mock_auth_request_invite_dict_1,
+                json=mock_auth_request_dict_1,
                 headers=mock_network_message_header_dict_1,
             )
 
     def test_post_error_code(self,
                              mock_session,
-                             mock_auth_request_invite_1,
+                             mock_auth_request_1,
                              mock_network_message_header_1,
                              ):
         mock_response = MagicMock()
@@ -106,14 +106,13 @@ class TestSession:
             with pytest.raises(NetworkRequestFailed):
                 session.post(
                     url='https://example.com',
-                    message=mock_auth_request_invite_1,
+                    message=mock_auth_request_1,
                     access_token='access_token',
                 )
 
     def test_post_non_json_response(self,
                                     mock_session,
-                                    mock_auth_request_invite_1,
-                                    mock_auth_response_1,
+                                    mock_auth_request_1,
                                     mock_network_message_header_1,
                                     ):
         mock_response = MagicMock()
@@ -131,7 +130,7 @@ class TestSession:
 
             response, response_header = session.post(
                 url='https://example.com',
-                message=mock_auth_request_invite_1,
+                message=mock_auth_request_1,
                 access_token='access_token',
             )
 

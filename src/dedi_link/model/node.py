@@ -28,6 +28,7 @@ class NodeB(BaseModel, Generic[DataIndexT, UserMappingT]):
                  url: str,
                  description: str,
                  client_id: str,
+                 *,
                  authentication_enabled: bool | None = None,
                  user_mapping: UserMappingT | None = None,
                  public_key: str | None = None,

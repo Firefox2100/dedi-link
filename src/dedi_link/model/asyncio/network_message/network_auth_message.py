@@ -4,7 +4,8 @@ from ...network_message.network_message_header import NetworkMessageHeaderT
 from ...data_index import DataIndexT
 from ...user_mapping import UserMappingT
 from ...network_message.network_auth_message.network_auth_message import NetworkAuthMessageB
-from ...network_message.network_auth_message.auth_request_invite import AuthRequestInviteB
+from ...network_message.network_auth_message.auth_request import AuthRequestB
+from ...network_message.network_auth_message.auth_invite import AuthInviteB
 from ...network_message.network_auth_message.auth_response import AuthResponseB
 from ...network_message.network_auth_message.auth_join import AuthJoinB
 from ...network_message.network_auth_message.auth_leave import AuthLeaveB
@@ -15,7 +16,8 @@ from .network_message import NetworkMessage
 
 
 NetworkAuthMessageT = TypeVar('NetworkAuthMessageT', bound='NetworkAuthMessage')
-AuthRequestInviteT = TypeVar('AuthRequestInviteT', bound='AuthRequestInvite')
+AuthRequestT = TypeVar('AuthRequestT', bound='AuthRequest')
+AuthInviteT = TypeVar('AuthInviteT', bound='AuthInvite')
 AuthResponseT = TypeVar('AuthResponseT', bound='AuthResponse')
 AuthJoinT = TypeVar('AuthJoinT', bound='AuthJoin')
 AuthLeaveT = TypeVar('AuthLeaveT', bound='AuthLeave')
@@ -29,10 +31,17 @@ class NetworkAuthMessage(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT, Da
     pass
 
 
-class AuthRequestInvite(AuthRequestInviteB[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
-                        NetworkAuthMessage[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
-                        Generic[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]
-                        ):
+class AuthRequest(AuthRequestB[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
+                  NetworkAuthMessage[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
+                  Generic[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]
+                  ):
+    NODE_CLASS = Node
+
+
+class AuthInvite(AuthInviteB[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
+                 NetworkAuthMessage[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
+                 Generic[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]
+                 ):
     NODE_CLASS = Node
 
 

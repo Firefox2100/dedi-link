@@ -2,12 +2,10 @@ import pytest
 import json
 import base64
 from unittest.mock import patch, PropertyMock
-from deepdiff import DeepDiff
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives import serialization
 
-from dedi_link.etc.enums import MessageType
 from dedi_link.etc.exceptions import NetworkMessageNotImplemented
 from dedi_link.model import NetworkMessage, Network
 from dedi_link.model.network_message import NetworkMessageHeader
@@ -16,22 +14,23 @@ from dedi_link.model.network_message import NetworkMessageHeader
 class TestNetworkMessage:
     def test_init(self):
         network_message = NetworkMessage(
-            message_type=MessageType.AUTH_MESSAGE,
             network_id='62d13013-d80c-4539-adc1-61862bdd65cb',
             node_id='f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
             message_id='ef893ef0-1d29-4cae-ac61-0891f346fed3',
             timestamp=1704067200,
         )
 
-        assert network_message.message_type == MessageType.AUTH_MESSAGE
+        assert network_message.message_type is None
         assert network_message.message_id == 'ef893ef0-1d29-4cae-ac61-0891f346fed3'
         assert network_message.network_id == '62d13013-d80c-4539-adc1-61862bdd65cb'
         assert network_message.node_id == 'f3bb816f-608b-4dd7-ac74-8e0d0a0979ad'
         assert network_message.timestamp == 1704067200
 
-    def test_equality(self, mock_network_message_1, mock_network_message_2):
+    def test_equality(self,
+                      mock_network_message_1,
+                      mock_network_message_2,
+                      ):
         assert mock_network_message_1 == NetworkMessage(
-            message_type=MessageType.AUTH_MESSAGE,
             network_id='62d13013-d80c-4539-adc1-61862bdd65cb',
             node_id='f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
             message_id='ef893ef0-1d29-4cae-ac61-0891f346fed3',
@@ -42,26 +41,35 @@ class TestNetworkMessage:
 
         assert not mock_network_message_1 == 'Random String'
 
-    def test_hash(self, mock_network_message_1):
-        message_hash = hash(mock_network_message_1)
+    def test_hash(self,
+                  mock_network_message_1,
+                  mock_network_message_2,
+                  ):
+        assert hash(mock_network_message_1) == hash(NetworkMessage(
+            network_id='62d13013-d80c-4539-adc1-61862bdd65cb',
+            node_id='f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
+            message_id='ef893ef0-1d29-4cae-ac61-0891f346fed3',
+            timestamp=1704067200,
+        ))
 
-        assert isinstance(message_hash, int)
+        assert hash(mock_network_message_1) != hash(mock_network_message_2)
 
     def test_to_dict(self,
                      mock_network_message_1,
                      mock_network_message_dict_1,
                      ):
-        assert not DeepDiff(
-            mock_network_message_1.to_dict(),
-            mock_network_message_dict_1,
-            ignore_order=True,
-        )
+        with pytest.raises(AttributeError):
+            mock_network_message_1.to_dict()
 
     def test_from_dict(self):
         with pytest.raises(NetworkMessageNotImplemented):
             NetworkMessage.from_dict({})
 
-    def test_signature(self, mock_network_message_1, mock_public_key, mock_private_key):
+    def test_signature(self,
+                       mock_auth_join_1,
+                       mock_public_key,
+                       mock_private_key,
+                       ):
         mock_network = Network(
             network_id='',
             network_name='',
@@ -71,14 +79,14 @@ class TestNetworkMessage:
             with patch('dedi_link.model.network.Network.private_key', new_callable=PropertyMock) as mock_p_key:
                 mock_p_key.return_value = mock_private_key
 
-                signature = mock_network_message_1.signature
+                signature = mock_auth_join_1.signature
 
                 assert isinstance(signature, str)
 
                 public_key = serialization.load_pem_public_key(
                     data=mock_public_key.encode(),
                 )
-                payload = json.dumps(mock_network_message_1.to_dict())
+                payload = json.dumps(mock_auth_join_1.to_dict())
 
                 signature_bytes = base64.b64decode(signature.encode())
 

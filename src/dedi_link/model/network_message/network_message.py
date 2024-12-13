@@ -57,8 +57,9 @@ class NetworkMessageB(BaseModel,
     NETWORK_MESSAGE_HEADER_CLASS = NetworkMessageHeader
     NETWORK_CLASS = Network[DataIndexT, UserMappingT, NodeT]
 
+    message_type: MessageType | None = None
+
     def __init__(self,
-                 message_type: MessageType,
                  network_id: str,
                  node_id: str,
                  message_id: str = None,
@@ -67,13 +68,11 @@ class NetworkMessageB(BaseModel,
         """
         Base model for a network message
 
-        :param message_type: The type of message
         :param network_id: The network ID
         :param node_id: The node ID
         :param message_id: The message ID
         :param timestamp: The timestamp in seconds since epoch
         """
-        self.message_type = message_type
         self.message_id = message_id or str(uuid.uuid4())
         self.network_id = network_id
         self.node_id = node_id

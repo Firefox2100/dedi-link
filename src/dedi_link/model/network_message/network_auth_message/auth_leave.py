@@ -18,6 +18,8 @@ AuthLeaveT = TypeVar('AuthLeaveT', bound='AuthLeave')
 class AuthLeaveB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
                 Generic[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]
                 ):
+    auth_type = AuthMessageType.LEAVE
+
     def __init__(self,
                  node_id: str,
                  network_id: str,
@@ -25,7 +27,7 @@ class AuthLeaveB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT, DataIndexT
                  timestamp: int | None = None,
                  ):
         """
-        Base class for Network Authorization Leave Message
+        Base class for Network Authorisation Leave Message
 
         :param network_id: The network ID
         :param node_id: The node ID
@@ -35,7 +37,6 @@ class AuthLeaveB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT, DataIndexT
         super().__init__(
             network_id=network_id,
             node_id=node_id,
-            auth_type=AuthMessageType.LEAVE,
             message_id=message_id or str(uuid.uuid4()),
             timestamp=timestamp,
         )

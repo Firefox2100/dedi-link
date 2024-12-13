@@ -97,6 +97,7 @@ class NetworkRelayMessageB(NetworkMessageB[NetworkMessageHeaderT, NetworkT, Data
     Base class for Network Relay Messages
     """
     RELAY_TARGET_CLASS = RelayTarget
+    message_type = MessageType.RELAY_MESSAGE
 
     def __init__(self,
                  network_id: str,
@@ -120,7 +121,6 @@ class NetworkRelayMessageB(NetworkMessageB[NetworkMessageHeaderT, NetworkT, Data
         :param timestamp: The timestamp in seconds since epoch
         """
         super().__init__(
-            message_type=MessageType.RELAY_MESSAGE,
             network_id=network_id,
             node_id=node_id,
             message_id=message_id,
