@@ -68,7 +68,7 @@ class TestSession:
         with patch(
                 'dedi_link.model.network_message.network_message.SyncNetworkMessageInterface.generate_headers',
         ) as mock_generate_headers:
-            mock_generate_headers.return_value.headers = mock_network_message_header_1
+            mock_generate_headers.return_value = mock_network_message_header_1
 
             session = Session()
             response = session.post(
@@ -80,7 +80,7 @@ class TestSession:
             assert response[0] == mock_auth_response_1
             assert response[1] == mock_network_message_header_1
 
-            assert mock_session.return_value.post.called_once_with(
+            mock_session.return_value.post.assert_called_once_with(
                 'https://example.com',
                 json=mock_auth_request_dict_1,
                 headers=mock_network_message_header_dict_1,
