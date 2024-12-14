@@ -39,7 +39,9 @@ class DataIndex(BaseModel):
         if not isinstance(other, DataIndex):
             return NotImplemented
 
-        return DataIndex()
+        return DataIndex(
+            record_count=self.record_count + other.record_count,
+        )
 
     def to_dict(self) -> dict:
         payload = {}

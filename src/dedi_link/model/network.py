@@ -205,16 +205,16 @@ class Network(NetworkB[DataIndexT, UserMappingT, NodeT],
         """
         raise NetworkNotImplemented('private_key property not implemented')
 
-    def get_self_node(self, config: DDLConfig) -> NodeT:
+    def get_self_node(self) -> NodeT:
         """
         Get the node object of the instance itself.
         """
         return self.NODE_CLASS(
             node_id=self.instance_id,
-            node_name=config.name,
-            url=config.url,
-            description=config.description,
-            client_id=config.client_id,
+            node_name=self.config.name,
+            url=self.config.url,
+            description=self.config.description,
+            client_id=self.config.client_id,
             public_key=self.public_key,
         )
 

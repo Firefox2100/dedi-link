@@ -1,4 +1,4 @@
-from aiohttp import ClientSession
+import httpx
 from typing import TypeVar, Generic
 
 from dedi_link.etc.exceptions import NetworkRequestFailed
@@ -12,7 +12,7 @@ class Session(Generic[NetworkMessageT, NetworkMessageHeaderT]):
     NETWORK_MESSAGE_HEADER_CLASS = NetworkMessageHeader
 
     def __init__(self):
-        self._session = ClientSession()
+        self._client = httpx.AsyncClient()
 
     async def __aenter__(self):
         return self
@@ -21,15 +21,15 @@ class Session(Generic[NetworkMessageT, NetworkMessageHeaderT]):
         await self.close()
 
     async def close(self):
-        await self._session.close()
+        await self._client.aclose()
 
     async def get(self,
                   url: str,
                   ) -> dict:
-        response = await self._session.get(url)
+        response = await self._client.get(url)
 
-        if response.status != 200:
-            raise NetworkRequestFailed(response.status)
+        if response.status_code != 200:
+            raise NetworkRequestFailed(response.status_code)
 
         return await response.json()
 
@@ -44,14 +44,14 @@ class Session(Generic[NetworkMessageT, NetworkMessageHeaderT]):
             access_token=access_token,
         )).headers
 
-        response = await self._session.post(
+        response = await self._client.post(
             url,
             json=payload,
             headers=headers,
         )
 
-        if response.status != 200:
-            raise NetworkRequestFailed(response.status)
+        if response.status_code != 200:
+            raise NetworkRequestFailed(response.status_code)
 
         response_payload = await response.json()
         response_headers = response.headers

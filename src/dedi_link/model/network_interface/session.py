@@ -1,4 +1,4 @@
-import requests
+import httpx
 from typing import TypeVar, Generic
 
 from dedi_link.etc.exceptions import NetworkRequestFailed
@@ -13,7 +13,7 @@ class Session(Generic[NetworkMessageT, NetworkMessageHeaderT]):
     NETWORK_MESSAGE_HEADER_CLASS = NetworkMessageHeader
 
     def __init__(self):
-        self._session = requests.Session()
+        self._client = httpx.Client()
 
     def __enter__(self):
         return self
@@ -22,12 +22,12 @@ class Session(Generic[NetworkMessageT, NetworkMessageHeaderT]):
         self.close()
 
     def close(self):
-        self._session.close()
+        self._client.close()
 
     def get(self,
             url: str,
             ) -> dict:
-        response = self._session.get(url)
+        response = self._client.get(url)
 
         if response.status_code != 200:
             raise NetworkRequestFailed(response.status_code)
@@ -44,7 +44,7 @@ class Session(Generic[NetworkMessageT, NetworkMessageHeaderT]):
             access_token=access_token,
         ).headers
 
-        response = self._session.post(
+        response = self._client.post(
             url,
             json=payload,
             headers=headers,

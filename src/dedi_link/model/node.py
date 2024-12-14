@@ -129,6 +129,22 @@ class NodeB(BaseModel, Generic[DataIndexT, UserMappingT]):
 
         return payload
 
+    def _ema_score(self,
+                   new_score: float,
+                   ):
+        """
+        Calculate an updated score using Exponential Moving Average
+
+        :param new_score: The new score to add
+        :return: The updated score, considering both the previous and new scores
+        """
+        if self.score is None:
+            return new_score
+        else:
+            weight = (self.config.ema_factor *
+                      (abs(new_score) / (abs(new_score) + abs(self.score))))
+            return weight * new_score + (1 - weight) * self.score
+
 
 class Node(NodeB[DataIndexT, UserMappingT],
            SyncDataInterface,
@@ -159,12 +175,13 @@ class Node(NodeB[DataIndexT, UserMappingT],
         """
         Wrapper method to update only the score of a node
 
-        The score is updated with each request, so this method is
-        more convenient to use than the update() method.
+        It calls the EMA calculation function to update the score
 
         :param score: New score to set
         :return:
         """
+        new_score = self._ema_score(score)
+
         self.update({
-            'score': score,
+            'score': new_score,
         })

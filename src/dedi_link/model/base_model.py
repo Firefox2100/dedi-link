@@ -6,6 +6,7 @@ from enum import Enum
 from typing import Type, TypeVar, Callable
 
 from dedi_link.etc.exceptions import BaseModelNotImplemented
+from .config import DDLConfig
 
 
 SyncDataInterfaceT = TypeVar('SyncDataInterfaceT', bound='SyncDataInterface')
@@ -104,6 +105,8 @@ class BaseModel:
 
     This class defines a uniform interface for all models to implement
     """
+    config = DDLConfig()
+
     @classmethod
     def _child_mapping(cls) -> dict[Enum, tuple[Type[BaseModelT], Callable[[dict], Enum] | None]]:
         """

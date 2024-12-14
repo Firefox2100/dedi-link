@@ -36,8 +36,24 @@ def mock_oidc_provider(mock_oidc_signing_key,
                        mock_oidc_clients,
                        ):
     hash_salt = secrets.token_urlsafe(16)[:16]
+    base_url = 'https://mock-op.local'
 
-    config_info = {}
+    config_info = {
+        'issuer': base_url,
+        'authorization_endpoint': f'{base_url}/authentication',
+        'jwks_uri': f'{base_url}/jwks',
+        'token_endpoint': f'{base_url}/token',
+        'userinfo_endpoint': f'{base_url}/userinfo',
+        'registration_endpoint': f'{base_url}/registration',
+        'end_session_endpoint': f'{base_url}/logout',
+        'scopes_supported': ['openid', 'profile'],
+        'response_types_supported': ['code', 'code id_token', 'code token', 'code id_token token'],  # code and hybrid
+        'response_modes_supported': ['query', 'fragment'],
+        'grant_types_supported': ['authorization_code', 'implicit'],
+        'subject_types_supported': ['pairwise'],
+        'token_endpoint_auth_methods_supported': ['client_secret_basic'],
+        'claims_parameter_supported': True
+    }
     user_info = Userinfo(mock_oidc_user_db)
 
     provider = Provider(
