@@ -7,10 +7,12 @@ class TestDDLConfig:
             name='Test instance',
             description='This is a test instance',
             url='https://test-node.example.com',
+            client_id='dedi-link',
+            idp='https://mock-oidc.local',
             allow_non_client_authenticated=True,
             auto_user_registration=True,
             anonymous_access=True,
-            default_ttl=5,
+            default_ttl=3,
             optimal_record_percentage=0.5,
             time_score_weight=0.5,
             ema_factor=0.5,
@@ -19,10 +21,12 @@ class TestDDLConfig:
         assert config.name == 'Test instance'
         assert config.description == 'This is a test instance'
         assert config.url == 'https://test-node.example.com'
+        assert config.client_id == 'dedi-link'
+        assert config.idp == 'https://mock-oidc.local'
         assert config.allow_non_client_authenticated == True
         assert config.auto_user_registration == True
         assert config.anonymous_access == True
-        assert config.default_ttl == 5
+        assert config.default_ttl == 3
         assert config.optimal_record_percentage == 0.5
         assert config.time_score_weight == 0.5
         assert config.ema_factor == 0.5

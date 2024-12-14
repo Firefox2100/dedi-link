@@ -1,10 +1,11 @@
 import json
 import pytest
 import networkx as nx
+from unittest.mock import patch, PropertyMock
 from cryptography.exceptions import InvalidSignature
 
 from dedi_link.etc.exceptions import NetworkInterfaceNotImplemented
-from dedi_link.model import Session, NetworkInterface
+from dedi_link.model import Session, NetworkInterface, Network
 
 from unit_test.consts import NODE_IDS
 
@@ -253,22 +254,19 @@ class TestNetworkInterface:
     def test_validate_signature(self,
                                 mock_network_interface,
                                 mock_public_key,
+                                mock_private_key,
                                 mock_auth_join_1,
                                 ):
-        mock_signature = (
-            'Z2VnzSGCDdHdlIHBftKaRTYQoYLKLRRycVgfbYnBDHnriaYBqY9A50OmK'
-            '8xIjQjmYpGZmDNorbVQhSnfwDnHwV6QTIp3a+t7VkzhJ4Adxmc+fCrIg1'
-            'jZQlGnKjkcOWwafemzU4U4OBDRUrwdwHuhM9auGysPlx787u7teGjEPPJ'
-            'tW4oqg+58WWurj6xrw+enZPlENZJlKGxVSLJM0UFfmNcMwLBn07Q547Et'
-            'p8aCp+bhWyPvrEBSlDDlsKsT/VedxgpUREproA4GeLTetn53cqPQtRbvf'
-            '1g8Uve6dv3F1lPZQYdsuph+nnwCAGNMsSHr9R2JS68dsjl6YYTMRgV4YG'
-            'TpSQkrrS5GM0WF79XS06hicHDlm/I6wJ0JUpuTEGjSrjcis1OLn8fYUd4'
-            'nKxA3/EopqP44G3GLW+xnBR5RABESNvYVJFuTKeUY7uJoBN1/LDScNc8q'
-            'mJzca9gNkuzia+6iDfgF3dXNI5m5Z0AnXaETbDXJLRk5oHOnhd2WgF+/U'
-            '76kfMyyfU/xTn+/UlqFtD/ac4k+0soOAUhLk/6TK4AJkOWM09PZdzij0s'
-            'A8S34y5DBmO+uCJOtsPSu37jIGkN95iXGH9+U74blq3TLo20aDjCePBf/'
-            'p673jeVBTbbpIc5tKt6ZcufYRVgDYfuMpOCm+Ff1B+ccxqeCYzQfGLko='
+        mock_network = Network(
+            network_id='',
+            network_name='',
         )
+
+        with patch('dedi_link.model.network.Network.load', return_value=mock_network):
+            with patch('dedi_link.model.network.Network.private_key', new_callable=PropertyMock) as mock_p_key:
+                mock_p_key.return_value = mock_private_key
+
+                mock_signature = mock_auth_join_1.signature
 
         mock_network_interface._validate_signature(
             signature=mock_signature,

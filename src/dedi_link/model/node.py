@@ -28,6 +28,7 @@ class NodeB(BaseModel, Generic[DataIndexT, UserMappingT]):
                  url: str,
                  description: str,
                  client_id: str,
+                 idp: str,
                  *,
                  authentication_enabled: bool | None = None,
                  user_mapping: UserMappingT | None = None,
@@ -46,6 +47,7 @@ class NodeB(BaseModel, Generic[DataIndexT, UserMappingT]):
         :param url: The URL of the node
         :param description: A description of the node
         :param client_id: The client ID of the node
+        :param idp: The IdP issuer URL this node uses. This must match the `iss` claim in the token
         :param authentication_enabled: Whether the requests coming from this node
         requires authentication. If disabled, all users will be mapped to the
         same static user with the same permissions.
@@ -62,6 +64,7 @@ class NodeB(BaseModel, Generic[DataIndexT, UserMappingT]):
         self.authentication_enabled = authentication_enabled or False
         self.user_mapping = user_mapping or self.USER_MAPPING_CLASS()
         self.client_id = client_id
+        self.idp = idp
         self.data_index = data_index or self.DATA_INDEX_CLASS()
         self.score = score
 
@@ -98,6 +101,7 @@ class NodeB(BaseModel, Generic[DataIndexT, UserMappingT]):
             node_name=payload['nodeName'],
             url=payload['nodeUrl'],
             client_id=payload['clientId'],
+            idp=payload['idp'],
             description=payload.get('nodeDescription', ''),
             authentication_enabled=payload.get('authenticationEnabled', False),
             user_mapping=cls.USER_MAPPING_CLASS.from_dict(payload.get('userMapping', {})),
@@ -112,6 +116,7 @@ class NodeB(BaseModel, Generic[DataIndexT, UserMappingT]):
             'nodeName': self.node_name,
             'nodeUrl': self.url,
             'clientId': self.client_id,
+            'idp': self.idp,
             'nodeDescription': self.description,
         }
 

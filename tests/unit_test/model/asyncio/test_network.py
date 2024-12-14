@@ -147,13 +147,16 @@ class TestNetwork:
             await mock_network_1.generate_keys()
 
     async def test_get_self_node(self,
-                           mock_ddl_config_1,
-                           mock_network_1,
-                           mock_self_node_1,
-                           ):
+                                 mock_ddl_config_1,
+                                 mock_network_1,
+                                 mock_self_node_1,
+                                 ):
         with patch('dedi_link.model.asyncio.network.Network.public_key', new_callable=PropertyMock) as mock_pub_key:
-            mock_pub_key.return_value = async_wrapper('test-public-key')
+            with patch('dedi_link.model.base_model.BaseModel.config', new_callable=PropertyMock) as mock_config:
+                mock_config.return_value = mock_ddl_config_1
 
-            self_node = await mock_network_1.get_self_node(mock_ddl_config_1)
+                mock_pub_key.return_value = async_wrapper('test-public-key')
 
-            assert self_node == mock_self_node_1
+                self_node = await mock_network_1.get_self_node()
+
+                assert self_node == mock_self_node_1

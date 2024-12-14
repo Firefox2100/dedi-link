@@ -54,6 +54,7 @@ def mock_self_node_1():
         url='https://test-node.example.com',
         description='This is a test instance',
         client_id='dedi-link',
+        idp='https://mock-oidc.local',
         public_key='test-public-key',
     )
 
@@ -66,6 +67,7 @@ def mock_self_node_dict_1():
         'nodeUrl': 'https://test-node.example.com',
         'nodeDescription': 'This is a test instance',
         'clientId': 'dedi-link',
+        'idp': 'https://mock-oidc.local',
         'publicKey': 'test-public-key',
         'authenticationEnabled': False,
     }
@@ -79,6 +81,7 @@ def mock_node_1():
         url='https://node1.example.com',
         description='This is a test node',
         client_id='a04ffd6a-b93c-46d5-ac0e-54d59b32abb9',
+        idp='https://mock-oidc.local',
         authentication_enabled=True,
         user_mapping=UserMapping(),
         public_key='test-public-key',
@@ -97,6 +100,7 @@ def mock_node_dict_1():
         'nodeUrl': 'https://node1.example.com',
         'nodeDescription': 'This is a test node',
         'clientId': 'a04ffd6a-b93c-46d5-ac0e-54d59b32abb9',
+        'idp': 'https://mock-oidc.local',
         'authenticationEnabled': True,
         'publicKey': 'test-public-key',
         'dataIndex': {
@@ -114,6 +118,7 @@ def mock_node_2():
         url='https://node2.example.com',
         description='This is a test node 2',
         client_id='f2827c56-758e-491d-829c-b86c7299b43f',
+        idp='https://mock-oidc.local',
         authentication_enabled=False,
         user_mapping=UserMapping(),
         public_key='test-public-key-2',
@@ -130,6 +135,7 @@ def mock_node_dict_2():
         'nodeUrl': 'https://node2.example.com',
         'nodeDescription': 'This is a test node 2',
         'clientId': 'f2827c56-758e-491d-829c-b86c7299b43f',
+        'idp': 'https://mock-oidc.local',
         'authenticationEnabled': False,
         'publicKey': 'test-public-key-2',
         'score': 0,
@@ -143,6 +149,7 @@ def mock_ddl_config_1():
         description='This is a test instance',
         url='https://test-node.example.com',
         client_id='dedi-link',
+        idp='https://mock-oidc.local',
         allow_non_client_authenticated=True,
         auto_user_registration=True,
         anonymous_access=True,

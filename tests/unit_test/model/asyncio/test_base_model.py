@@ -5,11 +5,6 @@ from dedi_link.model.asyncio import AsyncDataInterface
 
 
 class TestAsyncDataInterface:
-    async def test_access_token(self):
-        async_interface_instance = AsyncDataInterface()
-        with pytest.raises(BaseModelNotImplemented):
-            _ = await async_interface_instance.access_token
-
     async def test_load(self):
         with pytest.raises(BaseModelNotImplemented):
             await AsyncDataInterface.load()

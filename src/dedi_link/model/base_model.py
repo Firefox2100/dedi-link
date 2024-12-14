@@ -7,6 +7,7 @@ from typing import Type, TypeVar, Callable
 
 from dedi_link.etc.exceptions import BaseModelNotImplemented
 from .config import DDLConfig
+from .oidc import OidcDriver
 
 
 SyncDataInterfaceT = TypeVar('SyncDataInterfaceT', bound='SyncDataInterface')
@@ -20,18 +21,6 @@ class SyncDataInterface:
     This interface should be implemented by all classes that
     need to perform data-related operations.
     """
-
-    @property
-    def access_token(self) -> str:
-        """
-        Get the access token for the model
-
-        This is a property to allow for lazy loading of the access token
-        :return: The access token
-        """
-        raise BaseModelNotImplemented(
-            'access_token property has to be implemented by the child class'
-        )
 
     @classmethod
     def load(cls: Type[SyncDataInterfaceT], *args, **kwargs) -> SyncDataInterfaceT:
@@ -106,6 +95,20 @@ class BaseModel:
     This class defines a uniform interface for all models to implement
     """
     config = DDLConfig()
+    oidc: OidcDriver = None     # Requires initialisation. If your config is lazy loaded, you can do it here
+
+    @property
+    def access_token(self) -> str:
+        """
+        Get the access token for the model
+
+        This is a property to allow for lazy loading of the access token
+        :return: The access token
+        """
+        if self.oidc is None:
+            raise ValueError('OIDC driver not initialised')
+
+        return self.oidc.service_token
 
     @classmethod
     def _child_mapping(cls) -> dict[Enum, tuple[Type[BaseModelT], Callable[[dict], Enum] | None]]:

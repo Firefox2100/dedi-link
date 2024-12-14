@@ -10,18 +10,6 @@ class AsyncDataInterface:
     """
     Asynchronous base class for the async part of library
     """
-    @property
-    async def access_token(self) -> str:
-        """
-        Get the access token for the model
-
-        This is a property to allow for lazy loading of the access token
-        :return: The access token
-        """
-        raise BaseModelNotImplemented(
-            'access_token property has to be implemented by the child class'
-        )
-
     @classmethod
     async def load(cls: Type[AsyncDataInterfaceT],
                    *args,
