@@ -4,22 +4,23 @@ import uuid
 import base64
 import json
 
-import jwt
 import networkx as nx
 from typing import TypeVar, Any, List, Generic, Type
 from collections import Counter
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric import padding, rsa
+from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.backends import default_backend
 from copy import deepcopy
 from contextlib import contextmanager
 
+from dedi_link.etc.consts import LOGGER
 from dedi_link.etc.enums import MessageType
 from dedi_link.etc.exceptions import MessageSignatureInvalid, MessageTimestampInvalid, MessageAccessTokenInvalid, \
                                      MessageUndeliverable, NodeAuthenticationStatusInvalid
 from dedi_link.etc.exceptions import NetworkRequestFailed, NetworkInterfaceNotImplemented
+from ..base_model import BaseModel
 from ..config import DDLConfig
 from ..network import Network, NetworkT
 from ..node import Node, NodeT
@@ -34,7 +35,8 @@ NetworkInterfaceBT = TypeVar('NetworkInterfaceBT', bound='NetworkInterfaceB')
 NetworkInterfaceT = TypeVar('NetworkInterfaceT', bound='NetworkInterface')
 
 
-class NetworkInterfaceB(Generic[
+class NetworkInterfaceB(BaseModel,
+                        Generic[
                             NetworkT, NodeT, RelayTargetT, NetworkMessageHeaderT,
                             NetworkRelayMessageT, DataIndexT, UserMappingT
                         ]):
@@ -293,8 +295,8 @@ class NetworkInterfaceB(Generic[
 
     def _validate_access_token(self,
                                node_client_id: str,
+                               node_idp: str,
                                access_token: str,
-                               signature_key: dict,
                                user_mapping: UserMappingT,
                                ) -> str:
         """
@@ -310,43 +312,39 @@ class NetworkInterfaceB(Generic[
         consider using introspection instead.
 
         :param node_client_id: The client ID sender node uses
+        :param node_idp: The IdP URL of the sender node
         :param access_token: The access token to validate
+        :param user_mapping: The user mapping to use if the token is not introspected
         :return: The user ID if the token is valid
         :raises MessageAccessTokenInvalid: If the token is invalid
         """
-        # Construct the public key
-        def base64_decode_with_padding(data: str) -> bytes:
-            data += '=' * (4 - len(data) % 4)
-            return base64.urlsafe_b64decode(data)
+        if node_idp != self.config.idp:
+            # Different IdP, try token exchange first
+            try:
+                exchanged_token = self.oidc.exchange_token(access_token)
+            except Exception as e:
+                # Token exchange failed, map the user
+                LOGGER.warning(f'Token exchange failed: {e}')
+                return user_mapping.map()
 
-        public_number = rsa.RSAPublicNumbers(
-            e=int.from_bytes(base64_decode_with_padding(signature_key['e']), 'big'),
-            n=int.from_bytes(base64_decode_with_padding(signature_key['n']), 'big'),
-        )
+            # Token exchange successful, validate the new token
+            access_token = exchanged_token
 
-        public_key = public_number.public_key(default_backend())
-
-        # Decode the token
         try:
-            decoded_token = jwt.decode(
-                jwt=access_token,
-                key=public_key,
-                audience='account',
-                algorithms=['RS256'],
-            )
+            introspect_result = self.oidc.introspect_token(access_token)
 
-            if decoded_token['client_id'] != node_client_id:
+            if not introspect_result['active']:
+                raise MessageAccessTokenInvalid('Token is not active')
+
+            if introspect_result['client_id'] != node_client_id:
                 raise MessageAccessTokenInvalid('Client ID mismatch')
 
-            user_id = decoded_token['sub']
-
-            if decoded_token['iss'] not in self.config.trusted_issuers:
-                # Issuer not trusted, remap the user ID
-                user_id = user_mapping.map(user_id)
-
-            return user_id
-        except jwt.exceptions.InvalidSignatureError:
-            raise MessageAccessTokenInvalid('Invalid signature in access token')
+            return introspect_result['sub']
+        except MessageAccessTokenInvalid:
+            raise
+        except Exception as e:
+            LOGGER.warning(f'Token introspection failed: {e}')
+            return user_mapping.map()
 
     def calculate_new_score(self,
                             time_elapsed: float,
@@ -475,7 +473,9 @@ class NetworkInterface(NetworkInterfaceB[
                          node_ids: list[str],
                          ) -> list[str]:
         """
-        Tries to the optimal node to use for relaying a message
+        Tries to find the optimal node to use for relaying a message
+
+        :param node_ids: The node IDs to find the path to
         """
         with self.network_graph as graph:
             return self._find_relay_nodes(
@@ -511,33 +511,10 @@ class NetworkInterface(NetworkInterfaceB[
 
         # Validate the access token
         if validate_access_token:
-            decoded_token = jwt.decode(
-                jwt=headers.access_token,
-                options={
-                    'verify_signature': False,  # Disable verification for now
-                }
-            )
-            issuer_url = decoded_token['iss']
-            issuer_well_known = issuer_url + '/.well-known/openid-configuration'
-
-            well_known = self.session.get(issuer_well_known)
-            jwks_uri = well_known['jwks_uri']
-
-            jwks = self.session.get(jwks_uri)
-            signature_key = None
-
-            for key in jwks['keys']:
-                if key['use'] == 'sig':
-                    signature_key = key
-                    break
-
-            if signature_key is None:
-                raise MessageAccessTokenInvalid('No signature key found in JWKS')
-
             user_id = self._validate_access_token(
                 node_client_id=node.client_id,
+                node_idp=node.idp,
                 access_token=headers.access_token,
-                signature_key=signature_key,
                 user_mapping=node.user_mapping,
             )
 

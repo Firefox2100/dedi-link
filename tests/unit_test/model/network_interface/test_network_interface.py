@@ -1,11 +1,12 @@
 import json
 import pytest
 import networkx as nx
-from unittest.mock import patch, PropertyMock
+from unittest.mock import patch, PropertyMock, MagicMock
 from cryptography.exceptions import InvalidSignature
 
-from dedi_link.etc.exceptions import NetworkInterfaceNotImplemented
-from dedi_link.model import Session, NetworkInterface, Network
+from dedi_link.etc.enums import MappingType
+from dedi_link.etc.exceptions import NetworkInterfaceNotImplemented, MessageAccessTokenInvalid
+from dedi_link.model import Session, NetworkInterface, Network, UserMapping
 
 from unit_test.consts import NODE_IDS
 
@@ -281,6 +282,104 @@ class TestNetworkInterface:
                 node_public_key=mock_public_key,
             )
 
+    def test_validate_access_token(self,
+                                   mock_network_interface,
+                                   mock_oidc_driver,
+                                   ):
+        with patch('dedi_link.model.base_model.BaseModel.oidc',
+                   new_callable=PropertyMock) as mock_oidc:
+            mock_oidc.return_value = mock_oidc_driver
+
+            user_id = mock_network_interface._validate_access_token(
+                node_client_id='test_client_id',
+                node_idp='https://mock-oidc.local',
+                access_token='test_access_token',
+                user_mapping=UserMapping(),
+            )
+
+            assert user_id == '19a80cb0-7861-42c9-9212-c2e0cbe8dcfb'
+            mock_oidc_driver.introspect_token.assert_called_once_with(
+                'test_access_token',
+            )
+
+    def test_validate_access_token_with_exchange(self,
+                                                 mock_network_interface,
+                                                 mock_oidc_driver,
+                                                 ):
+        with patch('dedi_link.model.base_model.BaseModel.oidc',
+                   new_callable=PropertyMock) as mock_oidc:
+            mock_oidc.return_value = mock_oidc_driver
+
+            user_id = mock_network_interface._validate_access_token(
+                node_client_id='test_client_id',
+                node_idp='https://another.mock-oidc.local',
+                access_token='test_access_token',
+                user_mapping=UserMapping(),
+            )
+
+            assert user_id == '19a80cb0-7861-42c9-9212-c2e0cbe8dcfb'
+            mock_oidc_driver.introspect_token.assert_called_once_with(
+                'new_access_token',
+            )
+
+    def test_validate_access_token_exception(self,
+                                             mock_network_interface,
+                                             mock_oidc_driver,
+                                             ):
+        with patch('dedi_link.model.base_model.BaseModel.oidc',
+                     new_callable=PropertyMock) as mock_oidc:
+            mock_oidc.return_value = mock_oidc_driver
+
+            with pytest.raises(MessageAccessTokenInvalid):
+                # client ID mismatch
+                user_id = mock_network_interface._validate_access_token(
+                    node_client_id='another_client_id',
+                    node_idp='https://another.mock-oidc.local',
+                    access_token='test_access_token',
+                    user_mapping=UserMapping(),
+                )
+
+            with pytest.raises(MessageAccessTokenInvalid):
+                mock_oidc_driver.introspect_token.return_value['active'] = False
+
+                # Token not active
+                user_id = mock_network_interface._validate_access_token(
+                    node_client_id='client_id',
+                    node_idp='https://another.mock-oidc.local',
+                    access_token='test_access_token',
+                    user_mapping=UserMapping(),
+                )
+
+            # Error introspecting token, mapping required
+            mock_oidc_driver.introspect_token.side_effect = Exception
+
+            user_id = mock_network_interface._validate_access_token(
+                    node_client_id='client_id',
+                    node_idp='https://another.mock-oidc.local',
+                    access_token='test_access_token',
+                    user_mapping=UserMapping(
+                        mapping_type=MappingType.STATIC,
+                        static_id='mapped_user_id',
+                    ),
+                )
+            assert user_id == 'mapped_user_id'
+
+            # Error exchanging token. mapping required
+            mock_oidc_driver.introspect_token.side_effect = None
+            mock_oidc_driver.introspect_token.return_value['active'] = True
+            mock_oidc_driver.exchange_token.side_effect = Exception
+
+            user_id = mock_network_interface._validate_access_token(
+                node_client_id='client_id',
+                node_idp='https://another.mock-oidc.local',
+                access_token='test_access_token',
+                user_mapping=UserMapping(
+                mapping_type=MappingType.STATIC,
+                    static_id='mapped_user_id',
+                ),
+            )
+            assert user_id == 'mapped_user_id'
+
     def test_calculate_new_score(self,
                                  mock_network_interface,
                                  ):
@@ -352,3 +451,39 @@ class TestNetworkInterface:
         assert new_interface.instance_id == mock_network_interface.instance_id
         assert new_interface.config == mock_network_interface.config
         assert new_interface.session == mock_network_interface.session
+
+    def test_check_connectivity(self,
+                                mock_client,
+                                mock_network_interface,
+                                ):
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {'status': 'OK'}
+
+        mock_client.return_value.get.return_value = mock_response
+
+        # Local URL
+        result = mock_network_interface.check_connectivity(
+            url='http://localhost:5000'
+        )
+        assert not result
+
+        # Self URL
+        result = mock_network_interface.check_connectivity(
+            url='https://test-node.example.com'
+        )
+        assert not result
+
+        # External URL
+        result = mock_network_interface.check_connectivity(
+            url='https://example.com'
+        )
+        assert result
+
+        # Request failed
+        mock_client.return_value.get.side_effect = Exception
+
+        result = mock_network_interface.check_connectivity(
+            url='https://example.com'
+        )
+        assert not result

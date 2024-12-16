@@ -26,13 +26,15 @@ class OidcDriver:
         :return:
         """
         token_response = self.oauth.fetch_token(
-            token_url=self._discovery_document['token_endpoint'],
+            url=self._discovery_document['token_endpoint'],
             grant_type='client_credentials',
         )
 
         return token_response['access_token']
 
-    def exchange_token(self, external_token: str):
+    def exchange_token(self,
+                       external_token: str,
+                       ):
         """
         Exchange a token from external IdP for a token from this IdP
 
@@ -42,7 +44,7 @@ class OidcDriver:
         :return: A token from this IdP
         """
         exchange_response = self.oauth.fetch_token(
-            token_url=self._discovery_document['token_endpoint'],
+            url=self._discovery_document['token_endpoint'],
             grant_type='urn:ietf:params:oauth:grant-type:token-exchange',
             subject_token=external_token,
             subject_token_type='urn:ietf:params:oauth:token-type:access_token',
@@ -57,10 +59,9 @@ class OidcDriver:
         :param token: Access token to introspect
         :return: Introspection response
         """
-        introspect_response = self.oauth.fetch_token(
-            token_url=self._discovery_document['introspection_endpoint'],
-            grant_type='urn:ietf:params:oauth:grant-type:token-exchange',
+        introspect_response = self.oauth.introspect_token(
+            url=self._discovery_document['introspection_endpoint'],
             token=token,
         )
 
-        return introspect_response
+        return introspect_response.json()

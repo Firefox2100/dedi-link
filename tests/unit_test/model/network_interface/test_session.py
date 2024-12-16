@@ -1,15 +1,9 @@
 import pytest
 import httpx
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, patch
 
 from dedi_link.etc.exceptions import NetworkRequestFailed
 from dedi_link.model.network_interface import Session
-
-
-@pytest.fixture
-def mock_client():
-    with patch('dedi_link.model.network_interface.session.httpx.Client') as mock_client:
-        yield mock_client
 
 
 class TestSession:

@@ -27,39 +27,45 @@ class Session(Generic[NetworkMessageT, NetworkMessageHeaderT]):
     def get(self,
             url: str,
             ) -> dict:
-        response = self._client.get(url)
+        try:
+            response = self._client.get(url)
 
-        if response.status_code != 200:
-            raise NetworkRequestFailed(response.status_code)
+            if response.status_code != 200:
+                raise NetworkRequestFailed(response.status_code)
 
-        return response.json()
+            return response.json()
+        except Exception as e:
+            raise NetworkRequestFailed(e) from e
 
     def post(self,
              url: str,
              message: NetworkMessageT,
              access_token: str | None = None,
              ) -> tuple[NetworkMessageT | None, NetworkMessageHeaderT | None]:
-        payload = message.to_dict()
-        headers = message.generate_headers(
-            access_token=access_token,
-        ).headers
+        try:
+            payload = message.to_dict()
+            headers = message.generate_headers(
+                access_token=access_token,
+            ).headers
 
-        response = self._client.post(
-            url,
-            json=payload,
-            headers=headers,
-        )
+            response = self._client.post(
+                url,
+                json=payload,
+                headers=headers,
+            )
 
-        if response.status_code != 200:
-            raise NetworkRequestFailed(response.status_code)
+            if response.status_code != 200:
+                raise NetworkRequestFailed(response.status_code)
 
-        if response.headers.get('Content-Type') == 'application/json':
-            response_payload = response.json()
-            response_headers = response.headers
+            if response.headers.get('Content-Type') == 'application/json':
+                response_payload = response.json()
+                response_headers = response.headers
 
-            response_message = self.NETWORK_MESSAGE_CLASS.factory(response_payload)
-            response_header = self.NETWORK_MESSAGE_HEADER_CLASS.from_headers(response_headers)
+                response_message = self.NETWORK_MESSAGE_CLASS.factory(response_payload)
+                response_header = self.NETWORK_MESSAGE_HEADER_CLASS.from_headers(response_headers)
 
-            return response_message, response_header
-        else:
-            return None, None
+                return response_message, response_header
+            else:
+                return None, None
+        except Exception as e:
+            raise NetworkRequestFailed(e) from e

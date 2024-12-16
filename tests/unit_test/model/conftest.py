@@ -1,4 +1,5 @@
 import pytest
+from unittest.mock import MagicMock
 
 from dedi_link.etc.enums import AuthMessageStatus, SyncTarget
 from dedi_link.model import Network, Node, UserMapping, DataIndex, DDLConfig, NetworkMessage
@@ -609,3 +610,18 @@ HisUCIvCPAnP8lz/mjUBXgT3yS1Y+2LxQnGkAp/lI1Afh6jAeuZeRgGVQ3J0beIl
 fhSasRii99jo/Tnxg0kBDZCs/InKsba7SxyO1ZYqqH9OAazzlKa79lv8p5o=
 -----END RSA PRIVATE KEY-----
 """
+
+
+@pytest.fixture
+def mock_oidc_driver():
+    mock_driver = MagicMock()
+
+    mock_driver.introspect_token.return_value = {
+        'active': True,
+        'client_id': 'test_client_id',
+        'sub': '19a80cb0-7861-42c9-9212-c2e0cbe8dcfb',
+    }
+
+    mock_driver.exchange_token.return_value = 'new_access_token'
+
+    return mock_driver
