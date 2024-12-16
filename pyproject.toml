@@ -37,7 +37,6 @@ test = [
     "pytest-asyncio~=0.25",
     "pytest-cov~=6.0",
     "pylint~=3.3",
-    "pyop~=3.4",
 ]
 
 [project.urls]
