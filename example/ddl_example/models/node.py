@@ -16,15 +16,6 @@ class Node(NodeLib[DataIndex, UserMapping], BaseModel):
         return cls.from_dict(node_dict)
 
     @classmethod
-    def load_pending(cls, node_id: str) -> Union['Node', None]:
-        node_dict = next((n for n in cls.db.pending_nodes if n['nodeId'] == node_id), None)
-
-        if node_dict is None:
-            return None
-
-        return cls.from_dict(node_dict)
-
-    @classmethod
     def load_all(cls) -> list['Node']:
         nodes = []
 

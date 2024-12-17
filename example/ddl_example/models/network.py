@@ -10,32 +10,23 @@ class Network(NetworkLib[DataIndex, UserMapping, Node], BaseModel):
 
     @property
     def nodes(self) -> list[Node]:
-        approved_nodes = self.nodes_approved
-        pending_nodes = self.nodes_pending
-
-        return approved_nodes + pending_nodes
-
-    @property
-    def nodes_pending(self) -> list[Node]:
         nodes = []
 
         for node_id in self.node_ids:
-            node = Node.load_pending(node_id)
+            node = Node.load(node_id)
+            nodes.append(node)
 
-            if node is not None:
-                nodes.append(node)
+        return nodes
+
+    @property
+    def nodes_pending(self) -> list[Node]:
+        nodes = [n for n in self.nodes if not n.approved]
 
         return nodes
 
     @property
     def nodes_approved(self) -> list[Node]:
-        nodes = []
-
-        for node_id in self.node_ids:
-            node = Node.load(node_id)
-
-            if node is not None:
-                nodes.append(node)
+        nodes = [n for n in self.nodes if n.approved]
 
         return nodes
 

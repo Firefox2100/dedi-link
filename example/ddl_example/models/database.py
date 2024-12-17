@@ -8,7 +8,6 @@ class InMemoryDatabase:
     def __init__(self):
         self.networks = []
         self.nodes = []
-        self.pending_nodes = []
         self.user_keys = {}
 
         self.commit_lock = Lock()
@@ -24,5 +23,4 @@ class InMemoryDatabase:
 
             self.networks = data['networks']
             self.nodes = data['nodes']
-            self.pending_nodes = data['pendingNodes']
             self.user_keys = data['userKeys']
