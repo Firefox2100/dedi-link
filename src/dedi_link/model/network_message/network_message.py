@@ -7,7 +7,7 @@ import time
 import json
 import base64
 from enum import Enum
-from typing import TypeVar, Type, Callable, Generic, Protocol, ClassVar
+from typing import TypeVar, Type, Callable, Generic
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives import hashes
@@ -24,33 +24,13 @@ from ..user_mapping import UserMappingT
 from .network_message_header import NetworkMessageHeader, NetworkMessageHeaderT
 
 
-NetworkMessageBT = TypeVar('NetworkMessageBT', bound='NetworkMessageB')
+NetworkMessageBaseT = TypeVar('NetworkMessageBaseT', bound='NetworkMessageBase')
 NetworkMessageT = TypeVar('NetworkMessageT', bound='NetworkMessage')
 
 
-class SyncNetworkMessageBP(Protocol):
-    """
-    Protocol promises for the SyncNetworkMessageInterface
-    """
-    NETWORK_MESSAGE_HEADER_CLASS: ClassVar[Type[NetworkMessageHeader]]
-    NETWORK_CLASS: ClassVar[Type[Network]]
-
-    network_id: str
-    node_id: str
-
-    def to_dict(self) -> dict:
-        ...
-
-    def _sign_payload(self,
-                      private_pem: str,
-                      payload: str,
-                      ) -> str:
-        ...
-
-
-class NetworkMessageB(BaseModel,
-                      Generic[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]
-                      ):
+class NetworkMessageBase(BaseModel,
+                         Generic[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]
+                         ):
     """
     Base class for a Network Message
     """
@@ -134,7 +114,7 @@ class NetworkMessageB(BaseModel,
         return payload
 
     @classmethod
-    def from_dict(cls: Type[NetworkMessageBT], payload: dict) -> NetworkMessageBT:
+    def from_dict(cls: Type[NetworkMessageBaseT], payload: dict) -> NetworkMessageBaseT:
         """
         Build an instance from a dictionary
 
@@ -148,7 +128,7 @@ class NetworkMessageB(BaseModel,
         raise NetworkMessageNotImplemented('from_dict method not implemented')
 
     @classmethod
-    def factory(cls: Type[NetworkMessageBT], payload: dict) -> NetworkMessageBT:
+    def factory(cls: Type[NetworkMessageBaseT], payload: dict) -> NetworkMessageBaseT:
         id_var = MessageType(payload['messageType'])
 
         return cls.factory_from_id(
@@ -179,10 +159,29 @@ class NetworkMessageB(BaseModel,
         return base64.b64encode(signature).decode()
 
 
-class SyncNetworkMessageInterface(SyncDataInterface,
-                                  SyncNetworkMessageBP,
-                                  Generic[NetworkMessageHeaderT, NetworkT]
-                                  ):
+class NetworkMessage(NetworkMessageBase[
+                         NetworkMessageHeaderT,
+                         NetworkT,
+                         DataIndexT,
+                         UserMappingT,
+                         NodeT
+                     ],
+                     SyncDataInterface,
+                     Generic[
+                         NetworkMessageHeaderT,
+                         NetworkT,
+                         DataIndexT,
+                         UserMappingT,
+                         NodeT
+                     ]):
+    """
+    A generic network message structure
+
+    A message is a self-contained unit of communication used in the protocol.
+    All communication between nodes is RESTful, so all messages need to state
+    clearly who it's from, who it's intended for, what it does, and have all
+    the data needed to perform the action.
+    """
     @property
     def signature(self) -> str:
         """
@@ -216,17 +215,3 @@ class SyncNetworkMessageInterface(SyncDataInterface,
             server_signature=server_signature,
             access_token=access_token,
         )
-
-
-class NetworkMessage(NetworkMessageB[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
-                     SyncNetworkMessageInterface[NetworkMessageHeaderT, NetworkT],
-                     Generic[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]
-                     ):
-    """
-    A generic network message structure
-
-    A message is a self-contained unit of communication used in the protocol.
-    All communication between nodes is RESTful, so all messages need to state
-    clearly who it's from, who it's intended for, what it does, and have all
-    the data needed to perform the action.
-    """

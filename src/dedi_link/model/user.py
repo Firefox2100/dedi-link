@@ -8,11 +8,11 @@ from dedi_link.etc.exceptions import UserNotImplemented
 from .base_model import BaseModel, SyncDataInterface
 
 
-UserBT = TypeVar('UserBT', bound='UserB')
+UserBaseT = TypeVar('UserBaseT', bound='UserBase')
 UserT = TypeVar('UserT', bound='User')
 
 
-class UserB(BaseModel):
+class UserBase(BaseModel):
     """
     The base model for a User
     """
@@ -46,13 +46,13 @@ class UserB(BaseModel):
         }
 
     @classmethod
-    def from_dict(cls: Type[UserBT], payload: dict) -> UserBT:
+    def from_dict(cls: Type[UserBaseT], payload: dict) -> UserBaseT:
         return cls(
             user_id=payload['userId'],
         )
 
 
-class User(UserB, SyncDataInterface):
+class User(UserBase, SyncDataInterface):
     """
     The basic user model that is used for authentication and authorisation only.
 

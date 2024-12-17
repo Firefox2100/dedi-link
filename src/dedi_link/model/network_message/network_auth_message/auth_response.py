@@ -1,3 +1,7 @@
+"""
+Auth Response Messages
+"""
+
 from typing import TypeVar, Generic, Type
 
 from dedi_link.etc.consts import MESSAGE_ATTRIBUTES, MESSAGE_DATA
@@ -7,18 +11,29 @@ from ...network import Network, NetworkT
 from ...data_index import DataIndexT
 from ...user_mapping import UserMappingT
 from ..network_message_header import NetworkMessageHeaderT
-from .network_auth_message import NetworkAuthMessageB, NetworkAuthMessage
+from .network_auth_message import NetworkAuthMessageBase, NetworkAuthMessage
 
 
-AuthResponseBT = TypeVar('AuthResponseBT', bound='AuthResponseB')
+AuthResponseBaseT = TypeVar('AuthResponseBaseT', bound='AuthResponseBase')
 AuthResponseT = TypeVar('AuthResponseT', bound='AuthResponse')
 
 
-class AuthResponseB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
-                    Generic[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]
-                    ):
+class AuthResponseBase(NetworkAuthMessageBase[
+                           NetworkMessageHeaderT,
+                           NetworkT,
+                           DataIndexT,
+                           UserMappingT,
+                           NodeT
+                       ],
+                       Generic[
+                           NetworkMessageHeaderT,
+                           NetworkT,
+                           DataIndexT,
+                           UserMappingT,
+                           NodeT
+                       ]):
     """
-    The base model for Auth Response
+    The base model for Auth Response Messages
     """
     NODE_CLASS = Node[DataIndexT, UserMappingT]
     auth_type = AuthMessageType.RESPONSE
@@ -72,7 +87,7 @@ class AuthResponseB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT, DataInd
                     raise ValueError('Network ID must match the Network object')
 
     def __eq__(self, other):
-        if not isinstance(other, AuthResponseB):
+        if not isinstance(other, AuthResponseBase):
             return NotImplemented
 
         self_network = self.network
@@ -118,7 +133,7 @@ class AuthResponseB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT, DataInd
         return payload
 
     @classmethod
-    def from_dict(cls: Type[AuthResponseBT], payload: dict) -> AuthResponseBT:
+    def from_dict(cls: Type[AuthResponseBaseT], payload: dict) -> AuthResponseBaseT:
         node = None
         network = None
 
@@ -140,10 +155,27 @@ class AuthResponseB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT, DataInd
         )
 
 
-class AuthResponse(AuthResponseB[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
-                   NetworkAuthMessage[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
-                   Generic[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]
-                   ):
+class AuthResponse(AuthResponseBase[
+                       NetworkMessageHeaderT,
+                       NetworkT,
+                       DataIndexT,
+                       UserMappingT,
+                       NodeT
+                   ],
+                   NetworkAuthMessage[
+                       NetworkMessageHeaderT,
+                       NetworkT,
+                       DataIndexT,
+                       UserMappingT,
+                       NodeT
+                   ],
+                   Generic[
+                       NetworkMessageHeaderT,
+                       NetworkT,
+                       DataIndexT,
+                       UserMappingT,
+                       NodeT
+                   ]):
     """
     Network Authorisation Response Message
 

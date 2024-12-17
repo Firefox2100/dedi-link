@@ -1,9 +1,9 @@
-from dedi_link.model import DDLConfig
+from dedi_link.model import DdlConfig
 
 
 class TestDDLConfig:
     def test_init(self):
-        config = DDLConfig(
+        config = DdlConfig(
             name='Test instance',
             description='This is a test instance',
             url='https://test-node.example.com',

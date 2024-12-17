@@ -1,3 +1,9 @@
+"""
+The Auth Join Message is used to notify the other nodes within the network
+about a new node joining. The node information is only for the others to record
+it initially, and they will synchronise with the new node directly.
+"""
+
 import uuid
 from typing import TypeVar, Generic, Type
 
@@ -8,16 +14,31 @@ from ...network import NetworkT
 from ...data_index import DataIndexT
 from ...user_mapping import UserMappingT
 from ..network_message_header import NetworkMessageHeaderT
-from .network_auth_message import NetworkAuthMessageB, NetworkAuthMessage
+from .network_auth_message import NetworkAuthMessageBase, NetworkAuthMessage
 
 
-AuthJoinBT = TypeVar('AuthJoinBT', bound='AuthJoinB')
+AuthJoinBaseT = TypeVar('AuthJoinBaseT', bound='AuthJoinBase')
 AuthJoinT = TypeVar('AuthJoinT', bound='AuthJoin')
 
 
-class AuthJoinB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
-                Generic[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]
-                ):
+class AuthJoinBase(NetworkAuthMessageBase[
+                       NetworkMessageHeaderT,
+                       NetworkT,
+                       DataIndexT,
+                       UserMappingT,
+                       NodeT
+                   ],
+                   Generic[
+                       NetworkMessageHeaderT,
+                       NetworkT,
+                       DataIndexT,
+                       UserMappingT,
+                       NodeT
+                   ]):
+    """
+    The base model for Auth Join Messages
+    """
+
     NODE_CLASS = Node[DataIndexT, UserMappingT]
     auth_type = AuthMessageType.JOIN
 
@@ -68,7 +89,7 @@ class AuthJoinB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT, DataIndexT,
         return payload
 
     @classmethod
-    def from_dict(cls: Type[AuthJoinBT], payload: dict) -> AuthJoinBT:
+    def from_dict(cls: Type[AuthJoinBaseT], payload: dict) -> AuthJoinBaseT:
         return cls(
             message_id=payload[MESSAGE_ATTRIBUTES]['messageId'],
             network_id=payload[MESSAGE_ATTRIBUTES]['networkId'],
@@ -78,7 +99,7 @@ class AuthJoinB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT, DataIndexT,
         )
 
 
-class AuthJoin(AuthJoinB[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
+class AuthJoin(AuthJoinBase[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
                NetworkAuthMessage[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
                Generic[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]
                ):

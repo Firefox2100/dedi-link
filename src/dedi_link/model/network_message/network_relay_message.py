@@ -1,7 +1,11 @@
+"""
+Network Relay Message
+"""
+
 from copy import deepcopy
-from deepdiff import DeepDiff
 from collections import Counter
 from typing import TypeVar, Generic, Type
+from deepdiff import DeepDiff
 
 from dedi_link.etc.consts import MESSAGE_DATA, MESSAGE_ATTRIBUTES
 from dedi_link.etc.enums import MessageType
@@ -11,12 +15,12 @@ from ..network import NetworkT
 from ..node import NodeT
 from ..data_index import DataIndexT
 from ..user_mapping import UserMappingT
-from .network_message import NetworkMessageB, NetworkMessage, NetworkMessageT
+from .network_message import NetworkMessageBase, NetworkMessage, NetworkMessageT
 from .network_message_header import NetworkMessageHeader, NetworkMessageHeaderT
 
 
 RelayTargetT = TypeVar('RelayTargetT', bound='RelayTarget')
-NetworkRelayMessageBT = TypeVar('NetworkRelayMessageBT', bound='NetworkRelayMessageB')
+NetworkRelayMessageBaseT = TypeVar('NetworkRelayMessageBaseT', bound='NetworkRelayMessageBase')
 NetworkRelayMessageT = TypeVar('NetworkRelayMessageT', bound='NetworkRelayMessage')
 
 
@@ -30,7 +34,13 @@ class RelayTarget(BaseModel,
     a message being relayed.
     """
     NETWORK_MESSAGE_HEADER_CLASS = NetworkMessageHeader
-    NETWORK_MESSAGE_CLASS = NetworkMessage[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]
+    NETWORK_MESSAGE_CLASS = NetworkMessage[
+        NetworkMessageHeaderT,
+        NetworkT,
+        DataIndexT,
+        UserMappingT,
+        NodeT
+    ]
 
     def __init__(self,
                  recipient_ids: list[str],
@@ -56,7 +66,9 @@ class RelayTarget(BaseModel,
         self.message = message
 
         if message.message_type == MessageType.RELAY_MESSAGE:
-            raise NetworkRelayMessageEnvelopeTooDeep('Relay message cannot be sent in another relay message')
+            raise NetworkRelayMessageEnvelopeTooDeep(
+                'Relay message cannot be sent in another relay message'
+            )
 
         if self.header.node_id != self.message.node_id:
             raise ValueError('Header node ID does not match message node ID')
@@ -106,9 +118,20 @@ class RelayTarget(BaseModel,
         )
 
 
-class NetworkRelayMessageB(NetworkMessageB[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
-                           Generic[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT, RelayTargetT]
-                           ):
+class NetworkRelayMessageBase(NetworkMessageBase[
+                                  NetworkMessageHeaderT,
+                                  NetworkT,
+                                  DataIndexT,
+                                  UserMappingT,
+                                  NodeT,
+                              ],
+                              Generic[
+                                  NetworkMessageHeaderT,
+                                  NetworkT,
+                                  DataIndexT,
+                                  UserMappingT,
+                                  NodeT
+                              ]):
     """
     Base class for Network Relay Messages
     """
@@ -118,7 +141,7 @@ class NetworkRelayMessageB(NetworkMessageB[NetworkMessageHeaderT, NetworkT, Data
     def __init__(self,
                  network_id: str,
                  node_id: str,
-                 relay_targets: list[RelayTargetT],
+                 relay_targets: list[RelayTarget],
                  ttl: int = 3,
                  message_id: str = None,
                  timestamp: int | None = None,
@@ -149,8 +172,8 @@ class NetworkRelayMessageB(NetworkMessageB[NetworkMessageHeaderT, NetworkT, Data
         if ttl <= 0:
             raise NetworkRelayMessageNotAlive('Relay message TTL must be greater than 0')
 
-    def __eq__(self, other: NetworkRelayMessageBT):
-        if not isinstance(other, NetworkRelayMessageB):
+    def __eq__(self, other: NetworkRelayMessageBaseT):
+        if not isinstance(other, NetworkRelayMessageBase):
             return NotImplemented
 
         return all([
@@ -187,7 +210,7 @@ class NetworkRelayMessageB(NetworkMessageB[NetworkMessageHeaderT, NetworkT, Data
         return payload
 
     @classmethod
-    def from_dict(cls: Type[NetworkRelayMessageBT], payload: dict) -> NetworkRelayMessageBT:
+    def from_dict(cls: Type[NetworkRelayMessageBaseT], payload: dict) -> NetworkRelayMessageBaseT:
         return cls(
             message_id=payload[MESSAGE_ATTRIBUTES]['messageId'],
             network_id=payload[MESSAGE_ATTRIBUTES]['networkId'],
@@ -195,15 +218,33 @@ class NetworkRelayMessageB(NetworkMessageB[NetworkMessageHeaderT, NetworkT, Data
             timestamp=payload['timestamp'],
             ttl=payload[MESSAGE_ATTRIBUTES]['ttl'],
             relay_targets=[
-                cls.RELAY_TARGET_CLASS.from_dict(target) for target in payload[MESSAGE_DATA]['relayTargets']
+                cls.RELAY_TARGET_CLASS.from_dict(target)
+                    for target in payload[MESSAGE_DATA]['relayTargets']
             ],
         )
 
 
-class NetworkRelayMessage(NetworkRelayMessageB[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT, RelayTargetT],
-                          NetworkMessage[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
-                          Generic[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT, RelayTargetT]
-                          ):
+class NetworkRelayMessage(NetworkRelayMessageBase[
+                              NetworkMessageHeaderT,
+                              NetworkT,
+                              DataIndexT,
+                              UserMappingT,
+                              NodeT
+                          ],
+                          NetworkMessage[
+                              NetworkMessageHeaderT,
+                              NetworkT,
+                              DataIndexT,
+                              UserMappingT,
+                              NodeT
+                          ],
+                          Generic[
+                              NetworkMessageHeaderT,
+                              NetworkT,
+                              DataIndexT,
+                              UserMappingT,
+                              NodeT
+                          ]):
     """
     Network Relay Message
 

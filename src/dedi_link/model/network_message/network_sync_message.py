@@ -1,5 +1,9 @@
-from deepdiff import DeepDiff
+"""
+Network Synchronisation Message
+"""
+
 from typing import TypeVar, Generic, Type
+from deepdiff import DeepDiff
 
 from dedi_link.etc.consts import MESSAGE_ATTRIBUTES, MESSAGE_DATA
 from dedi_link.etc.enums import SyncTarget, MessageType
@@ -7,17 +11,28 @@ from ..network import NetworkT
 from ..node import Node, NodeT
 from ..data_index import DataIndexT
 from ..user_mapping import UserMappingT
-from .network_message import NetworkMessageB, NetworkMessage
+from .network_message import NetworkMessageBase, NetworkMessage
 from .network_message_header import NetworkMessageHeaderT
 
 
-NetworkSyncMessageBT = TypeVar('NetworkSyncMessageBT', bound='NetworkSyncMessageB')
+NetworkSyncMessageBaseT = TypeVar('NetworkSyncMessageBaseT', bound='NetworkSyncMessageBase')
 NetworkSyncMessageT = TypeVar('NetworkSyncMessageT', bound='NetworkSyncMessage')
 
 
-class NetworkSyncMessageB(NetworkMessageB[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
-                          Generic[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
-                          ):
+class NetworkSyncMessageBase(NetworkMessageBase[
+                                 NetworkMessageHeaderT,
+                                 NetworkT,
+                                 DataIndexT,
+                                 UserMappingT,
+                                 NodeT
+                             ],
+                             Generic[
+                                 NetworkMessageHeaderT,
+                                 NetworkT,
+                                 DataIndexT,
+                                 UserMappingT,
+                                 NodeT
+                             ]):
     """
     Base class for Network Synchronisation Messages
     """
@@ -54,8 +69,8 @@ class NetworkSyncMessageB(NetworkMessageB[NetworkMessageHeaderT, NetworkT, DataI
         self.target_type = target_type
         self.data = data
 
-    def __eq__(self, other: NetworkSyncMessageBT):
-        if not isinstance(other, NetworkSyncMessageB):
+    def __eq__(self, other):
+        if not isinstance(other, NetworkSyncMessageBase):
             return NotImplemented
 
         return all([
@@ -97,7 +112,7 @@ class NetworkSyncMessageB(NetworkMessageB[NetworkMessageHeaderT, NetworkT, DataI
         return payload
 
     @classmethod
-    def from_dict(cls: Type[NetworkSyncMessageBT], payload: dict) -> NetworkSyncMessageBT:
+    def from_dict(cls: Type[NetworkSyncMessageBaseT], payload: dict) -> NetworkSyncMessageBaseT:
         if MESSAGE_DATA in payload:
             message_data = []
 
@@ -105,7 +120,7 @@ class NetworkSyncMessageB(NetworkMessageB[NetworkMessageHeaderT, NetworkT, DataI
                 if 'nodeId' in data_item:
                     message_data.append(cls.NODE_CLASS.from_dict(data_item))
                 elif 'networkId' in data_item:
-                    message_data.append(NetworkT.from_dict(data_item))
+                    message_data.append(cls.NETWORK_CLASS.from_dict(data_item))
                 else:
                     message_data.append(data_item)
         else:
@@ -121,10 +136,27 @@ class NetworkSyncMessageB(NetworkMessageB[NetworkMessageHeaderT, NetworkT, DataI
         )
 
 
-class NetworkSyncMessage(NetworkSyncMessageB[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
-                         NetworkMessage[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
-                         Generic[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
-                         ):
+class NetworkSyncMessage(NetworkSyncMessageBase[
+                             NetworkMessageHeaderT,
+                             NetworkT,
+                             DataIndexT,
+                             UserMappingT,
+                             NodeT
+                         ],
+                         NetworkMessage[
+                             NetworkMessageHeaderT,
+                             NetworkT,
+                             DataIndexT,
+                             UserMappingT,
+                             NodeT
+                         ],
+                         Generic[
+                             NetworkMessageHeaderT,
+                             NetworkT,
+                             DataIndexT,
+                             UserMappingT,
+                             NodeT
+                         ]):
     """
     Network Synchronisation Message
 

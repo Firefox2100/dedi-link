@@ -1,5 +1,9 @@
-from copy import deepcopy
+"""
+Network Authorisation Invite Message
+"""
+
 from typing import TypeVar, Generic, Type
+from copy import deepcopy
 
 from dedi_link.etc.consts import MESSAGE_ATTRIBUTES, MESSAGE_DATA
 from dedi_link.etc.enums import AuthMessageType, AuthMessageStatus
@@ -8,15 +12,31 @@ from ...network import Network, NetworkT
 from ...data_index import DataIndexT
 from ...user_mapping import UserMappingT
 from ..network_message_header import NetworkMessageHeaderT
-from .auth_request import AuthRequestB, AuthRequest
+from .auth_request import AuthRequestBase, AuthRequest
 
 
-AuthInviteBT = TypeVar('AuthInviteBT', bound='AuthInviteB')
+AuthInviteBaseT = TypeVar('AuthInviteBaseT', bound='AuthInviteBase')
 AuthInviteT = TypeVar('AuthInviteT', bound='AuthInvite')
 
 
-class AuthInviteB(AuthRequestB[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
-                  Generic[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]):
+class AuthInviteBase(AuthRequestBase[
+                         NetworkMessageHeaderT,
+                         NetworkT,
+                         DataIndexT,
+                         UserMappingT,
+                         NodeT
+                     ],
+                     Generic[
+                         NetworkMessageHeaderT,
+                         NetworkT,
+                         DataIndexT,
+                         UserMappingT,
+                         NodeT
+                     ]):
+    """
+    Base model for Network Authorization Invite Message
+    """
+
     auth_type = AuthMessageType.INVITE
 
     def __init__(self,
@@ -32,9 +52,10 @@ class AuthInviteB(AuthRequestB[NetworkMessageHeaderT, NetworkT, DataIndexT, User
                  timestamp: int | None = None,
                  ):
         """
-        Network Authorization Request Message
+        Network Authorization Invite Message
 
-        This message is for requesting to join a network by asking a "seeder" node.
+        This message is for requesting another node to join a
+        network this node is already a part of.
 
         :param network_id: The network ID
         :param node_id: The node ID
@@ -68,7 +89,7 @@ class AuthInviteB(AuthRequestB[NetworkMessageHeaderT, NetworkT, DataIndexT, User
             raise ValueError('Node ID must match the instance ID of the network')
 
     def __eq__(self, other):
-        if not isinstance(other, AuthInviteB):
+        if not isinstance(other, AuthInviteBase):
             return NotImplemented
 
         self_network = deepcopy(self.network)
@@ -103,7 +124,7 @@ class AuthInviteB(AuthRequestB[NetworkMessageHeaderT, NetworkT, DataIndexT, User
         return payload
 
     @classmethod
-    def from_dict(cls: Type[AuthInviteBT], payload: dict) -> AuthInviteBT:
+    def from_dict(cls: Type[AuthInviteBaseT], payload: dict) -> AuthInviteBaseT:
         network = cls.NETWORK_CLASS.from_dict(
             payload[MESSAGE_DATA]['network']
         )
@@ -113,7 +134,6 @@ class AuthInviteB(AuthRequestB[NetworkMessageHeaderT, NetworkT, DataIndexT, User
             message_id=payload[MESSAGE_ATTRIBUTES]['messageId'],
             network_id=payload[MESSAGE_ATTRIBUTES]['networkId'],
             node_id=payload[MESSAGE_ATTRIBUTES]['nodeId'],
-            auth_type=AuthMessageType(payload[MESSAGE_ATTRIBUTES]['authType']),
             status=AuthMessageStatus(payload[MESSAGE_ATTRIBUTES]['status']),
             target_url=payload[MESSAGE_ATTRIBUTES]['targetUrl'],
             node=cls.NODE_CLASS.from_dict(payload[MESSAGE_DATA]['node']),
@@ -124,8 +144,30 @@ class AuthInviteB(AuthRequestB[NetworkMessageHeaderT, NetworkT, DataIndexT, User
         )
 
 
-class AuthInvite(AuthInviteB[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
-                 AuthRequest[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
-                 Generic[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]
-                 ):
-    pass
+class AuthInvite(AuthInviteBase[
+                     NetworkMessageHeaderT,
+                     NetworkT,
+                     DataIndexT,
+                     UserMappingT,
+                     NodeT
+                 ],
+                 AuthRequest[
+                     NetworkMessageHeaderT,
+                     NetworkT,
+                     DataIndexT,
+                     UserMappingT,
+                     NodeT
+                 ],
+                 Generic[
+                     NetworkMessageHeaderT,
+                     NetworkT,
+                     DataIndexT,
+                     UserMappingT,
+                     NodeT
+                 ]):
+    """
+    Network Authorization Invite Message
+
+    This message is for requesting another node to join a
+    network this node is already a part of.
+    """

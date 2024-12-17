@@ -3,8 +3,8 @@ from typing import TypeVar, Generic
 from dedi_link.etc.exceptions import NetworkNotImplemented
 from ..user_mapping import UserMappingT
 from ..data_index import DataIndexT
-from ..network import NetworkB
-from ..config import DDLConfig
+from ..network import NetworkBase
+from ..config import DdlConfig
 from .base_model import AsyncDataInterface
 from .node import Node, NodeT
 
@@ -12,7 +12,7 @@ from .node import Node, NodeT
 NetworkT = TypeVar('NetworkT', bound='Network')
 
 
-class Network(NetworkB[DataIndexT, UserMappingT, NodeT],
+class Network(NetworkBase[DataIndexT, UserMappingT, NodeT],
               AsyncDataInterface,
               Generic[DataIndexT, UserMappingT, NodeT]
               ):

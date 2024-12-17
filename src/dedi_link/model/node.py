@@ -11,11 +11,13 @@ from .data_index import DataIndex, DataIndexT
 from .user_mapping import UserMapping, UserMappingT
 
 
-NodeBT = TypeVar('NodeBT', bound='NodeB')
+NodeBaseT = TypeVar('NodeBaseT', bound='NodeBase')
 NodeT = TypeVar('NodeT', bound='Node')
 
 
-class NodeB(BaseModel, Generic[DataIndexT, UserMappingT]):
+class NodeBase(BaseModel,
+               Generic[DataIndexT, UserMappingT]
+               ):
     """
     Base model for a Node
     """
@@ -72,7 +74,7 @@ class NodeB(BaseModel, Generic[DataIndexT, UserMappingT]):
         self.approved = approved
 
     def __eq__(self, other) -> bool:
-        if not isinstance(other, NodeB):
+        if not isinstance(other, NodeBase):
             return NotImplemented
 
         return all([
@@ -101,7 +103,7 @@ class NodeB(BaseModel, Generic[DataIndexT, UserMappingT]):
         ))
 
     @classmethod
-    def from_dict(cls: Type[NodeBT], payload: dict) -> NodeBT:
+    def from_dict(cls: Type[NodeBaseT], payload: dict) -> NodeBaseT:
         return cls(
             node_id=payload['nodeId'],
             node_name=payload['nodeName'],
@@ -158,7 +160,7 @@ class NodeB(BaseModel, Generic[DataIndexT, UserMappingT]):
             return weight * new_score + (1 - weight) * self.score
 
 
-class Node(NodeB[DataIndexT, UserMappingT],
+class Node(NodeBase[DataIndexT, UserMappingT],
            SyncDataInterface,
            Generic[DataIndexT, UserMappingT]
            ):

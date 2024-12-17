@@ -1,13 +1,27 @@
+"""
+OIDC integrated driver for access token management and validation
+"""
+
 from httpx import Client
 from authlib.integrations.requests_client import OAuth2Session
 
 
 class OidcDriver:
+    """
+    OIDC integrated driver for access token management and validation
+    """
     def __init__(self,
                  client_id: str,
                  client_secret: str,
                  discovery_url: str,
                  ):
+        """
+        Initialize OIDC driver
+
+        :param client_id: Client ID
+        :param client_secret: Client secret
+        :param discovery_url: OIDC discovery URL
+        """
         with Client() as client:
             response = client.get(discovery_url)
             response.raise_for_status()

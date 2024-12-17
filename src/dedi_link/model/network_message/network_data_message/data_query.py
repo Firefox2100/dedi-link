@@ -7,14 +7,14 @@ from ...node import NodeT
 from ...data_index import DataIndexT
 from ...user_mapping import UserMappingT
 from ..network_message_header import NetworkMessageHeaderT
-from .network_data_message import NetworkDataMessage, NetworkDataMessageB
+from .network_data_message import NetworkDataMessage, NetworkDataMessageBase
 
 
 DataQueryBT = TypeVar('DataQueryBT', bound='DataQueryB')
 DataQueryT = TypeVar('DataQueryT', bound='DataQuery')
 
 
-class DataQueryB(NetworkDataMessageB[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
+class DataQueryB(NetworkDataMessageBase[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
                  Generic[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]
                  ):
     def __init__(self,

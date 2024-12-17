@@ -9,14 +9,14 @@ from ...user import User
 from ...data_index import DataIndexT
 from ...user_mapping import UserMappingT
 from ..network_message_header import NetworkMessageHeaderT
-from .network_data_message import NetworkDataMessage, NetworkDataMessageB
+from .network_data_message import NetworkDataMessage, NetworkDataMessageBase
 
 
 DataResponseBT = TypeVar('DataResponseBT', bound='DataResponseB')
 DataResponseT = TypeVar('DataResponseT', bound='DataResponse')
 
 
-class DataResponseB(NetworkDataMessageB[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
+class DataResponseB(NetworkDataMessageBase[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
                     Generic[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]
                     ):
     NODE_CLASS = Node

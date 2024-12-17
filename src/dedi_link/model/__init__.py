@@ -1,5 +1,9 @@
+"""
+This module contains the models and data structures used in the DeDi Link library.
+"""
+
 from .base_model import BaseModel, SyncDataInterface, SyncDataInterfaceT, BaseModelT
-from .config import DDLConfig
+from .config import DdlConfig
 from .data_index import DataIndex, DataIndexT
 from .network import Network, NetworkT
 from .network_message import NetworkMessage, NetworkMessageT

@@ -1,7 +1,11 @@
+"""
+Network Authorization Request Message
+"""
+
 import uuid
 import secrets
-from deepdiff import DeepDiff
 from typing import TypeVar, Generic, Type
+from deepdiff import DeepDiff
 
 from dedi_link.etc.consts import MESSAGE_ATTRIBUTES, MESSAGE_DATA
 from dedi_link.etc.enums import AuthMessageType, AuthMessageStatus
@@ -9,18 +13,29 @@ from ...node import Node, NodeT
 from ...network import NetworkT
 from ...data_index import DataIndexT
 from ...user_mapping import UserMappingT
-from ...config import DDLConfig
+from ...config import DdlConfig
 from ..network_message_header import NetworkMessageHeaderT
-from .network_auth_message import NetworkAuthMessageB, NetworkAuthMessage
+from .network_auth_message import NetworkAuthMessageBase, NetworkAuthMessage
 
 
-AuthRequestBT = TypeVar('AuthRequestBT', bound='AuthRequestB')
+AuthRequestBaseT = TypeVar('AuthRequestBaseT', bound='AuthRequestBase')
 AuthRequestT = TypeVar('AuthRequestT', bound='AuthRequest')
 
 
-class AuthRequestB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
-                   Generic[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]
-                   ):
+class AuthRequestBase(NetworkAuthMessageBase[
+                          NetworkMessageHeaderT,
+                          NetworkT,
+                          DataIndexT,
+                          UserMappingT,
+                          NodeT
+                      ],
+                      Generic[
+                          NetworkMessageHeaderT,
+                          NetworkT,
+                          DataIndexT,
+                          UserMappingT,
+                          NodeT
+                      ]):
     """
     Base model for Network Authorization Request or Invite Message
     """
@@ -74,7 +89,7 @@ class AuthRequestB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT, DataInde
             raise ValueError('Node ID mismatch')
 
     def __eq__(self, other):
-        if not isinstance(other, AuthRequestB):
+        if not isinstance(other, AuthRequestBase):
             return NotImplemented
 
         if DeepDiff(
@@ -119,7 +134,7 @@ class AuthRequestB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT, DataInde
         return payload
 
     @classmethod
-    def from_dict(cls: Type[AuthRequestBT], payload: dict) -> AuthRequestBT:
+    def from_dict(cls: Type[AuthRequestBaseT], payload: dict) -> AuthRequestBaseT:
         return cls(
             message_id=payload[MESSAGE_ATTRIBUTES]['messageId'],
             network_id=payload[MESSAGE_ATTRIBUTES]['networkId'],
@@ -145,7 +160,7 @@ class AuthRequestB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT, DataInde
         """
         challenge = []
 
-        words = DDLConfig().bip_39
+        words = DdlConfig().bip_39
 
         while len(challenge) < 3:
             word = secrets.choice(words).strip()
@@ -157,10 +172,27 @@ class AuthRequestB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT, DataInde
         return challenge
 
 
-class AuthRequest(AuthRequestB[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
-                  NetworkAuthMessage[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
-                  Generic[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]
-                  ):
+class AuthRequest(AuthRequestBase[
+                      NetworkMessageHeaderT,
+                      NetworkT,
+                      DataIndexT,
+                      UserMappingT,
+                      NodeT
+                  ],
+                  NetworkAuthMessage[
+                      NetworkMessageHeaderT,
+                      NetworkT,
+                      DataIndexT,
+                      UserMappingT,
+                      NodeT
+                  ],
+                  Generic[
+                      NetworkMessageHeaderT,
+                      NetworkT,
+                      DataIndexT,
+                      UserMappingT,
+                      NodeT
+                  ]):
     """
     Network Authorisation Request Message
 

@@ -2,13 +2,13 @@ from typing import TypeVar
 
 from dedi_link.etc.exceptions import UserNotImplemented
 from .base_model import AsyncDataInterface
-from ..user import UserB
+from ..user import UserBase
 
 
 UserT = TypeVar('UserT', bound='User')
 
 
-class User(UserB, AsyncDataInterface):
+class User(UserBase, AsyncDataInterface):
     @property
     async def public_key(self) -> str:
         """

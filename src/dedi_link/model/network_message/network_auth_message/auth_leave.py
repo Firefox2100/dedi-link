@@ -1,4 +1,7 @@
-import uuid
+"""
+Network Authorisation Leave Message
+"""
+
 from typing import TypeVar, Generic
 
 from dedi_link.etc.consts import MESSAGE_ATTRIBUTES
@@ -8,16 +11,31 @@ from ...node import NodeT
 from ...data_index import DataIndexT
 from ...user_mapping import UserMappingT
 from ..network_message_header import NetworkMessageHeaderT
-from .network_auth_message import NetworkAuthMessageB, NetworkAuthMessage
+from .network_auth_message import NetworkAuthMessageBase, NetworkAuthMessage
 
 
-AuthLeaveBT = TypeVar('AuthLeaveBT', bound='AuthLeaveB')
+AuthLeaveBaseT = TypeVar('AuthLeaveBaseT', bound='AuthLeaveBase')
 AuthLeaveT = TypeVar('AuthLeaveT', bound='AuthLeave')
 
 
-class AuthLeaveB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
-                Generic[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]
-                ):
+class AuthLeaveBase(NetworkAuthMessageBase[
+                        NetworkMessageHeaderT,
+                        NetworkT,
+                        DataIndexT,
+                        UserMappingT,
+                        NodeT
+                    ],
+                    Generic[
+                        NetworkMessageHeaderT,
+                        NetworkT,
+                        DataIndexT,
+                        UserMappingT,
+                        NodeT
+                    ]):
+    """
+    The base model for Auth Leave Messages
+    """
+
     auth_type = AuthMessageType.LEAVE
 
     def __init__(self,
@@ -37,12 +55,12 @@ class AuthLeaveB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT, DataIndexT
         super().__init__(
             network_id=network_id,
             node_id=node_id,
-            message_id=message_id or str(uuid.uuid4()),
+            message_id=message_id,
             timestamp=timestamp,
         )
 
     @classmethod
-    def from_dict(cls, payload: dict) -> AuthLeaveBT:
+    def from_dict(cls, payload: dict) -> AuthLeaveBaseT:
         return cls(
             message_id=payload[MESSAGE_ATTRIBUTES]['messageId'],
             network_id=payload[MESSAGE_ATTRIBUTES]['networkId'],
@@ -51,12 +69,30 @@ class AuthLeaveB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT, DataIndexT
         )
 
 
-class AuthLeave(AuthLeaveB[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
-                NetworkAuthMessage[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
-                Generic[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]
+class AuthLeave(AuthLeaveBase[
+                    NetworkMessageHeaderT,
+                    NetworkT,
+                    DataIndexT,
+                    UserMappingT,
+                    NodeT
+                ],
+                NetworkAuthMessage[
+                    NetworkMessageHeaderT,
+                    NetworkT,
+                    DataIndexT,
+                    UserMappingT,
+                    NodeT
+                ],
+                Generic[
+                    NetworkMessageHeaderT,
+                    NetworkT,
+                    DataIndexT,
+                    UserMappingT,
+                    NodeT
+                ]
                 ):
     """
-    Network Authorization Leave Message
+    Network Authorisation Leave Message
 
     This message notifies the other nodes within the network about
     this node leaving. The others are expected to remove all information

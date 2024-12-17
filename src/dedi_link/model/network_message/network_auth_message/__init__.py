@@ -1,3 +1,8 @@
+"""
+This module contains the network message classes for the
+authorisation messages.
+"""
+
 from .network_auth_message import NetworkAuthMessage, NetworkAuthMessageT
 from .auth_request import AuthRequest, AuthRequestT
 from .auth_invite import AuthInvite, AuthInviteT

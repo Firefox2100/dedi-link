@@ -4,7 +4,7 @@ from typing import TypeVar, Generic, Protocol, ClassVar, Type
 from ...data_index import DataIndexT
 from ...user_mapping import UserMappingT
 from ...network_message.network_message_header import NetworkMessageHeader, NetworkMessageHeaderT
-from ...network_message.network_message import NetworkMessageB
+from ...network_message.network_message import NetworkMessageBase
 from ..base_model import AsyncDataInterface
 from ..network import Network, NetworkT
 from ..node import NodeT
@@ -69,7 +69,7 @@ class AsyncNetworkMessageInterface(AsyncDataInterface,
         )
 
 
-class NetworkMessage(NetworkMessageB[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
+class NetworkMessage(NetworkMessageBase[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
                      AsyncNetworkMessageInterface,
                      Generic[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
                      ):

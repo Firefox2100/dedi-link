@@ -50,7 +50,7 @@ class UserMapping(BaseModel):
         self.dynamic_mapping = dynamic_mapping or {}
 
         if mapping_type == MappingType.STATIC and static_id is None:
-                raise ValueError('Static ID is required for static mapping')
+            raise ValueError('Static ID is required for static mapping')
 
     def __eq__(self, other):
         if not isinstance(other, UserMapping):

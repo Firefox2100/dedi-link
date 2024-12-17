@@ -1,6 +1,6 @@
 from ..base_model import BaseModel
 from .base_model import AsyncDataInterface, AsyncDataInterfaceT
-from ..config import DDLConfig
+from ..config import DdlConfig
 from ..data_index import DataIndex, DataIndexT
 from .network import Network, NetworkT
 from .network_message import NetworkMessage, NetworkMessageT

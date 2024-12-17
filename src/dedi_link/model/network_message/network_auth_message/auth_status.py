@@ -1,3 +1,7 @@
+"""
+Network Authorisation Status Message
+"""
+
 from typing import TypeVar, Generic, Type
 
 from dedi_link.etc.consts import MESSAGE_ATTRIBUTES
@@ -7,16 +11,27 @@ from ...node import NodeT
 from ...data_index import DataIndexT
 from ...user_mapping import UserMappingT
 from ..network_message_header import NetworkMessageHeaderT
-from .network_auth_message import NetworkAuthMessageB, NetworkAuthMessage
+from .network_auth_message import NetworkAuthMessageBase, NetworkAuthMessage
 
 
-AuthStatusBT = TypeVar('AuthStatusBT', bound='AuthStatusB')
+AuthStatusBaseT = TypeVar('AuthStatusBaseT', bound='AuthStatusBase')
 AuthStatusT = TypeVar('AuthStatusT', bound='AuthStatus')
 
 
-class AuthStatusB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
-                  Generic[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]
-                  ):
+class AuthStatusBase(NetworkAuthMessageBase[
+                         NetworkMessageHeaderT,
+                         NetworkT,
+                         DataIndexT,
+                         UserMappingT,
+                         NodeT
+                     ],
+                     Generic[
+                         NetworkMessageHeaderT,
+                         NetworkT,
+                         DataIndexT,
+                         UserMappingT,
+                         NodeT
+                     ]):
     """
     Base model for Auth Status
     """
@@ -51,7 +66,7 @@ class AuthStatusB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT, DataIndex
         self.status = status
 
     def __eq__(self, other):
-        if not isinstance(other, AuthStatusB):
+        if not isinstance(other, AuthStatusBase):
             return NotImplemented
 
         return all([
@@ -74,7 +89,7 @@ class AuthStatusB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT, DataIndex
         return payload
 
     @classmethod
-    def from_dict(cls: Type[AuthStatusBT], payload: dict) -> AuthStatusBT:
+    def from_dict(cls: Type[AuthStatusBaseT], payload: dict) -> AuthStatusBaseT:
         status = None
 
         if 'status' in payload[MESSAGE_ATTRIBUTES]:
@@ -89,10 +104,27 @@ class AuthStatusB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT, DataIndex
         )
 
 
-class AuthStatus(AuthStatusB[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
-                 NetworkAuthMessage[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
-                 Generic[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]
-                 ):
+class AuthStatus(AuthStatusBase[
+                     NetworkMessageHeaderT,
+                     NetworkT,
+                     DataIndexT,
+                     UserMappingT,
+                     NodeT
+                 ],
+                 NetworkAuthMessage[
+                     NetworkMessageHeaderT,
+                     NetworkT,
+                     DataIndexT,
+                     UserMappingT,
+                     NodeT
+                 ],
+                 Generic[
+                     NetworkMessageHeaderT,
+                     NetworkT,
+                     DataIndexT,
+                     UserMappingT,
+                     NodeT
+                 ]):
     """
     Auth Status Message
 

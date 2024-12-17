@@ -1,14 +1,23 @@
-import httpx
+"""
+Custom session class for uniform network requests interface.
+"""
+
 from typing import TypeVar, Generic
 
+import httpx
+
 from dedi_link.etc.exceptions import NetworkRequestFailed
-from ..network_message import NetworkMessage, NetworkMessageT, NetworkMessageHeader, NetworkMessageHeaderT
+from ..network_message import NetworkMessage, NetworkMessageT, \
+    NetworkMessageHeader, NetworkMessageHeaderT
 
 
 SessionT = TypeVar('SessionT', bound='Session')
 
 
 class Session(Generic[NetworkMessageT, NetworkMessageHeaderT]):
+    """
+    Custom session class
+    """
     NETWORK_MESSAGE_CLASS = NetworkMessage
     NETWORK_MESSAGE_HEADER_CLASS = NetworkMessageHeader
 
@@ -22,11 +31,21 @@ class Session(Generic[NetworkMessageT, NetworkMessageHeaderT]):
         self.close()
 
     def close(self):
+        """
+        Close the internal client
+        """
         self._client.close()
 
     def get(self,
             url: str,
             ) -> dict:
+        """
+        Perform a GET request
+
+        :param url: URL to request
+        :return: JSON response from the server
+        :raises NetworkRequestFailed: If the request fails or the response is not 200
+        """
         try:
             response = self._client.get(url)
 
@@ -40,8 +59,19 @@ class Session(Generic[NetworkMessageT, NetworkMessageHeaderT]):
     def post(self,
              url: str,
              message: NetworkMessageT,
-             access_token: str | None = None,
+             access_token: str,
              ) -> tuple[NetworkMessageT | None, NetworkMessageHeaderT | None]:
+        """
+        Perform a POST request
+
+        This method is designed specifically for posting a network message
+
+        :param url: URL to request
+        :param message: Network message to send
+        :param access_token: Access token to send in the headers.
+        :return: Tuple of the response message and headers
+        :raises NetworkRequestFailed: If the request fails or the response is not 200
+        """
         try:
             payload = message.to_dict()
             headers = message.generate_headers(

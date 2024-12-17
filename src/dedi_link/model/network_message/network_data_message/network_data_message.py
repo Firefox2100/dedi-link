@@ -1,3 +1,9 @@
+"""
+Network Data Message
+
+These messages are used to send data between nodes in a network.
+"""
+
 import uuid
 from enum import Enum
 from typing import TypeVar, Type, Callable, Generic
@@ -8,17 +14,33 @@ from ...network import NetworkT
 from ...node import NodeT
 from ...data_index import DataIndexT
 from ...user_mapping import UserMappingT
-from ..network_message import NetworkMessageB, NetworkMessage
+from ..network_message import NetworkMessageBase, NetworkMessage
 from ..network_message_header import NetworkMessageHeaderT
 
 
-NetworkDataMessageBT = TypeVar('NetworkDataMessageBT', bound='NetworkDataMessageB')
+NetworkDataMessageBaseT = TypeVar('NetworkDataMessageBaseT', bound='NetworkDataMessageBase')
 NetworkDataMessageT = TypeVar('NetworkDataMessageT', bound='NetworkDataMessage')
 
 
-class NetworkDataMessageB(NetworkMessageB[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
-                          Generic[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]
-                          ):
+class NetworkDataMessageBase(NetworkMessageBase[
+                                 NetworkMessageHeaderT,
+                                 NetworkT,
+                                 DataIndexT,
+                                 UserMappingT,
+                                 NodeT
+                             ],
+                             Generic[
+                                 NetworkMessageHeaderT,
+                                 NetworkT,
+                                 DataIndexT,
+                                 UserMappingT,
+                                 NodeT
+                             ]):
+    """
+    Base class for Network Data Messages
+    """
+    message_type = MessageType.DATA_MESSAGE
+
     def __init__(self,
                  network_id: str,
                  node_id: str,
@@ -29,7 +51,6 @@ class NetworkDataMessageB(NetworkMessageB[NetworkMessageHeaderT, NetworkT, DataI
                  timestamp: int | None = None,
                  ):
         super().__init__(
-            message_type=MessageType.DATA_MESSAGE,
             network_id=network_id,
             node_id=node_id,
             message_id=message_id or str(uuid.uuid4()),
@@ -41,7 +62,8 @@ class NetworkDataMessageB(NetworkMessageB[NetworkMessageHeaderT, NetworkT, DataI
         self.should_relay = should_relay
 
     @classmethod
-    def _child_mapping(cls) -> dict[Enum, tuple[Type[NetworkDataMessageBT], Callable[[dict], Enum] | None]]:
+    def _child_mapping(cls) -> dict[Enum, tuple[Type[NetworkDataMessageBaseT],
+                                    Callable[[dict], Enum] | None]]:
         from .data_query import DataQuery
         from .data_response import DataResponse
 
@@ -51,7 +73,7 @@ class NetworkDataMessageB(NetworkMessageB[NetworkMessageHeaderT, NetworkT, DataI
         }
 
     @classmethod
-    def factory(cls: Type[NetworkDataMessageBT], payload: dict) -> NetworkDataMessageBT:
+    def factory(cls: Type[NetworkDataMessageBaseT], payload: dict) -> NetworkDataMessageBaseT:
         id_var = DataMessageType(payload[MESSAGE_ATTRIBUTES]['dataType'])
 
         return cls.factory_from_id(
@@ -75,7 +97,9 @@ class NetworkDataMessageB(NetworkMessageB[NetworkMessageHeaderT, NetworkT, DataI
     def _encrypt_payload(public_key: str,
                          payload: dict,
                          ) -> tuple[str, str, str, str]:
-        raise NotImplementedError('NetworkDataMessage._encrypt_payload() must be implemented by subclasses')
+        raise NotImplementedError(
+            'NetworkDataMessage._encrypt_payload() must be implemented by subclasses'
+        )
 
     @staticmethod
     def _decrypt_payload(encrypted_key: str,
@@ -84,11 +108,25 @@ class NetworkDataMessageB(NetworkMessageB[NetworkMessageHeaderT, NetworkT, DataI
                          encrypted_payload: str,
                          public_key: str,
                          ) -> str:
-        raise NotImplementedError('NetworkDataMessage._decrypt_payload() must be implemented by subclasses')
+        raise NotImplementedError(
+            'NetworkDataMessage._decrypt_payload() must be implemented by subclasses'
+        )
 
 
-class NetworkDataMessage(NetworkDataMessageB[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
-                         NetworkMessage[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
+class NetworkDataMessage(NetworkDataMessageBase[
+                             NetworkMessageHeaderT,
+                             NetworkT,
+                             DataIndexT,
+                             UserMappingT,
+                             NodeT
+                         ],
+                         NetworkMessage[
+                             NetworkMessageHeaderT,
+                             NetworkT,
+                             DataIndexT,
+                             UserMappingT,
+                             NodeT
+                         ],
                          Generic[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]
                          ):
     pass

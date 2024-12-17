@@ -60,7 +60,7 @@ class TestSession:
         mock_client.return_value.post.return_value = mock_response
 
         with patch(
-                'dedi_link.model.network_message.network_message.SyncNetworkMessageInterface.generate_headers',
+                'dedi_link.model.network_message.network_message.NetworkMessage.generate_headers',
         ) as mock_generate_headers:
             mock_generate_headers.return_value = mock_network_message_header_1
 
@@ -91,7 +91,7 @@ class TestSession:
         mock_client.return_value.post.return_value = mock_response
 
         with patch(
-                'dedi_link.model.network_message.network_message.SyncNetworkMessageInterface.generate_headers',
+                'dedi_link.model.network_message.network_message.NetworkMessage.generate_headers',
         ) as mock_generate_headers:
             mock_generate_headers.return_value.headers = mock_network_message_header_1
 
@@ -116,7 +116,7 @@ class TestSession:
         mock_client.return_value.post.return_value = mock_response
 
         with patch(
-                'dedi_link.model.network_message.network_message.SyncNetworkMessageInterface.generate_headers',
+                'dedi_link.model.network_message.network_message.NetworkMessage.generate_headers',
         ) as mock_generate_headers:
             mock_generate_headers.return_value.headers = mock_network_message_header_1
 

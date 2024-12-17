@@ -10,10 +10,10 @@ from contextlib import asynccontextmanager
 from dedi_link.etc.enums import MessageType
 from dedi_link.etc.exceptions import NetworkRequestFailed, NetworkInterfaceNotImplemented, MessageUndeliverable, \
                                      MessageAccessTokenInvalid, NodeAuthenticationStatusInvalid
-from ...network_interface.network_interface import NetworkInterfaceB
+from ...network_interface.network_interface import NetworkInterfaceBase
 from ...data_index import DataIndexT
 from ...user_mapping import UserMappingT
-from ...config import DDLConfig
+from ...config import DdlConfig
 from ..network import Network, NetworkT
 from ..node import Node, NodeT
 from ..network_message import NetworkMessage, NetworkMessageT, NetworkMessageHeader, NetworkMessageHeaderT, \
@@ -24,7 +24,7 @@ from .session import Session, SessionT
 NetworkInterfaceT = TypeVar('NetworkInterfaceT', bound='NetworkInterface')
 
 
-class NetworkInterface(NetworkInterfaceB[SessionT, NetworkT, NodeT, RelayTargetT, NetworkRelayMessageT, DataIndexT, UserMappingT],
+class NetworkInterface(NetworkInterfaceBase[SessionT, NetworkT, NodeT, RelayTargetT, NetworkRelayMessageT, DataIndexT, UserMappingT],
                        Generic[SessionT, NetworkT, NodeT, RelayTargetT, NetworkRelayMessageT, DataIndexT, UserMappingT],
                        ):
     SESSION_CLASS = Session[NetworkMessageT, NetworkMessageHeaderT]
@@ -37,7 +37,7 @@ class NetworkInterface(NetworkInterfaceB[SessionT, NetworkT, NodeT, RelayTargetT
     def __init__(self,
                  network_id: str,
                  instance_id: str,
-                 config: DDLConfig,
+                 config: DdlConfig,
                  session: SessionT | None = None,
                  ):
         super().__init__(

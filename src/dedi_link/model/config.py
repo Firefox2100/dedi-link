@@ -7,7 +7,7 @@ import importlib.resources as pkg_resources
 
 
 @dataclass
-class DDLConfig:
+class DdlConfig:
     """
     Configuration for a Decentralised Discovery Link node
 

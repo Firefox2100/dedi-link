@@ -4,13 +4,13 @@ from dedi_link.etc.exceptions import NodeNotImplemented
 from .base_model import AsyncDataInterface
 from ..data_index import DataIndexT
 from ..user_mapping import UserMappingT
-from ..node import NodeB
+from ..node import NodeBase
 
 
 NodeT = TypeVar('NodeT', bound='Node')
 
 
-class Node(NodeB[DataIndexT, UserMappingT],
+class Node(NodeBase[DataIndexT, UserMappingT],
            AsyncDataInterface,
            Generic[DataIndexT, UserMappingT]
            ):

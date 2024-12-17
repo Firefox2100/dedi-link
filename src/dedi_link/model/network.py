@@ -7,19 +7,18 @@ from typing import Generic, TypeVar, Type
 
 from dedi_link.etc.exceptions import NetworkNotImplemented
 from .base_model import BaseModel, SyncDataInterface
-from .config import DDLConfig
 from .data_index import DataIndex, DataIndexT
 from .node import Node, NodeT
 from .user_mapping import UserMappingT
 
 
-NetworkBT = TypeVar('NetworkBT', bound='NetworkB')
+NetworkBaseT = TypeVar('NetworkBaseT', bound='NetworkBase')
 NetworkT = TypeVar('NetworkT', bound='Network')
 
 
-class NetworkB(BaseModel,
-               Generic[DataIndexT, UserMappingT, NodeT]
-               ):
+class NetworkBase(BaseModel,
+                  Generic[DataIndexT, UserMappingT, NodeT]
+                  ):
     """
     A base model for a network.
     """
@@ -56,7 +55,7 @@ class NetworkB(BaseModel,
         self.node_ids = node_ids or []
 
     def __eq__(self, other):
-        if not isinstance(other, NetworkB):
+        if not isinstance(other, NetworkBase):
             return NotImplemented
 
         return all([
@@ -79,7 +78,7 @@ class NetworkB(BaseModel,
         )
 
     @classmethod
-    def from_dict(cls: Type[NetworkBT], payload: dict) -> NetworkBT:
+    def from_dict(cls: Type[NetworkBaseT], payload: dict) -> NetworkBaseT:
         if 'networkId' not in payload or not payload['networkId']:
             payload['networkId'] = str(uuid.uuid4())
 
@@ -106,7 +105,7 @@ class NetworkB(BaseModel,
         }
 
 
-class Network(NetworkB[DataIndexT, UserMappingT, NodeT],
+class Network(NetworkBase[DataIndexT, UserMappingT, NodeT],
               SyncDataInterface,
               Generic[DataIndexT, UserMappingT, NodeT ]
               ):

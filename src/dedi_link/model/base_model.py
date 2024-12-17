@@ -6,7 +6,7 @@ from enum import Enum
 from typing import Type, TypeVar, Callable
 
 from dedi_link.etc.exceptions import BaseModelNotImplemented
-from .config import DDLConfig
+from .config import DdlConfig
 from .oidc import OidcDriver
 
 
@@ -94,7 +94,7 @@ class BaseModel:
 
     This class defines a uniform interface for all models to implement
     """
-    config = DDLConfig()
+    config = DdlConfig()
     oidc: OidcDriver = None     # Requires initialisation. If your config is lazy loaded, you can do it here
 
     @property

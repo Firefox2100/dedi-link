@@ -13,11 +13,13 @@ from unit_test.consts import NODE_IDS
 
 @pytest.fixture
 def mock_network_interface(mock_ddl_config_1):
-    return NetworkInterface(
-        network_id='62d13013-d80c-4539-adc1-61862bdd65cb',
-        instance_id='f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
-        config=mock_ddl_config_1,
-    )
+    with patch('dedi_link.model.base_model.BaseModel.config', new_callable=PropertyMock) as mock_config:
+        mock_config.return_value = mock_ddl_config_1
+
+        yield NetworkInterface(
+            network_id='62d13013-d80c-4539-adc1-61862bdd65cb',
+            instance_id='f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
+        )
 
 
 @pytest.fixture
@@ -62,33 +64,36 @@ def mock_network_graph_1():
 
 
 class TestNetworkInterface:
-    def test_init(self, mock_ddl_config_1):
+    def test_init(self,
+                  mock_ddl_config_1,
+                  ):
         session = Session()
 
-        network_interface = NetworkInterface(
-            network_id='62d13013-d80c-4539-adc1-61862bdd65cb',
-            instance_id='f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
-            config=mock_ddl_config_1,
-            session=session,
-        )
+        with patch('dedi_link.model.base_model.BaseModel.config', new_callable=PropertyMock) as mock_config:
+            mock_config.return_value = mock_ddl_config_1
 
-        assert network_interface.network_id == '62d13013-d80c-4539-adc1-61862bdd65cb'
-        assert network_interface.instance_id == 'f3bb816f-608b-4dd7-ac74-8e0d0a0979ad'
-        assert network_interface.config == mock_ddl_config_1
-        assert network_interface.session == session
+            network_interface = NetworkInterface(
+                network_id='62d13013-d80c-4539-adc1-61862bdd65cb',
+                instance_id='f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
+                session=session,
+            )
 
-        interface_no_session = NetworkInterface(
-            network_id='62d13013-d80c-4539-adc1-61862bdd65cb',
-            instance_id='f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
-            config=mock_ddl_config_1,
-        )
+            assert network_interface.network_id == '62d13013-d80c-4539-adc1-61862bdd65cb'
+            assert network_interface.instance_id == 'f3bb816f-608b-4dd7-ac74-8e0d0a0979ad'
+            assert network_interface.config == mock_ddl_config_1
+            assert network_interface.session == session
 
-        assert interface_no_session.network_id == '62d13013-d80c-4539-adc1-61862bdd65cb'
-        assert interface_no_session.instance_id == 'f3bb816f-608b-4dd7-ac74-8e0d0a0979ad'
-        assert interface_no_session.config == mock_ddl_config_1
-        assert interface_no_session.session is not None
-        assert isinstance(interface_no_session.session, Session)
-        assert interface_no_session.session != session
+            interface_no_session = NetworkInterface(
+                network_id='62d13013-d80c-4539-adc1-61862bdd65cb',
+                instance_id='f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
+            )
+
+            assert interface_no_session.network_id == '62d13013-d80c-4539-adc1-61862bdd65cb'
+            assert interface_no_session.instance_id == 'f3bb816f-608b-4dd7-ac74-8e0d0a0979ad'
+            assert interface_no_session.config == mock_ddl_config_1
+            assert interface_no_session.session is not None
+            assert isinstance(interface_no_session.session, Session)
+            assert interface_no_session.session != session
 
     def test_vote_from_responses(self, mock_network_interface):
         class TestingClass:
@@ -294,7 +299,6 @@ class TestNetworkInterface:
                 node_client_id='test_client_id',
                 node_idp='https://mock-oidc.local',
                 access_token='test_access_token',
-                user_mapping=UserMapping(),
             )
 
             assert user_id == '19a80cb0-7861-42c9-9212-c2e0cbe8dcfb'
@@ -314,7 +318,6 @@ class TestNetworkInterface:
                 node_client_id='test_client_id',
                 node_idp='https://another.mock-oidc.local',
                 access_token='test_access_token',
-                user_mapping=UserMapping(),
             )
 
             assert user_id == '19a80cb0-7861-42c9-9212-c2e0cbe8dcfb'
@@ -336,7 +339,6 @@ class TestNetworkInterface:
                     node_client_id='another_client_id',
                     node_idp='https://another.mock-oidc.local',
                     access_token='test_access_token',
-                    user_mapping=UserMapping(),
                 )
 
             with pytest.raises(MessageAccessTokenInvalid):
@@ -347,24 +349,19 @@ class TestNetworkInterface:
                     node_client_id='client_id',
                     node_idp='https://another.mock-oidc.local',
                     access_token='test_access_token',
-                    user_mapping=UserMapping(),
                 )
 
-            # Error introspecting token, mapping required
+            # Error introspecting token
             mock_oidc_driver.introspect_token.side_effect = Exception
 
             user_id = mock_network_interface._validate_access_token(
                     node_client_id='client_id',
                     node_idp='https://another.mock-oidc.local',
                     access_token='test_access_token',
-                    user_mapping=UserMapping(
-                        mapping_type=MappingType.STATIC,
-                        static_id='mapped_user_id',
-                    ),
                 )
-            assert user_id == 'mapped_user_id'
+            assert user_id is None
 
-            # Error exchanging token. mapping required
+            # Error exchanging token
             mock_oidc_driver.introspect_token.side_effect = None
             mock_oidc_driver.introspect_token.return_value['active'] = True
             mock_oidc_driver.exchange_token.side_effect = Exception
@@ -373,12 +370,8 @@ class TestNetworkInterface:
                 node_client_id='client_id',
                 node_idp='https://another.mock-oidc.local',
                 access_token='test_access_token',
-                user_mapping=UserMapping(
-                mapping_type=MappingType.STATIC,
-                    static_id='mapped_user_id',
-                ),
             )
-            assert user_id == 'mapped_user_id'
+            assert user_id is None
 
     def test_calculate_new_score(self,
                                  mock_network_interface,
@@ -421,16 +414,18 @@ class TestNetworkInterface:
     def test_context_manager(self,
                              mock_ddl_config_1,
                              ):
-        with NetworkInterface(
-            network_id='62d13013-d80c-4539-adc1-61862bdd65cb',
-            instance_id='f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
-            config=mock_ddl_config_1,
-        ) as network_interface:
-            assert network_interface.network_id == '62d13013-d80c-4539-adc1-61862bdd65cb'
-            assert network_interface.instance_id == 'f3bb816f-608b-4dd7-ac74-8e0d0a0979ad'
-            assert network_interface.config == mock_ddl_config_1
-            assert network_interface.session is not None
-            assert isinstance(network_interface.session, Session)
+        with patch('dedi_link.model.base_model.BaseModel.config', new_callable=PropertyMock) as mock_config:
+            mock_config.return_value = mock_ddl_config_1
+
+            with NetworkInterface(
+                network_id='62d13013-d80c-4539-adc1-61862bdd65cb',
+                instance_id='f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
+            ) as network_interface:
+                assert network_interface.network_id == '62d13013-d80c-4539-adc1-61862bdd65cb'
+                assert network_interface.instance_id == 'f3bb816f-608b-4dd7-ac74-8e0d0a0979ad'
+                assert network_interface.config == mock_ddl_config_1
+                assert network_interface.session is not None
+                assert isinstance(network_interface.session, Session)
 
     def test_network_graph(self,
                            mock_network_interface,

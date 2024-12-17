@@ -1,63 +1,80 @@
+"""
+Network Interface Base Class
+
+Network Interface is the core logic of the DediLink library, which provides the
+decentralised and federated functions of communication and security.
+"""
+
 import math
 import time
 import uuid
 import base64
 import json
+from collections import Counter
+from copy import deepcopy
+from contextlib import contextmanager
+from typing import TypeVar, Any, List, Generic, Type
 
 import networkx as nx
-from typing import TypeVar, Any, List, Generic, Type
-from collections import Counter
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.backends import default_backend
-from copy import deepcopy
-from contextlib import contextmanager
 
 from dedi_link.etc.consts import LOGGER
 from dedi_link.etc.enums import MessageType
-from dedi_link.etc.exceptions import MessageSignatureInvalid, MessageTimestampInvalid, MessageAccessTokenInvalid, \
-                                     MessageUndeliverable, NodeAuthenticationStatusInvalid
+from dedi_link.etc.exceptions import MessageSignatureInvalid, MessageTimestampInvalid, \
+    MessageAccessTokenInvalid, MessageUndeliverable, NodeAuthenticationStatusInvalid
 from dedi_link.etc.exceptions import NetworkRequestFailed, NetworkInterfaceNotImplemented
 from ..base_model import BaseModel
-from ..config import DDLConfig
 from ..network import Network, NetworkT
 from ..node import Node, NodeT
 from ..data_index import DataIndexT
 from ..user_mapping import UserMappingT
-from ..network_message import NetworkMessage, RelayTarget, RelayTargetT, NetworkRelayMessage, NetworkMessageHeader, \
-                              NetworkMessageT, NetworkRelayMessageT, NetworkMessageHeaderT
+from ..network_message import NetworkMessage, RelayTarget, RelayTargetT, NetworkRelayMessage, \
+    NetworkMessageHeader, NetworkMessageT, NetworkRelayMessageT, NetworkMessageHeaderT
 from .session import Session
 
 T = TypeVar('T')
-NetworkInterfaceBT = TypeVar('NetworkInterfaceBT', bound='NetworkInterfaceB')
+NetworkInterfaceBaseT = TypeVar('NetworkInterfaceBaseT', bound='NetworkInterfaceBase')
 NetworkInterfaceT = TypeVar('NetworkInterfaceT', bound='NetworkInterface')
 
 
-class NetworkInterfaceB(BaseModel,
-                        Generic[
-                            NetworkT,
-                            NodeT,
-                            RelayTargetT,
-                            NetworkMessageHeaderT,
-                            DataIndexT,
-                            UserMappingT
-                        ]):
+class NetworkInterfaceBase(BaseModel,
+                           Generic[
+                               NetworkT,
+                               NodeT,
+                               RelayTargetT,
+                               NetworkMessageHeaderT,
+                               DataIndexT,
+                               UserMappingT
+                           ]):
+    """
+    Base class for Network Interface
+
+    This class defines shared and concret methods used by all network
+    interfaces, including the core logic of message validation,
+    signature verification, and access token validation.
+    """
     NETWORK_CLASS = Network[DataIndexT, UserMappingT, NodeT]
     NODE_CLASS = Node[DataIndexT, UserMappingT]
     RELAY_TARGET_CLASS = RelayTarget[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]
     NETWORK_MESSAGE_CLASS = NetworkMessage[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]
-    NETWORK_RELAY_MESSAGE_CLASS = NetworkRelayMessage[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT, RelayTargetT]
+    NETWORK_RELAY_MESSAGE_CLASS = NetworkRelayMessage[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]
 
     def __init__(self,
                  network_id: str,
                  instance_id: str,
-                 config: DDLConfig,
                  ):
+        """
+        Network Interface Base Class
+
+        :param network_id: The network ID this interface is bound to
+        :param instance_id: The instance ID of this node within the network
+        """
         self.network_id = network_id
         self.instance_id = instance_id
-        self.config = config
 
     @staticmethod
     def vote_from_responses(objects: List[List[T]],
@@ -74,10 +91,11 @@ class NetworkInterfaceB(BaseModel,
         :param obj_type: Type of the object
         :return: Object that has the majority vote
         """
-        # Create a list to store objects that match the identifier value
+        # Create a list to store objects that match the identifier
         matching_objects = []
 
-        # Iterate through list[list[CustomClass]] to find objects that have the specified identifier value
+        # Iterate through list[list[CustomClass]] to find objects
+        # that have the specified identifier value
         for sublist in objects:
             for obj in sublist:
                 if obj_type is not None and isinstance(obj, dict):
@@ -183,7 +201,10 @@ class NetworkInterfaceB(BaseModel,
                 reverse=True,
             )
 
-            paths = [all_shortest_paths[k] for k in sorted_keys if len(all_shortest_paths[k]) <= route_length]
+            paths = [
+                all_shortest_paths[k] for k in sorted_keys
+                    if len(all_shortest_paths[k]) <= route_length
+            ]
 
             return paths
 
@@ -301,8 +322,7 @@ class NetworkInterfaceB(BaseModel,
                                node_client_id: str,
                                node_idp: str,
                                access_token: str,
-                               user_mapping: UserMappingT,
-                               ) -> str:
+                               ) -> str | None:
         """
         Validate the access token against the original OIDC IdP
 
@@ -318,8 +338,7 @@ class NetworkInterfaceB(BaseModel,
         :param node_client_id: The client ID sender node uses
         :param node_idp: The IdP URL of the sender node
         :param access_token: The access token to validate
-        :param user_mapping: The user mapping to use if the token is not introspected
-        :return: The user ID if the token is valid
+        :return: The user ID if the token is valid, None otherwise
         :raises MessageAccessTokenInvalid: If the token is invalid
         """
         if node_idp != self.config.idp:
@@ -329,7 +348,7 @@ class NetworkInterfaceB(BaseModel,
             except Exception as e:
                 # Token exchange failed, map the user
                 LOGGER.warning(f'Token exchange failed: {e}')
-                return user_mapping.map()
+                return None
 
             # Token exchange successful, validate the new token
             access_token = exchanged_token
@@ -348,7 +367,7 @@ class NetworkInterfaceB(BaseModel,
             raise
         except Exception as e:
             LOGGER.warning(f'Token introspection failed: {e}')
-            return user_mapping.map()
+            return None
 
     def calculate_new_score(self,
                             time_elapsed: float,
@@ -382,7 +401,7 @@ class NetworkInterfaceB(BaseModel,
             (1 - self.config.time_score_weight) * response_quality_score
 
 
-class NetworkInterface(NetworkInterfaceB[
+class NetworkInterface(NetworkInterfaceBase[
                            NetworkT,
                            NodeT,
                            RelayTargetT,
@@ -405,13 +424,11 @@ class NetworkInterface(NetworkInterfaceB[
     def __init__(self,
                  network_id: str,
                  instance_id: str,
-                 config: DDLConfig,
                  session: Session | None = None,
                  ):
         super().__init__(
             network_id=network_id,
             instance_id=instance_id,
-            config=config,
         )
 
         if session is not None:
@@ -431,9 +448,14 @@ class NetworkInterface(NetworkInterfaceB[
         """
         Get a networkx.DiGraph representation of the network
         """
-        raise NetworkInterfaceNotImplemented('network_graph method needs to be implemented by an application')
+        raise NetworkInterfaceNotImplemented(
+            'network_graph method needs to be implemented by an application'
+        )
 
     def close(self):
+        """
+        Close the session
+        """
         self.session.close()
 
     @classmethod
@@ -447,7 +469,6 @@ class NetworkInterface(NetworkInterfaceB[
             network_id=interface.network_id,
             instance_id=interface.instance_id,
             session=interface.session,
-            config=interface.config,
         )
 
     def check_connectivity(self,
@@ -528,12 +549,13 @@ class NetworkInterface(NetworkInterfaceB[
                 node_client_id=node.client_id,
                 node_idp=node.idp,
                 access_token=headers.access_token,
-                user_mapping=node.user_mapping,
             )
 
         if user_id is None:
             if node.authentication_enabled:
-                raise NodeAuthenticationStatusInvalid('Authentication enabled but validation failed')
+                raise NodeAuthenticationStatusInvalid(
+                    'Authentication enabled but validation failed'
+                )
 
             # Access token authentication skipped, remap the user
             user_id = node.user_mapping.map()

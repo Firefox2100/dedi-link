@@ -1,3 +1,11 @@
+"""
+Network Authorisation Message
+
+Network Authorisation Messages are used to handle
+permission, node authorisation, and other security-
+related operations.
+"""
+
 import uuid
 from enum import Enum
 from typing import Type, TypeVar, Callable, Generic
@@ -8,17 +16,32 @@ from ...network import NetworkT
 from ...node import NodeT
 from ...data_index import DataIndexT
 from ...user_mapping import UserMappingT
-from ..network_message import NetworkMessageB, NetworkMessage
+from ..network_message import NetworkMessageBase, NetworkMessage
 from ..network_message_header import NetworkMessageHeaderT
 
 
-NetworkAuthMessageBT = TypeVar('NetworkAuthMessageBT', bound='NetworkAuthMessageB')
+NetworkAuthMessageBaseT = TypeVar('NetworkAuthMessageBaseT', bound='NetworkAuthMessageBase')
 NetworkAuthMessageT = TypeVar('NetworkAuthMessageT', bound='NetworkAuthMessage')
 
 
-class NetworkAuthMessageB(NetworkMessageB[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
-                          Generic[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]
-                          ):
+class NetworkAuthMessageBase(NetworkMessageBase[
+                                 NetworkMessageHeaderT,
+                                 NetworkT,
+                                 DataIndexT,
+                                 UserMappingT,
+                                 NodeT
+                             ],
+                             Generic[
+                                 NetworkMessageHeaderT,
+                                 NetworkT,
+                                 DataIndexT,
+                                 UserMappingT,
+                                 NodeT
+                             ]):
+    """
+    Base class for a Network Authorisation Message
+    """
+
     message_type = MessageType.AUTH_MESSAGE
     auth_type: AuthMessageType | None = None
 
@@ -47,7 +70,7 @@ class NetworkAuthMessageB(NetworkMessageB[NetworkMessageHeaderT, NetworkT, DataI
         )
 
     def __eq__(self, other):
-        if not isinstance(other, NetworkAuthMessageB):
+        if not isinstance(other, NetworkAuthMessageBase):
             return NotImplemented
 
         return all([
@@ -59,7 +82,8 @@ class NetworkAuthMessageB(NetworkMessageB[NetworkMessageHeaderT, NetworkT, DataI
         return hash((super().__hash__(), self.auth_type))
 
     @classmethod
-    def _child_mapping(cls) -> dict[Enum, tuple[Type[NetworkAuthMessageT], Callable[[dict], Enum] | None]]:
+    def _child_mapping(cls) -> dict[Enum, tuple[Type[NetworkAuthMessageT],
+                                    Callable[[dict], Enum] | None]]:
         from .auth_request import AuthRequest
         from .auth_invite import AuthInvite
         from .auth_response import AuthResponse
@@ -77,7 +101,7 @@ class NetworkAuthMessageB(NetworkMessageB[NetworkMessageHeaderT, NetworkT, DataI
         }
 
     @classmethod
-    def factory(cls: Type[NetworkAuthMessageBT], payload: dict) -> NetworkAuthMessageBT:
+    def factory(cls: Type[NetworkAuthMessageBaseT], payload: dict) -> NetworkAuthMessageBaseT:
         id_var = AuthMessageType(payload[MESSAGE_ATTRIBUTES]['authType'])
 
         return cls.factory_from_id(
@@ -93,8 +117,29 @@ class NetworkAuthMessageB(NetworkMessageB[NetworkMessageHeaderT, NetworkT, DataI
         return payload
 
 
-class NetworkAuthMessage(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
-                         NetworkMessage[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
-                         Generic[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]
-                         ):
-    pass
+class NetworkAuthMessage(NetworkAuthMessageBase[
+                             NetworkMessageHeaderT,
+                             NetworkT,
+                             DataIndexT,
+                             UserMappingT,
+                             NodeT
+                         ],
+                         NetworkMessage[
+                             NetworkMessageHeaderT,
+                             NetworkT, DataIndexT,
+                             UserMappingT,
+                             NodeT
+                         ],
+                         Generic[
+                             NetworkMessageHeaderT,
+                             NetworkT,
+                             DataIndexT,
+                             UserMappingT,
+                             NodeT
+                         ]):
+    """
+    Network Authorisation Message
+
+    This class of messages handle permission, node authorisation, and other
+    security-related operations.
+    """

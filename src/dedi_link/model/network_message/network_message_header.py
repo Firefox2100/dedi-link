@@ -1,3 +1,11 @@
+"""
+Network Message Header
+
+This class is used to generate and parse headers for
+network messages. There is usually no need to extend
+this class.
+"""
+
 from typing import TypeVar, Type
 
 
@@ -50,6 +58,10 @@ class NetworkMessageHeader:
 
     @property
     def headers(self) -> dict[str, str]:
+        """
+        A header dictionary for use in a request.
+        """
+
         headers = {
             'Content-Type': 'application/json',
         }
@@ -75,7 +87,7 @@ class NetworkMessageHeader:
         Generate a NetworkMessageHeader object from a set of headers.
         :param headers: A header object that implements the get() method,
                         such as the headers from a Quart request object.
-        :return:
+        :return: A NetworkMessageHeader object
         """
         access_token = headers.get('Authorization', None)
         if access_token is not None:

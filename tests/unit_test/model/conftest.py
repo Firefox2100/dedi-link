@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import MagicMock
 
 from dedi_link.etc.enums import AuthMessageStatus, SyncTarget
-from dedi_link.model import Network, Node, UserMapping, DataIndex, DDLConfig, NetworkMessage
+from dedi_link.model import Network, Node, UserMapping, DataIndex, DdlConfig, NetworkMessage
 from dedi_link.model.network_message.network_message_header import NetworkMessageHeader
 from dedi_link.model.network_message.network_auth_message import AuthRequest, AuthInvite, AuthResponse, AuthJoin, AuthLeave, \
     AuthStatus
@@ -148,7 +148,7 @@ def mock_node_dict_2():
 
 @pytest.fixture
 def mock_ddl_config_1():
-    return DDLConfig(
+    return DdlConfig(
         name='Test instance',
         description='This is a test instance',
         url='https://test-node.example.com',
