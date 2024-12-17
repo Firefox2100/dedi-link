@@ -24,6 +24,7 @@ class AuthRequestB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT, DataInde
     """
     Base model for Network Authorization Request or Invite Message
     """
+
     NODE_CLASS = Node[DataIndexT, UserMappingT]
     auth_type = AuthMessageType.REQUEST
 
@@ -31,7 +32,7 @@ class AuthRequestB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT, DataInde
                  network_id: str,
                  node_id: str,
                  status: AuthMessageStatus,
-                 node: NodeT,
+                 node: Node,
                  target_url: str,
                  challenge: list[str] = None,
                  justification: str = '',
@@ -138,7 +139,7 @@ class AuthRequestB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT, DataInde
         The words are taken from BIP-0039 word list, but the generation process
         is not tied to the request itself like most BIP-0039 implementations.
         The words cannot be reproduced from the request, or used to recover the
-        requet information.
+        request information.
 
         :return: A list of three random words
         """
@@ -166,3 +167,14 @@ class AuthRequest(AuthRequestB[NetworkMessageHeaderT, NetworkT, DataIndexT, User
     This message is for requesting to join a network by asking a node,
     or to invite a node to join a network that this node is in.
     """
+    def update_status(self, status: AuthMessageStatus):
+        """
+        Wrapper method to update the status of the request
+
+        :param status: The new status
+        """
+        self.status = status
+
+        self.update({
+            'status': status.value,
+        })

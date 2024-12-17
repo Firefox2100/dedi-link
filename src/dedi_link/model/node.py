@@ -35,6 +35,7 @@ class NodeB(BaseModel, Generic[DataIndexT, UserMappingT]):
                  public_key: str | None = None,
                  data_index: DataIndexT = None,
                  score: float = 0.0,
+                 approved: bool = False,
                  ):
         """
         A node in a network
@@ -55,6 +56,7 @@ class NodeB(BaseModel, Generic[DataIndexT, UserMappingT]):
         :param public_key: The public key of the node
         :param data_index: The data index of the node
         :param score: The score of the node
+        :param approved: Whether the node is approved for message exchange
         """
         self.node_id = node_id
         self.node_name = node_name
@@ -67,6 +69,7 @@ class NodeB(BaseModel, Generic[DataIndexT, UserMappingT]):
         self.idp = idp
         self.data_index = data_index or self.DATA_INDEX_CLASS()
         self.score = score
+        self.approved = approved
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, NodeB):
@@ -80,19 +83,22 @@ class NodeB(BaseModel, Generic[DataIndexT, UserMappingT]):
             self.description == other.description,
             self.authentication_enabled == other.authentication_enabled,
             self.client_id == other.client_id,
+            self.idp == other.idp,
+            self.approved == other.approved,
         ])
 
     def __hash__(self) -> int:
-        return hash(
-            (
-                self.node_id,
-                self.node_name,
-                self.url,
-                self.public_key,
-                self.description,
-                self.authentication_enabled,
-            )
-        )
+        return hash((
+            self.node_id,
+            self.node_name,
+            self.url,
+            self.public_key,
+            self.description,
+            self.authentication_enabled,
+            self.client_id,
+            self.idp,
+            self.approved,
+        ))
 
     @classmethod
     def from_dict(cls: Type[NodeBT], payload: dict) -> NodeBT:
@@ -108,6 +114,7 @@ class NodeB(BaseModel, Generic[DataIndexT, UserMappingT]):
             public_key=payload.get('publicKey', None),
             data_index=cls.DATA_INDEX_CLASS.from_dict(payload.get('dataIndex', {})),
             score=payload.get('score', 0.0),
+            approved=payload.get('approved', False),
         )
 
     def to_dict(self, key=False) -> dict:
@@ -118,6 +125,8 @@ class NodeB(BaseModel, Generic[DataIndexT, UserMappingT]):
             'clientId': self.client_id,
             'idp': self.idp,
             'nodeDescription': self.description,
+            'score': self.score,
+            'approved': self.approved,
         }
 
         if self.authentication_enabled is not None:
@@ -129,8 +138,6 @@ class NodeB(BaseModel, Generic[DataIndexT, UserMappingT]):
             payload['publicKey'] = self.public_key
         if self.data_index:
             payload['dataIndex'] = self.data_index.to_dict()
-        if self.score:
-            payload['score'] = self.score
 
         return payload
 

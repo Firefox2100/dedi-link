@@ -52,6 +52,10 @@ class NetworkMessageNotImplemented(DeDiLinkNotImplemented):
     pass
 
 
+class NetworkMessageNotFound(DeDiLinkNotFound):
+    pass
+
+
 class NetworkRelayMessageEnvelopeTooDeep(DeDiLinkException):
     pass
 
@@ -93,4 +97,8 @@ class MessageUndeliverable(NetworkInterfaceException):
 
 
 class NodeAuthenticationStatusInvalid(NetworkInterfaceException):
+    pass
+
+
+class MessageAlreadyProcessed(NetworkInterfaceException):
     pass

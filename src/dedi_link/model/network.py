@@ -219,6 +219,34 @@ class Network(NetworkB[DataIndexT, UserMappingT, NodeT],
             public_key=self.public_key,
         )
 
+    def add_node(self, node: Node):
+        """
+        Add a node to the network.
+
+        :param node: The new node to add
+        """
+        node.store()
+
+        self.node_ids.append(node.node_id)
+
+        self.update({
+            'nodeIds': self.node_ids,
+        })
+
+    def remove_node(self, node: Node):
+        """
+        Remove a node from the network.
+
+        :param node: The node to remove
+        """
+        self.node_ids.remove(node.node_id)
+
+        self.update({
+            'nodeIds': self.node_ids,
+        })
+
+        node.delete()
+
     def generate_keys(self):
         """
         Generate public and private keys for the network.

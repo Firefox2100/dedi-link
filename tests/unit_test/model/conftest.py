@@ -66,10 +66,12 @@ def mock_self_node_dict_1():
         'nodeId': NODE_IDS[0],
         'nodeName': 'Test instance',
         'nodeUrl': 'https://test-node.example.com',
-        'nodeDescription': 'This is a test instance',
         'clientId': 'dedi-link',
         'idp': 'https://mock-oidc.local',
+        'nodeDescription': 'This is a test instance',
         'publicKey': 'test-public-key',
+        'score': 0.0,
+        'approved': False,
         'authenticationEnabled': False,
     }
 
@@ -103,6 +105,7 @@ def mock_node_dict_1():
         'clientId': 'a04ffd6a-b93c-46d5-ac0e-54d59b32abb9',
         'idp': 'https://mock-oidc.local',
         'authenticationEnabled': True,
+        'approved': False,
         'publicKey': 'test-public-key',
         'dataIndex': {
             'recordCount': 100,
@@ -245,12 +248,12 @@ def mock_auth_request_dict_1(mock_self_node_dict_1):
             'targetUrl': 'https://node1.example.com',
             'status': 'sent',
         },
+        'timestamp': 1704067200,
         'messageData': {
             'node': mock_self_node_dict_1,
             'challenge': ['accident', 'flip', 'royal'],
             'justification': 'This is a test',
         },
-        'timestamp': 1704067200,
     }
 
 

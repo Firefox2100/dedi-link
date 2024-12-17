@@ -3,7 +3,7 @@ from typing import TypeVar, Generic, Type
 from dedi_link.etc.consts import MESSAGE_ATTRIBUTES, MESSAGE_DATA
 from dedi_link.etc.enums import AuthMessageType
 from ...node import Node, NodeT
-from ...network import NetworkT
+from ...network import Network, NetworkT
 from ...data_index import DataIndexT
 from ...user_mapping import UserMappingT
 from ..network_message_header import NetworkMessageHeaderT
@@ -28,9 +28,9 @@ class AuthResponseB(NetworkAuthMessageB[NetworkMessageHeaderT, NetworkT, DataInd
                  approved: bool,
                  network_id: str = '',
                  node_id: str = '',
-                 node: NodeT | None = None,
-                 timestamp: int | None = None,
-                 network: NetworkT | None = None,
+                 node: Node = None,
+                 timestamp: int  = None,
+                 network: Network = None,
                  ):
         """
         Network Authorisation Response Message

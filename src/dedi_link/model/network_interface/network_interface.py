@@ -28,7 +28,7 @@ from ..data_index import DataIndexT
 from ..user_mapping import UserMappingT
 from ..network_message import NetworkMessage, RelayTarget, RelayTargetT, NetworkRelayMessage, NetworkMessageHeader, \
                               NetworkMessageT, NetworkRelayMessageT, NetworkMessageHeaderT
-from .session import Session, SessionT
+from .session import Session
 
 T = TypeVar('T')
 NetworkInterfaceBT = TypeVar('NetworkInterfaceBT', bound='NetworkInterfaceB')
@@ -37,8 +37,12 @@ NetworkInterfaceT = TypeVar('NetworkInterfaceT', bound='NetworkInterface')
 
 class NetworkInterfaceB(BaseModel,
                         Generic[
-                            NetworkT, NodeT, RelayTargetT, NetworkMessageHeaderT,
-                            NetworkRelayMessageT, DataIndexT, UserMappingT
+                            NetworkT,
+                            NodeT,
+                            RelayTargetT,
+                            NetworkMessageHeaderT,
+                            DataIndexT,
+                            UserMappingT
                         ]):
     NETWORK_CLASS = Network[DataIndexT, UserMappingT, NodeT]
     NODE_CLASS = Node[DataIndexT, UserMappingT]
@@ -379,12 +383,21 @@ class NetworkInterfaceB(BaseModel,
 
 
 class NetworkInterface(NetworkInterfaceB[
-                           NetworkT, NodeT, RelayTargetT, NetworkMessageHeaderT,
-                           NetworkRelayMessageT, DataIndexT, UserMappingT
+                           NetworkT,
+                           NodeT,
+                           RelayTargetT,
+                           NetworkMessageHeaderT,
+                           DataIndexT,
+                           UserMappingT
                        ],
                        Generic[
-                           NetworkT, NodeT, RelayTargetT, NetworkMessageHeaderT,
-                           NetworkRelayMessageT, DataIndexT, UserMappingT, SessionT
+                           NetworkT,
+                           NodeT,
+                           RelayTargetT,
+                           NetworkMessageHeaderT,
+                           NetworkRelayMessageT,
+                           DataIndexT,
+                           UserMappingT
                        ]
                        ):
     SESSION_CLASS = Session[NetworkMessageT, NetworkMessageHeaderT]
@@ -393,7 +406,7 @@ class NetworkInterface(NetworkInterfaceB[
                  network_id: str,
                  instance_id: str,
                  config: DDLConfig,
-                 session: SessionT | None = None,
+                 session: Session | None = None,
                  ):
         super().__init__(
             network_id=network_id,
@@ -402,9 +415,9 @@ class NetworkInterface(NetworkInterfaceB[
         )
 
         if session is not None:
-            self.session: SessionT = session
+            self.session: Session = session
         else:
-            self.session: SessionT = self.SESSION_CLASS()
+            self.session: Session = self.SESSION_CLASS()
 
     def __enter__(self):
         return self
@@ -570,13 +583,14 @@ class NetworkInterface(NetworkInterfaceB[
                 # so this should be a data response
                 record_count = response_message.record_count
 
-            new_score = self.calculate_new_score(
-                time_elapsed=time_elapsed,
-                record_count=record_count,
-                record_count_max=node.data_index.record_count or 0,
-            )
+            if node.node_id != '':
+                new_score = self.calculate_new_score(
+                    time_elapsed=time_elapsed,
+                    record_count=record_count,
+                    record_count_max=node.data_index.record_count or 0,
+                )
 
-            node.update_score(new_score)
+                node.update_score(new_score)
 
             self.validate_message(response_message, response_header)
 

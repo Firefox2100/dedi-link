@@ -3,13 +3,12 @@ from typing import TypeVar, Generic, Type
 
 from dedi_link.etc.consts import MESSAGE_ATTRIBUTES, MESSAGE_DATA
 from dedi_link.etc.enums import AuthMessageType, AuthMessageStatus
-from ...node import NodeT
-from ...network import NetworkT
+from ...node import Node, NodeT
+from ...network import Network, NetworkT
 from ...data_index import DataIndexT
 from ...user_mapping import UserMappingT
 from ..network_message_header import NetworkMessageHeaderT
-from .network_auth_message import NetworkAuthMessage
-from .auth_request import AuthRequestB
+from .auth_request import AuthRequestB, AuthRequest
 
 
 AuthInviteBT = TypeVar('AuthInviteBT', bound='AuthInviteB')
@@ -24,8 +23,8 @@ class AuthInviteB(AuthRequestB[NetworkMessageHeaderT, NetworkT, DataIndexT, User
                  network_id: str,
                  node_id: str,
                  status: AuthMessageStatus,
-                 node: NodeT,
-                 network: NetworkT,
+                 node: Node,
+                 network: Network,
                  target_url: str,
                  challenge: list[str] = None,
                  justification: str = '',
@@ -126,7 +125,7 @@ class AuthInviteB(AuthRequestB[NetworkMessageHeaderT, NetworkT, DataIndexT, User
 
 
 class AuthInvite(AuthInviteB[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
-                 NetworkAuthMessage[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
+                 AuthRequest[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
                  Generic[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]
                  ):
     pass
