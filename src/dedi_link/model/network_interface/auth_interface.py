@@ -1,11 +1,19 @@
+"""
+Auth Interface
+
+This module provides the specialised interface for the
+authentication and authorisation process of the network.
+"""
+
 import json
 
 from dedi_link.etc.consts import LOGGER
 from dedi_link.etc.enums import AuthMessageStatus, AuthMessageType, MappingType
-from dedi_link.etc.exceptions import MessageAlreadyProcessed, NodeNotFound, NetworkNotFound, NetworkMessageNotFound
+from dedi_link.etc.exceptions import MessageAlreadyProcessed, NodeNotFound, NetworkNotFound, \
+    NetworkMessageNotFound
 from ..network_message.network_message_header import NetworkMessageHeader, NetworkMessageHeaderT
-from ..network_message.network_auth_message import NetworkAuthMessage, AuthRequest, AuthInvite, AuthResponse, \
-                                                   AuthJoin, AuthLeave, AuthStatus
+from ..network_message.network_auth_message import NetworkAuthMessage, AuthRequest, AuthInvite, \
+    AuthResponse, AuthJoin, AuthLeave, AuthStatus
 from ..network_message.network_relay_message import NetworkRelayMessageT, RelayTargetT
 from ..network import NetworkT
 from ..node import Node, NodeT
@@ -23,6 +31,13 @@ class AuthInterface(NetworkInterface[
                         DataIndexT,
                         UserMappingT
                     ]):
+    """
+    Auth Interface
+
+    This class provides the specialised interface for the
+    authentication and authorisation process of the network.
+    """
+
     USER_MAPPING_CLASS = UserMapping
 
     def validate_message(self,
@@ -42,7 +57,7 @@ class AuthInterface(NetworkInterface[
         """
         user_id = None
 
-        if message.auth_type == AuthMessageType.REQUEST or message.auth_type == AuthMessageType.INVITE:
+        if message.auth_type in {AuthMessageType.REQUEST, AuthMessageType.INVITE}:
             # The node is not in database yet, use the one in the incoming message
             if not isinstance(message, AuthRequest) and not isinstance(message, AuthInvite):
                 raise ValueError('Invalid message type for request or invite')
@@ -65,7 +80,6 @@ class AuthInterface(NetworkInterface[
                 node_client_id=node.client_id,
                 node_idp=node.idp,
                 access_token=headers.access_token,
-                user_mapping=node.user_mapping,
             )
 
         if user_id is None:
@@ -159,7 +173,9 @@ class AuthInterface(NetworkInterface[
 
             if message.approved:
                 if message.node is None:
-                    raise ValueError('Approved response must have a Node object to represent itself')
+                    raise ValueError(
+                        'Approved response must have a Node object to represent itself'
+                    )
 
                 previous_message.update_status(AuthMessageStatus.ACCEPTED)
 
@@ -189,15 +205,17 @@ class AuthInterface(NetworkInterface[
                     network.delete()
                 except NetworkNotFound:
                     pass
-        except NetworkMessageNotFound:
+        except NetworkMessageNotFound as e:
             previous_message = AuthInvite.load(message.message_id)
 
             if previous_message.status != AuthMessageStatus.SENT:
-                raise MessageAlreadyProcessed('Message already processed')
+                raise MessageAlreadyProcessed('Message already processed') from e
 
             if message.approved:
                 if message.node is None:
-                    raise ValueError('Approved response must have a Node object to represent itself')
+                    raise ValueError(
+                        'Approved response must have a Node object to represent itself'
+                    ) from e
 
                 previous_message.update_status(AuthMessageStatus.ACCEPTED)
 
@@ -269,15 +287,16 @@ class AuthInterface(NetworkInterface[
             network = self.NETWORK_CLASS.load(self.network_id)
 
             network.remove_node(node)
-        except NodeNotFound:
-            raise MessageAlreadyProcessed('Node already deleted')
+        except NodeNotFound as e:
+            raise MessageAlreadyProcessed('Node already deleted') from e
 
     def _receive_auth_status(self,
                              message: AuthStatus,
                              ):
         previous_message = NetworkAuthMessage.load(message.message_id)
 
-        if not isinstance(previous_message, AuthRequest) and not isinstance(previous_message, AuthInvite):
+        if not isinstance(previous_message, AuthRequest) and \
+            not isinstance(previous_message, AuthInvite):
             raise ValueError('The message to check is not a request or invite')
 
         if previous_message.status == AuthMessageStatus.PENDING:
@@ -361,7 +380,11 @@ class AuthInterface(NetworkInterface[
 
             raise ValueError(f'Unknown auth type: {message.auth_type}')
         except Exception as e:
-            LOGGER.exception(f'Error processing message {message.message_id}: {e}')
+            LOGGER.exception(
+                'Error processing message {}: {}',
+                message.message_id,
+                e,
+            )
 
             if should_raise:
                 raise
@@ -391,6 +414,7 @@ class AuthInterface(NetworkInterface[
             node_id='',
             node_name='',
             client_id='',
+            idp='',
             description='',
         )
 
@@ -429,6 +453,7 @@ class AuthInterface(NetworkInterface[
                 node_id='',
                 node_name='',
                 client_id='',
+                idp='',
                 description='',
             ),
             message=message,
@@ -459,6 +484,7 @@ class AuthInterface(NetworkInterface[
             node_id='',
             node_name='',
             client_id='',
+            idp='',
             description='',
         )
 

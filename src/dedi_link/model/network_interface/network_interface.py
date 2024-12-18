@@ -57,11 +57,36 @@ class NetworkInterfaceBase(BaseModel,
     interfaces, including the core logic of message validation,
     signature verification, and access token validation.
     """
-    NETWORK_CLASS = Network[DataIndexT, UserMappingT, NodeT]
-    NODE_CLASS = Node[DataIndexT, UserMappingT]
-    RELAY_TARGET_CLASS = RelayTarget[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]
-    NETWORK_MESSAGE_CLASS = NetworkMessage[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]
-    NETWORK_RELAY_MESSAGE_CLASS = NetworkRelayMessage[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]
+    NETWORK_CLASS = Network[
+        DataIndexT,
+        UserMappingT,
+        NodeT
+    ]
+    NODE_CLASS = Node[
+        DataIndexT,
+        UserMappingT
+    ]
+    RELAY_TARGET_CLASS = RelayTarget[
+        NetworkMessageHeaderT,
+        NetworkT,
+        DataIndexT,
+        UserMappingT,
+        NodeT
+    ]
+    NETWORK_MESSAGE_CLASS = NetworkMessage[
+        NetworkMessageHeaderT,
+        NetworkT,
+        DataIndexT,
+        UserMappingT,
+        NodeT
+    ]
+    NETWORK_RELAY_MESSAGE_CLASS = NetworkRelayMessage[
+        NetworkMessageHeaderT,
+        NetworkT,
+        DataIndexT,
+        UserMappingT,
+        NodeT
+    ]
 
     def __init__(self,
                  network_id: str,
@@ -347,7 +372,7 @@ class NetworkInterfaceBase(BaseModel,
                 exchanged_token = self.oidc.exchange_token(access_token)
             except Exception as e:
                 # Token exchange failed, map the user
-                LOGGER.warning(f'Token exchange failed: {e}')
+                LOGGER.warning('Token exchange failed: {}', e)
                 return None
 
             # Token exchange successful, validate the new token
@@ -366,7 +391,7 @@ class NetworkInterfaceBase(BaseModel,
         except MessageAccessTokenInvalid:
             raise
         except Exception as e:
-            LOGGER.warning(f'Token introspection failed: {e}')
+            LOGGER.warning('Token introspection failed: {}', e)
             return None
 
     def calculate_new_score(self,
@@ -374,6 +399,16 @@ class NetworkInterfaceBase(BaseModel,
                             record_count: int = None,
                             record_count_max: int = None,
                             ) -> float:
+        """
+        Calculate the new score of a node
+        
+        Calculation is based on the response time and quality.
+        The response time is calculated based on the time elapsed
+        from sending the request to receiving the response, with
+        a maximum of 30 seconds. The response quality is calculated
+        based on the record count of the response, with an optimal
+        record count configurable of the maximum record count.
+        """
         if time_elapsed < 0:
             return -1.0
 
@@ -385,15 +420,16 @@ class NetworkInterfaceBase(BaseModel,
         optimal_record_count = math.floor(self.config.optimal_record_percentage * record_count_max)
 
         if record_count <= optimal_record_count:
-            sqr_param = (2 - (4 / optimal_record_count + 4 / (record_count_max - optimal_record_count)) *
+            sqr_param = (2 - (4 / optimal_record_count + 4 /
+                         (record_count_max - optimal_record_count)) *
                          optimal_record_count) / optimal_record_count ** 2
 
             sgl_param = 4 / optimal_record_count + 4 / (record_count_max - optimal_record_count)
 
             response_quality_score = sqr_param * record_count ** 2 + sgl_param * record_count - 1
         elif record_count <= record_count_max:
-            response_quality_score = (2 / (record_count_max - optimal_record_count) ** 2) * (record_count -
-                                                                                             record_count_max) ** 2 - 1
+            response_quality_score = (2 / (record_count_max - optimal_record_count) ** 2) *\
+                                     (record_count - record_count_max) ** 2 - 1
         else:
             raise ValueError('Record count exceeds maximum')
 
@@ -417,8 +453,16 @@ class NetworkInterface(NetworkInterfaceBase[
                            NetworkRelayMessageT,
                            DataIndexT,
                            UserMappingT
-                       ]
-                       ):
+                       ]):
+    """
+    Network Interface Class
+
+    This class defines the methods used by the network interfaces
+    to interact with the network, including sending and receiving
+    messages, checking connectivity, and finding the optimal relay
+    nodes for a message.
+    """
+
     SESSION_CLASS = Session[NetworkMessageT, NetworkMessageHeaderT]
 
     def __init__(self,
@@ -460,7 +504,7 @@ class NetworkInterface(NetworkInterfaceBase[
 
     @classmethod
     def from_interface(cls: Type[NetworkInterfaceT],
-                       interface: NetworkInterfaceT,
+                       interface: 'NetworkInterface',
                        ) -> NetworkInterfaceT:
         """
         Factory method to create a new interface from an existing one
@@ -624,6 +668,7 @@ class NetworkInterface(NetworkInterfaceBase[
                 relay_targets=[
                     self.RELAY_TARGET_CLASS(
                         recipient_ids=[node.node_id],
+                        route=[self.instance_id],
                         header=message.generate_headers(
                             access_token=access_token,
                         ),
@@ -650,17 +695,31 @@ class NetworkInterface(NetworkInterfaceBase[
                 if len(response_message.relay_targets) != 1:
                     raise ValueError('Relay message got unexpected response length')
 
-                return response_message.relay_targets[0].message, response_message.relay_targets[0].header
+                return (
+                    response_message.relay_targets[0].message,
+                    response_message.relay_targets[0].header
+                )
         else:
             raise MessageUndeliverable('No direct route to target node')
 
     def relay_message(self,
                       message: NetworkRelayMessageT,
-                      path: str = '/federation/federation/',
+                      path: str = '/api',
                       access_token: str | None = None,
                       should_raise: bool = False,
                       skipping_nodes: list[str] = None,
                       ) -> tuple[NetworkRelayMessageT | None, NetworkMessageHeaderT | None]:
+        """
+        Relay a message to the next hop
+
+        :param message: The message to relay
+        :param path: The path to relay the message to
+        :param access_token: The access token to use; if None,
+            the service account token will be used
+        :param should_raise: Whether to raise an exception if the request fails
+        :param skipping_nodes: IDs of nodes to skip
+        :return: The response message and header
+        """
         network = self.NETWORK_CLASS.load(self.network_id)
         nodes = network.nodes_approved
 
@@ -698,7 +757,10 @@ class NetworkInterface(NetworkInterfaceBase[
                 # Message routing succeeded
                 if not isinstance(response_message, NetworkRelayMessage):
                     # Relay message should only be responded with another relay message
-                    raise ValueError(f'Relay message got unexpected response type: {response_message.message_type}')
+                    raise ValueError(
+                        ('Relay message got unexpected response type:'
+                         f'{response_message.message_type}')
+                    )
 
                 return response_message, response_message_header
 
@@ -718,7 +780,8 @@ class NetworkInterface(NetworkInterfaceBase[
 
         :param message: The message to send
         :param path: The path to send the message to
-        :param access_token: The access token to use; if None, the service account token will be used
+        :param access_token: The access token to use; if None,
+            the service account token will be used
         :param should_raise: Whether to raise an exception if the request fails
         :param skip_unreachable: Whether to skip unreachable nodes
         :param change_id: Whether to change the message ID when sending to different node
@@ -765,6 +828,7 @@ class NetworkInterface(NetworkInterfaceBase[
                     relay_targets=[
                         self.RELAY_TARGET_CLASS(
                             recipient_ids=[node.node_id for node in unreachable_nodes],
+                            route=[self.instance_id],
                             header=message.generate_headers(access_token),
                             message=message,
                         ),
@@ -797,7 +861,8 @@ class NetworkInterface(NetworkInterfaceBase[
                 if response_header.delivered:
                     for relay_target in response.relay_targets:
                         if self.instance_id in relay_target.recipient_ids:
-                            responses[relay_target.message.node_id] = (relay_target.message, relay_target.header)
+                            responses[relay_target.message.node_id] = \
+                                (relay_target.message, relay_target.header)
 
         return responses
 
@@ -853,5 +918,7 @@ class NetworkInterface(NetworkInterfaceBase[
                 # A response is required immediately
                 return result
         except Exception as e:
+            LOGGER.exception('Error processing message: {}', e)
+
             if should_raise:
-                raise e
+                raise
