@@ -14,3 +14,5 @@ AUTH_TYPE_PATH = f'{MESSAGE_ATTRIBUTES}.authType'
 STATUS_PATH = f'{MESSAGE_ATTRIBUTES}.status'
 
 LOGGER = logging.getLogger('Decentralised Discovery Link')
+
+PUBLIC_REACHABLE = False

@@ -9,7 +9,8 @@ from deepdiff import DeepDiff
 
 from dedi_link.etc.consts import MESSAGE_DATA, MESSAGE_ATTRIBUTES
 from dedi_link.etc.enums import MessageType
-from dedi_link.etc.exceptions import NetworkRelayMessageEnvelopeTooDeep, NetworkRelayMessageNotAlive
+from dedi_link.etc.exceptions import NetworkRelayMessageEnvelopeTooDeep, NetworkRelayMessageNotAlive, \
+    NetworkMessageNotImplemented
 from ..base_model import BaseModel
 from ..network import NetworkT
 from ..node import NodeT
@@ -250,3 +251,13 @@ class NetworkRelayMessage(NetworkRelayMessageBase[
 
     These messages are used to relay messages between nodes in a network.
     """
+    @classmethod
+    def load_polling(cls: Type[NetworkRelayMessageT]) -> list[NetworkRelayMessageT]:
+        """
+        Load all polling messages from the storage
+
+        :return: A list of polling messages
+        """
+        raise NetworkMessageNotImplemented(
+            'load_polling method must be implemented in library implementation'
+        )

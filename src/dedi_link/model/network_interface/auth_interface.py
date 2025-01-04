@@ -6,15 +6,16 @@ authentication and authorisation process of the network.
 """
 
 import json
+from typing import TypeVar, Generic
 
 from dedi_link.etc.consts import LOGGER
 from dedi_link.etc.enums import AuthMessageStatus, AuthMessageType, MappingType
 from dedi_link.etc.exceptions import MessageAlreadyProcessed, NodeNotFound, NetworkNotFound, \
     NetworkMessageNotFound
 from ..network_message.network_message_header import NetworkMessageHeader, NetworkMessageHeaderT
-from ..network_message.network_auth_message import NetworkAuthMessage, AuthRequest, AuthInvite, \
-    AuthResponse, AuthJoin, AuthLeave, AuthStatus
-from ..network_message.network_relay_message import NetworkRelayMessageT, RelayTargetT
+from ..network_message.network_auth_message import NetworkAuthMessage, AuthRequest, AuthInvite, AuthResponse, \
+    AuthJoin, AuthLeave, AuthStatus
+from ..network_message.network_relay_message import NetworkRelayMessageT
 from ..network import NetworkT
 from ..node import Node, NodeT
 from ..data_index import DataIndexT
@@ -22,10 +23,20 @@ from ..user_mapping import UserMapping, UserMappingT
 from .network_interface import NetworkInterface
 
 
+AuthInterfaceT = TypeVar('AuthInterfaceT', bound='AuthInterface')
+
+
 class AuthInterface(NetworkInterface[
                         NetworkT,
                         NodeT,
-                        RelayTargetT,
+                        NetworkMessageHeaderT,
+                        NetworkRelayMessageT,
+                        DataIndexT,
+                        UserMappingT
+                    ],
+                    Generic[
+                        NetworkT,
+                        NodeT,
                         NetworkMessageHeaderT,
                         NetworkRelayMessageT,
                         DataIndexT,
@@ -163,7 +174,9 @@ class AuthInterface(NetworkInterface[
         """
         from .sync_interface import SyncInterface
 
-        sync_interface = SyncInterface.from_interface(self)
+        sync_interface = SyncInterface.from_interface(
+            interface=self,
+        )
 
         try:
             previous_message = AuthRequest.load(message.message_id)

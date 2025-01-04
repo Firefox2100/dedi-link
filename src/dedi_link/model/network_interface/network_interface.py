@@ -32,9 +32,10 @@ from ..network import Network, NetworkT
 from ..node import Node, NodeT
 from ..data_index import DataIndexT
 from ..user_mapping import UserMappingT
-from ..network_message import NetworkMessage, RelayTarget, RelayTargetT, NetworkRelayMessage, \
+from ..network_message import NetworkMessage, RelayTarget, NetworkRelayMessage, \
     NetworkMessageHeader, NetworkMessageT, NetworkRelayMessageT, NetworkMessageHeaderT
 from .session import Session
+
 
 T = TypeVar('T')
 NetworkInterfaceBaseT = TypeVar('NetworkInterfaceBaseT', bound='NetworkInterfaceBase')
@@ -45,7 +46,6 @@ class NetworkInterfaceBase(BaseModel,
                            Generic[
                                NetworkT,
                                NodeT,
-                               RelayTargetT,
                                NetworkMessageHeaderT,
                                DataIndexT,
                                UserMappingT
@@ -138,10 +138,9 @@ class NetworkInterfaceBase(BaseModel,
 
     def _check_connectivity_url(self,
                                 url: str | None = None,
-                                path: str = '/api'
                                 ) -> str | None:
         if url is None:
-            url = self.config.url + path
+            url = self.config.url
         else:
             # Ensure that this URL is different from the self-URL
             if url == self.config.url:
@@ -372,7 +371,7 @@ class NetworkInterfaceBase(BaseModel,
                 exchanged_token = self.oidc.exchange_token(access_token)
             except Exception as e:
                 # Token exchange failed, map the user
-                LOGGER.warning('Token exchange failed: {}', e)
+                LOGGER.warning('Token exchange failed: %s', e)
                 return None
 
             # Token exchange successful, validate the new token
@@ -391,7 +390,7 @@ class NetworkInterfaceBase(BaseModel,
         except MessageAccessTokenInvalid:
             raise
         except Exception as e:
-            LOGGER.warning('Token introspection failed: {}', e)
+            LOGGER.warning('Token introspection failed: %s', e)
             return None
 
     def calculate_new_score(self,
@@ -401,7 +400,7 @@ class NetworkInterfaceBase(BaseModel,
                             ) -> float:
         """
         Calculate the new score of a node
-        
+
         Calculation is based on the response time and quality.
         The response time is calculated based on the time elapsed
         from sending the request to receiving the response, with
@@ -440,7 +439,6 @@ class NetworkInterfaceBase(BaseModel,
 class NetworkInterface(NetworkInterfaceBase[
                            NetworkT,
                            NodeT,
-                           RelayTargetT,
                            NetworkMessageHeaderT,
                            DataIndexT,
                            UserMappingT
@@ -448,7 +446,6 @@ class NetworkInterface(NetworkInterfaceBase[
                        Generic[
                            NetworkT,
                            NodeT,
-                           RelayTargetT,
                            NetworkMessageHeaderT,
                            NetworkRelayMessageT,
                            DataIndexT,
@@ -534,7 +531,6 @@ class NetworkInterface(NetworkInterfaceBase[
         """
         url = self._check_connectivity_url(
             url=url,
-            path=path,
         )
 
         if url is None:
@@ -786,7 +782,7 @@ class NetworkInterface(NetworkInterfaceBase[
         :param skip_unreachable: Whether to skip unreachable nodes
         :param change_id: Whether to change the message ID when sending to different node
         :param skipping_nodes: IDs of nodes to skip
-        :return: A list of responses as NetworkMessage and NetworkMessageHeader tuples
+        :return: A dictionary of responses, with the node ID as the key
         """
         network = self.NETWORK_CLASS.load(self.network_id)
         nodes = network.nodes_approved
@@ -845,7 +841,7 @@ class NetworkInterface(NetworkInterfaceBase[
                 raise ValueError('Invalid message type')
 
             polling_message = deepcopy(relay_message)
-            polling_message.message_id = f'p-{polling_message.message_id}'
+            polling_message.message_id = f'poll:{polling_message.message_id}'
 
             polling_message.store()
 

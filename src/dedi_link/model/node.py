@@ -183,6 +183,19 @@ class Node(NodeBase[DataIndexT, UserMappingT],
         """
         raise NodeNotImplemented('get_user_key method not implemented')
 
+    def store_user_key(self, user_id: str, user_key: str):
+        """
+        Store the user key for the given user ID
+
+        This key is usually stored in KMS or similar service,
+        and should not be held in memory for long. This is why
+        it's not stored as a property of the Node object.
+
+        :param user_id: The user ID to store the key for
+        :param user_key: The user key to store
+        """
+        raise NodeNotImplemented('store_user_key method not implemented')
+
     def update_score(self,
                      score: float,
                      ):
