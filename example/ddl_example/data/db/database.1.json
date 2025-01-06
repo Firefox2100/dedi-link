@@ -1,4 +1,14 @@
 {
-  "networks": [],
-  "nodes": []
+  "networks": [
+    {
+      "networkId": "62d13013-d80c-4539-adc1-61862bdd65cb",
+      "networkName": "Test Network",
+      "description": "Test Description",
+      "nodeIds": ["895f4aa3-5336-4b75-8f74-5600dbc6f893"],
+      "visible": true,
+      "instanceId": "f3bb816f-608b-4dd7-ac74-8e0d0a0979ad"
+    }
+  ],
+  "nodes": [],
+  "userKeys": []
 }

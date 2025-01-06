@@ -1,0 +1,34 @@
+### Get all networks
+GET http://localhost:5000/network/
+
+
+### Create a new network
+POST http://localhost:5000/network/
+Content-Type: application/json
+
+{
+  "networkName": "Test Network 1",
+  "description": "This is a test network",
+  "visible": true
+}
+
+
+### Get a network by ID
+GET http://localhost:5000/network/62d13013-d80c-4539-adc1-61862bdd65cb
+
+
+### Update a network
+PATCH http://localhost:5000/network/62d13013-d80c-4539-adc1-61862bdd65cb
+Content-Type: application/json
+
+{
+  "description": "This is a test network updated"
+}
+
+
+### Delete a network
+DELETE http://localhost:5000/network/62d13013-d80c-4539-adc1-61862bdd65cb
+
+
+### Get nodes of a network
+GET http://localhost:5000/network/62d13013-d80c-4539-adc1-61862bdd65cb/nodes

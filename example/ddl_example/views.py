@@ -23,6 +23,8 @@ def create_network():
 
     network.store()
 
+    return network.to_dict()
+
 
 @network_blueprint.route('/<network_id>', methods=['GET'])
 def get_network(network_id):
