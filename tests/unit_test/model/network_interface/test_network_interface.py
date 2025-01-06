@@ -156,7 +156,7 @@ class TestNetworkInterface:
         assert mock_network_interface._check_connectivity_url(local_url) is None
 
         empty_url = mock_network_interface._check_connectivity_url()
-        assert empty_url == f'{self_url}/api'
+        assert empty_url == f'{self_url}'
 
     def test_find_path_to_node(self,
                                mock_network_interface,

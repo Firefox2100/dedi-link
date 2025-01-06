@@ -914,7 +914,7 @@ class NetworkInterface(NetworkInterfaceBase[
                 # A response is required immediately
                 return result
         except Exception as e:
-            LOGGER.exception('Error processing message: {}', e)
+            LOGGER.exception('Error processing message: %s', e)
 
             if should_raise:
                 raise
