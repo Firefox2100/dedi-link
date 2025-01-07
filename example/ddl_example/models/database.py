@@ -12,8 +12,13 @@ class InMemoryDatabase:
 
         self.commit_lock = Lock()
 
-    def load_from_file(self):
-        file_name = os.getenv('DATABASE_FILE', 'database.1.json')
+    def load_from_file(self,
+                       database_file: str = None,
+                       ):
+        if database_file is not None:
+            file_name = database_file
+        else:
+            file_name = os.getenv('DATABASE_FILE', 'database.1.json')
 
         with pkg_resources.open_text(
             package='ddl_example.data.db',

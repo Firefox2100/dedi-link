@@ -80,6 +80,9 @@ class Network(NetworkLib[DataIndex, UserMapping, Node], BaseModel):
             for key, value in payload.items():
                 network_dict[key] = value
 
+        network_obj = self.from_dict(network_dict)
+        self.__dict__.update(network_obj.__dict__)
+
     def delete(self):
         with self.db.commit_lock:
             network_dict = next(n for n in self.db.networks if n['networkId'] == self.network_id)
