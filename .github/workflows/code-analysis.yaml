@@ -1,0 +1,70 @@
+name: Code Analysis with SonarQube
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+      types: [opened, synchronize, reopened]
+
+jobs:
+  analysis:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install .[test]
+
+    - name: Start Mock Server
+      run: |
+        export PYTHONPATH=./example:$PYTHONPATH
+        python ./example/mock_oidc_idp/app.py &
+        sleep 5
+      env:
+        PYTHONUNBUFFERED: "1"
+
+    - name: Run tests with coverage
+      continue-on-error: true
+      run: |
+        pytest --junitxml=test-results.xml --cov=dedi_link --cov-report=xml --cov-report=html
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results
+        path: test-results.xml
+
+    - name: Upload coverage report
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report
+        path: coverage.xml
+
+    - name: Extract Project Version
+      run: echo "VERSION=$(python -c 'import re; v=open("src/dedi_link/__init__.py").read(); print(re.search(r'__version__\s*=\s*\"(.+?)\"', v).group(1))')" >> $GITHUB_ENV
+
+    - name: SonarQube Scan
+      uses: SonarSource/sonarqube-scan-action@v5
+      env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      with:
+        args: >
+          -Dsonar.projectVersion=${{ env.VERSION }}
+
+    - name: Publish test results
+      uses: mikepenz/action-junit-report@v5
+      if: always()
+      with:
+        report_paths: "test-results.xml"
