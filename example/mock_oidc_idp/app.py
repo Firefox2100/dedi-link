@@ -1,6 +1,6 @@
 from flask import Flask
 
-from .views import bp
+from mock_oidc_idp.views import bp
 
 
 def create_app():

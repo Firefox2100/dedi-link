@@ -2,7 +2,7 @@ from secrets import token_urlsafe
 from datetime import datetime, timedelta
 from flask import Blueprint, jsonify, redirect, request
 
-from .database import InMemoryDatabase
+from mock_oidc_idp.database import InMemoryDatabase
 
 
 bp = Blueprint('mock_oidc_idp', __name__)
