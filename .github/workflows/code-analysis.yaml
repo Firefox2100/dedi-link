@@ -43,6 +43,7 @@ jobs:
     - name: Run tests with coverage
       continue-on-error: true
       run: |
+        export PYTHONPATH=./src:$PYTHONPATH
         pytest --junitxml=test-results.xml --cov=dedi_link --cov-report=xml --cov-report=html
 
     - name: Upload test results
@@ -57,8 +58,10 @@ jobs:
         name: coverage-report
         path: coverage.xml
 
-    - name: Extract Project Version
-      run: echo "VERSION=$(python -c 'import re; v=open("src/dedi_link/__init__.py").read(); print(re.search(r'__version__\s*=\s*\"(.+?)\"', v).group(1))')" >> $GITHUB_ENV
+    - name: Extract Version
+      run: |
+        VERSION=$(awk -F'"' '/^__version__/ {print $2}' ./src/dedi_link/__init__.py)
+        echo "VERSION=$VERSION" >> $GITHUB_ENV
 
     - name: SonarQube Scan
       uses: SonarSource/sonarqube-scan-action@v5
