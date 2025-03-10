@@ -42,6 +42,8 @@ class OidcDriver:
         token_response = self.oauth.fetch_token(
             url=self._discovery_document['token_endpoint'],
             grant_type='client_credentials',
+            client_id=self.oauth.client_id,
+            client_secret=self.oauth.client_secret,
         )
 
         return token_response['access_token']

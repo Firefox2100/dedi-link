@@ -26,6 +26,11 @@ def create_network():
     return network.to_dict()
 
 
+@network_blueprint.route('/join', methods=['POST'])
+def join_network():
+    ...
+
+
 @network_blueprint.route('/<network_id>', methods=['GET'])
 def get_network(network_id):
     network = Network.load(network_id)

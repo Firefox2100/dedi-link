@@ -79,3 +79,18 @@ class User(UserBase, SyncDataInterface):
         :return: The private key of the user.
         """
         raise UserNotImplemented('private_key property not implemented')
+
+    @classmethod
+    def get_user_from_identity(cls,
+                               idp: str,
+                               subject_id: str,
+                               email: str,
+                               ):
+        """
+        Get the user from the identity provider.
+
+        :param idp: The identity provider (the "iss" claim in the token).
+        :param subject_id: The subject ID (the "sub" claim in the token).
+        :param email: The email of the user (the "email" claim in the token).
+        """
+        raise UserNotImplemented('get_user_from_identity method not implemented')

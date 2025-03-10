@@ -97,6 +97,20 @@ class BaseModel:
     config = DdlConfig()
     oidc: OidcDriver = None     # Requires initialisation. If your config is lazy loaded, you can do it here
 
+    @classmethod
+    def init_config(cls,
+                    config: DdlConfig,
+                    oidc: OidcDriver,
+                    ):
+        """
+        Initialise the configuration for the model
+
+        :param config: The configuration object
+        :param oidc: The OIDC driver instance
+        """
+        cls.config = config
+        cls.oidc = oidc
+
     @property
     def access_token(self) -> str:
         """

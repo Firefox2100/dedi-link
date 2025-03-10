@@ -45,20 +45,6 @@ class Network(NetworkBase[DataIndexT, UserMappingT, NodeT],
 
         return data_index
 
-    async def to_dict_with_index(self) -> dict:
-        """
-        Convert the network object to a dictionary, with index included.
-
-        :return: Dictionary
-        """
-        data_index = await self.network_data_index
-
-        payload = self.to_dict()
-
-        payload['dataIndex'] = data_index.to_dict()
-
-        return payload
-
     @property
     async def public_key(self) -> str:
         """
@@ -77,6 +63,20 @@ class Network(NetworkBase[DataIndexT, UserMappingT, NodeT],
         """
         raise NetworkNotImplemented('private_key property not implemented')
 
+    async def to_dict_with_index(self) -> dict:
+        """
+        Convert the network object to a dictionary, with index included.
+
+        :return: Dictionary
+        """
+        data_index = await self.network_data_index
+
+        payload = self.to_dict()
+
+        payload['dataIndex'] = data_index.to_dict()
+
+        return payload
+
     async def get_self_node(self) -> NodeT:
         """
         Get the node object of the instance itself.
@@ -90,6 +90,34 @@ class Network(NetworkBase[DataIndexT, UserMappingT, NodeT],
             idp=self.config.idp,
             public_key=await self.public_key,
         )
+
+    async def add_node(self, node: Node):
+        """
+        Add a node to the network.
+
+        :param node: The new node to add
+        """
+        await node.store()
+
+        self.node_ids.append(node.node_id)
+
+        await self.update({
+            'nodeIds': self.node_ids,
+        })
+
+    async def remove_node(self, node: Node):
+        """
+        Remove a node from the network.
+
+        :param node: The node to remove
+        """
+        self.node_ids.remove(node.node_id)
+
+        await self.update({
+            'nodeIds': self.node_ids,
+        })
+
+        await node.delete()
 
     async def generate_keys(self):
         """

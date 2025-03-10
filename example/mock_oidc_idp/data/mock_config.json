@@ -1,4 +1,8 @@
 {
-  "clients": {},
+  "clients": {
+    "node1": {
+      "secret": "node_secret_1"
+    }
+  },
   "users": {}
 }

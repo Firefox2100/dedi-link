@@ -115,20 +115,6 @@ class Network(NetworkBase[DataIndexT, UserMappingT, NodeT],
     A network is a logical abstraction of a group of nodes that accepts (partially)
     others credentials and allows access to their data.
     """
-    def to_dict_with_index(self) -> dict:
-        """
-        Convert the network object to a dictionary, with index included.
-
-        :return: Dictionary
-        """
-        data_index = self.network_data_index
-
-        payload = self.to_dict()
-
-        payload['dataIndex'] = data_index.to_dict()
-
-        return payload
-
     @property
     def nodes(self) -> list[NodeT]:
         """
@@ -203,6 +189,20 @@ class Network(NetworkBase[DataIndexT, UserMappingT, NodeT],
         :return: Private key in PEM string format
         """
         raise NetworkNotImplemented('private_key property not implemented')
+
+    def to_dict_with_index(self) -> dict:
+        """
+        Convert the network object to a dictionary, with index included.
+
+        :return: Dictionary
+        """
+        data_index = self.network_data_index
+
+        payload = self.to_dict()
+
+        payload['dataIndex'] = data_index.to_dict()
+
+        return payload
 
     def get_self_node(self) -> NodeT:
         """

@@ -7,6 +7,7 @@ from .database import InMemoryDatabase
 
 bp = Blueprint('mock_oidc_idp', __name__)
 db = InMemoryDatabase()
+db.load_from_file()
 
 
 @bp.route('/', methods=['GET'])

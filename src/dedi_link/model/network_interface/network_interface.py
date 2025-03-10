@@ -876,7 +876,7 @@ class NetworkInterface(NetworkInterfaceBase[
         from .auth_interface import AuthInterface
         from .sync_interface import SyncInterface
         from .relay_interface import RelayInterface
-        from .data_interface import DataInterface
+        # from .data_interface import DataInterface
 
         try:
             if message.message_type == MessageType.AUTH_MESSAGE:
@@ -900,13 +900,13 @@ class NetworkInterface(NetworkInterfaceBase[
                     headers=headers,
                     should_raise=should_raise,
                 )
-            elif message.message_type == MessageType.DATA_MESSAGE:
-                data_interface = DataInterface.from_interface(self)
-                result = data_interface.receive_message(
-                    message=message,
-                    headers=headers,
-                    should_raise=should_raise,
-                )
+            # elif message.message_type == MessageType.DATA_MESSAGE:
+            #     data_interface = DataInterface.from_interface(self)
+            #     result = data_interface.receive_message(
+            #         message=message,
+            #         headers=headers,
+            #         should_raise=should_raise,
+            #     )
             else:
                 raise ValueError(f'Unknown message type: {message.message_type}')
 
