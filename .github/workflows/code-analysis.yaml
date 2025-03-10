@@ -1,5 +1,9 @@
 name: Code Analysis with SonarQube
 
+permissions:
+  checks: write
+  pull-requests: write
+
 on:
   push:
     branches:
@@ -29,6 +33,7 @@ jobs:
 
     - name: Start Mock Server
       run: |
+        pip install -r example/requirements.txt
         export PYTHONPATH=./example:$PYTHONPATH
         python ./example/mock_oidc_idp/app.py &
         sleep 5
