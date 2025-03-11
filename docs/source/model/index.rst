@@ -12,4 +12,5 @@ Considering different use cases, this library provides both synchronous and asyn
 .. toctree::
     :maxdepth: 1
 
+    data_model/user
     data_model/node

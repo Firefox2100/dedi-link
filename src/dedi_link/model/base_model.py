@@ -3,7 +3,7 @@ The base models of all data models used in the library
 """
 
 from enum import Enum
-from typing import Type, TypeVar, Callable
+from typing import Type, TypeVar, Callable, Optional
 
 from dedi_link.etc.exceptions import BaseModelNotImplemented
 from .config import DdlConfig
@@ -95,7 +95,7 @@ class BaseModel:
     This class defines a uniform interface for all models to implement
     """
     config = DdlConfig()
-    oidc: OidcRegistry = None     # Requires initialisation. If your config is lazy loaded, you can do it here
+    oidc: Optional[OidcRegistry] = None     # Requires initialisation. If your config is lazy loaded, you can do it here
 
     @classmethod
     def init_config(cls,

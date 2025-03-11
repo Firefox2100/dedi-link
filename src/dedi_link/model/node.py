@@ -147,10 +147,9 @@ class NodeBase(BaseModel,
         """
         if self.score is None:
             return new_score
-        else:
-            weight = (self.config.ema_factor *
-                      (abs(new_score) / (abs(new_score) + abs(self.score))))
-            return weight * new_score + (1 - weight) * self.score
+
+        weight = (self.config.ema_factor * (abs(new_score) / (abs(new_score) + abs(self.score))))
+        return weight * new_score + (1 - weight) * self.score
 
 
 class Node(NodeBase[DataIndexT, UserMappingT],
