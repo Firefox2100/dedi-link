@@ -289,88 +289,65 @@ class TestNetworkInterface:
 
     def test_validate_access_token(self,
                                    mock_network_interface,
-                                   mock_oidc_driver,
+                                   mock_oidc_registry,
                                    ):
         with patch('dedi_link.model.base_model.BaseModel.oidc',
                    new_callable=PropertyMock) as mock_oidc:
-            mock_oidc.return_value = mock_oidc_driver
+            mock_oidc.return_value = mock_oidc_registry
 
             user_id = mock_network_interface._validate_access_token(
                 node_client_id='test_client_id',
-                node_idp='https://mock-oidc.local',
+                request_idp='https://mock-oidc.local',
                 access_token='test_access_token',
             )
 
             assert user_id == '19a80cb0-7861-42c9-9212-c2e0cbe8dcfb'
-            mock_oidc_driver.introspect_token.assert_called_once_with(
-                'test_access_token',
-            )
-
-    def test_validate_access_token_with_exchange(self,
-                                                 mock_network_interface,
-                                                 mock_oidc_driver,
-                                                 ):
-        with patch('dedi_link.model.base_model.BaseModel.oidc',
-                   new_callable=PropertyMock) as mock_oidc:
-            mock_oidc.return_value = mock_oidc_driver
-
-            user_id = mock_network_interface._validate_access_token(
-                node_client_id='test_client_id',
-                node_idp='https://another.mock-oidc.local',
-                access_token='test_access_token',
-            )
-
-            assert user_id == '19a80cb0-7861-42c9-9212-c2e0cbe8dcfb'
-            mock_oidc_driver.introspect_token.assert_called_once_with(
-                'new_access_token',
+            mock_oidc_registry.default_driver.introspect_token.assert_called_once_with(
+                'test_access_token'
             )
 
     def test_validate_access_token_exception(self,
                                              mock_network_interface,
-                                             mock_oidc_driver,
+                                             mock_oidc_registry,
                                              ):
         with patch('dedi_link.model.base_model.BaseModel.oidc',
                      new_callable=PropertyMock) as mock_oidc:
-            mock_oidc.return_value = mock_oidc_driver
+            mock_oidc.return_value = mock_oidc_registry
 
             with pytest.raises(MessageAccessTokenInvalid):
                 # client ID mismatch
-                user_id = mock_network_interface._validate_access_token(
+                _ = mock_network_interface._validate_access_token(
                     node_client_id='another_client_id',
-                    node_idp='https://another.mock-oidc.local',
+                    request_idp='https://mock-oidc.local',
                     access_token='test_access_token',
                 )
 
             with pytest.raises(MessageAccessTokenInvalid):
-                mock_oidc_driver.introspect_token.return_value['active'] = False
+                # IdP unknown
+                _ = mock_network_interface._validate_access_token(
+                    node_client_id='client_id',
+                    request_idp='https://another.mock-oidc.local',
+                    access_token='test_access_token',
+                )
+
+            with pytest.raises(MessageAccessTokenInvalid):
+                mock_oidc_registry.default_driver.introspect_token.return_value['active'] = False
 
                 # Token not active
-                user_id = mock_network_interface._validate_access_token(
+                _ = mock_network_interface._validate_access_token(
                     node_client_id='client_id',
-                    node_idp='https://another.mock-oidc.local',
+                    request_idp='https://mock-oidc.local',
                     access_token='test_access_token',
                 )
 
             # Error introspecting token
-            mock_oidc_driver.introspect_token.side_effect = Exception
+            mock_oidc_registry.default_driver.introspect_token.side_effect = Exception
 
             user_id = mock_network_interface._validate_access_token(
                     node_client_id='client_id',
-                    node_idp='https://another.mock-oidc.local',
+                    request_idp='https://mock-oidc.local',
                     access_token='test_access_token',
                 )
-            assert user_id is None
-
-            # Error exchanging token
-            mock_oidc_driver.introspect_token.side_effect = None
-            mock_oidc_driver.introspect_token.return_value['active'] = True
-            mock_oidc_driver.exchange_token.side_effect = Exception
-
-            user_id = mock_network_interface._validate_access_token(
-                node_client_id='client_id',
-                node_idp='https://another.mock-oidc.local',
-                access_token='test_access_token',
-            )
             assert user_id is None
 
     def test_calculate_new_score(self,

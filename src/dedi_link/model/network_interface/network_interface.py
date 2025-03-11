@@ -344,7 +344,7 @@ class NetworkInterfaceBase(BaseModel,
 
     def _validate_access_token(self,
                                node_client_id: str,
-                               node_idp: str,
+                               request_idp: str,
                                access_token: str,
                                ) -> str | None:
         """
@@ -360,25 +360,16 @@ class NetworkInterfaceBase(BaseModel,
         consider using introspection instead.
 
         :param node_client_id: The client ID sender node uses
-        :param node_idp: The IdP URL of the sender node
+        :param request_idp: The IdP issuer of the access token
         :param access_token: The access token to validate
         :return: The user ID if the token is valid, None otherwise
         :raises MessageAccessTokenInvalid: If the token is invalid
         """
-        if node_idp != self.config.idp:
-            # Different IdP, try token exchange first
-            try:
-                exchanged_token = self.oidc.exchange_token(access_token)
-            except Exception as e:
-                # Token exchange failed, map the user
-                LOGGER.warning('Token exchange failed: %s', e)
-                return None
-
-            # Token exchange successful, validate the new token
-            access_token = exchanged_token
-
         try:
-            introspect_result = self.oidc.introspect_token(access_token)
+            introspect_result = self.oidc.introspect_token(
+                token=access_token,
+                driver_id=request_idp,
+            )
 
             if not introspect_result['active']:
                 raise MessageAccessTokenInvalid('Token is not active')
@@ -387,6 +378,8 @@ class NetworkInterfaceBase(BaseModel,
                 raise MessageAccessTokenInvalid('Client ID mismatch')
 
             return introspect_result['sub']
+        except ValueError as e:
+            raise MessageAccessTokenInvalid('Token issuer is not registered') from e
         except MessageAccessTokenInvalid:
             raise
         except Exception as e:
@@ -587,7 +580,7 @@ class NetworkInterface(NetworkInterfaceBase[
         if validate_access_token:
             user_id = self._validate_access_token(
                 node_client_id=node.client_id,
-                node_idp=node.idp,
+                request_idp=headers.idp_iss,
                 access_token=headers.access_token,
             )
 

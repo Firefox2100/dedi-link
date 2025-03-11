@@ -87,7 +87,6 @@ class Network(NetworkBase[DataIndexT, UserMappingT, NodeT],
             url=self.config.url,
             description=self.config.description,
             client_id=self.config.client_id,
-            idp=self.config.idp,
             public_key=await self.public_key,
         )
 

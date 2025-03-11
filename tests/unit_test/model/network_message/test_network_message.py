@@ -99,7 +99,10 @@ class TestNetworkMessage:
                     hashes.SHA256(),
                 )
 
-    def test_generate_headers(self, mock_network_message_1):
+    def test_generate_headers(self,
+                              mock_network_message_1,
+                              mock_oidc_registry,
+                              ):
         with patch(
                 'dedi_link.model.network_message.network_message.NetworkMessage.signature',
                 new_callable=PropertyMock,
@@ -108,14 +111,18 @@ class TestNetworkMessage:
                     'dedi_link.model.network_message.network_message.NetworkMessage.access_token',
                     new_callable=PropertyMock,
             ) as mock_access_token:
-                mock_signature.return_value = 'signature'
-                mock_access_token.return_value = 'access_token'
+                with patch('dedi_link.model.base_model.BaseModel.oidc',
+                           new_callable=PropertyMock) as mock_oidc:
+                    mock_signature.return_value = 'signature'
+                    mock_access_token.return_value = 'access_token'
+                    mock_oidc.return_value = mock_oidc_registry
 
-                headers = mock_network_message_1.generate_headers()
+                    headers = mock_network_message_1.generate_headers()
 
-                assert headers == NetworkMessageHeader(
-                    node_id='f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
-                    network_id='62d13013-d80c-4539-adc1-61862bdd65cb',
-                    server_signature='signature',
-                    access_token='access_token',
-                )
+                    assert headers == NetworkMessageHeader(
+                        node_id='f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
+                        network_id='62d13013-d80c-4539-adc1-61862bdd65cb',
+                        server_signature='signature',
+                        idp_iss='https://mock-oidc.local',
+                        access_token='access_token',
+                    )

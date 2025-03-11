@@ -196,12 +196,15 @@ class NetworkMessage(NetworkMessageBase[
         return self._sign_payload(private_pem, payload)
 
     def generate_headers(self,
+                         idp_iss: str | None = None,
                          access_token: str | None = None,
                          ) -> NetworkMessageHeaderT:
         """
         Generate the headers for the message
 
-        :param access_token:
+        :param idp_iss: The IDP issuer to use. Leave empty to use the default OIDC IDP
+        :param access_token: The access token to use. Leave empty to generate a service
+        account token.
         :return: A NetworkMessageHeader instance
         """
         server_signature = self.signature
@@ -209,9 +212,13 @@ class NetworkMessage(NetworkMessageBase[
         if access_token is None:
             access_token = self.access_token
 
+        if idp_iss is None:
+            idp_iss = self.oidc.default_driver.driver_id
+
         return self.NETWORK_MESSAGE_HEADER_CLASS(
             node_id=self.node_id,
             network_id=self.network_id,
             server_signature=server_signature,
+            idp_iss=idp_iss,
             access_token=access_token,
         )

@@ -18,7 +18,6 @@ class DdlConfig:
     description: str = 'A decentralised discovery service'
     url: str = 'http://localhost:8000'
     client_id: str = 'dedi-link'
-    idp: str = 'http://localhost:8080/realms/dedi-link'
     allow_non_client_authenticated: bool = False
     auto_user_registration: bool = False
     anonymous_access: bool = False

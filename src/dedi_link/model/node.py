@@ -30,7 +30,6 @@ class NodeBase(BaseModel,
                  url: str,
                  description: str,
                  client_id: str,
-                 idp: str,
                  *,
                  authentication_enabled: bool | None = None,
                  user_mapping: UserMappingT | None = None,
@@ -50,7 +49,6 @@ class NodeBase(BaseModel,
         :param url: The URL of the node
         :param description: A description of the node
         :param client_id: The client ID of the node
-        :param idp: The IdP issuer URL this node uses. This must match the `iss` claim in the token
         :param authentication_enabled: Whether the requests coming from this node
         requires authentication. If disabled, all users will be mapped to the
         same static user with the same permissions.
@@ -68,7 +66,6 @@ class NodeBase(BaseModel,
         self.authentication_enabled = authentication_enabled or False
         self.user_mapping = user_mapping or self.USER_MAPPING_CLASS()
         self.client_id = client_id
-        self.idp = idp
         self.data_index = data_index or self.DATA_INDEX_CLASS()
         self.score = score
         self.approved = approved
@@ -85,7 +82,6 @@ class NodeBase(BaseModel,
             self.description == other.description,
             self.authentication_enabled == other.authentication_enabled,
             self.client_id == other.client_id,
-            self.idp == other.idp,
             self.approved == other.approved,
         ])
 
@@ -98,7 +94,6 @@ class NodeBase(BaseModel,
             self.description,
             self.authentication_enabled,
             self.client_id,
-            self.idp,
             self.approved,
         ))
 
@@ -109,7 +104,6 @@ class NodeBase(BaseModel,
             node_name=payload['nodeName'],
             url=payload['nodeUrl'],
             client_id=payload['clientId'],
-            idp=payload['idp'],
             description=payload.get('nodeDescription', ''),
             authentication_enabled=payload.get('authenticationEnabled', False),
             user_mapping=cls.USER_MAPPING_CLASS.from_dict(payload.get('userMapping', {})),
@@ -125,7 +119,6 @@ class NodeBase(BaseModel,
             'nodeName': self.node_name,
             'nodeUrl': self.url,
             'clientId': self.client_id,
-            'idp': self.idp,
             'nodeDescription': self.description,
             'score': self.score,
             'approved': self.approved,

@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import MagicMock
 
 from dedi_link.etc.enums import AuthMessageStatus, SyncTarget
-from dedi_link.model import Network, Node, UserMapping, DataIndex, DdlConfig, NetworkMessage
+from dedi_link.model import Network, Node, UserMapping, DataIndex, DdlConfig, NetworkMessage, OidcRegistry
 from dedi_link.model.network_message.network_message_header import NetworkMessageHeader
 from dedi_link.model.network_message.network_auth_message import AuthRequest, AuthInvite, AuthResponse, AuthJoin, AuthLeave, \
     AuthStatus
@@ -55,7 +55,6 @@ def mock_self_node_1():
         url='https://test-node.example.com',
         description='This is a test instance',
         client_id='dedi-link',
-        idp='https://mock-oidc.local',
         public_key='test-public-key',
     )
 
@@ -67,7 +66,6 @@ def mock_self_node_dict_1():
         'nodeName': 'Test instance',
         'nodeUrl': 'https://test-node.example.com',
         'clientId': 'dedi-link',
-        'idp': 'https://mock-oidc.local',
         'nodeDescription': 'This is a test instance',
         'publicKey': 'test-public-key',
         'score': 0.0,
@@ -84,7 +82,6 @@ def mock_node_1():
         url='https://node1.example.com',
         description='This is a test node',
         client_id='a04ffd6a-b93c-46d5-ac0e-54d59b32abb9',
-        idp='https://mock-oidc.local',
         authentication_enabled=True,
         user_mapping=UserMapping(),
         public_key='test-public-key',
@@ -103,7 +100,6 @@ def mock_node_dict_1():
         'nodeUrl': 'https://node1.example.com',
         'nodeDescription': 'This is a test node',
         'clientId': 'a04ffd6a-b93c-46d5-ac0e-54d59b32abb9',
-        'idp': 'https://mock-oidc.local',
         'authenticationEnabled': True,
         'approved': False,
         'publicKey': 'test-public-key',
@@ -122,7 +118,6 @@ def mock_node_2():
         url='https://node2.example.com',
         description='This is a test node 2',
         client_id='f2827c56-758e-491d-829c-b86c7299b43f',
-        idp='https://mock-oidc.local',
         authentication_enabled=False,
         user_mapping=UserMapping(),
         public_key='test-public-key-2',
@@ -139,7 +134,6 @@ def mock_node_dict_2():
         'nodeUrl': 'https://node2.example.com',
         'nodeDescription': 'This is a test node 2',
         'clientId': 'f2827c56-758e-491d-829c-b86c7299b43f',
-        'idp': 'https://mock-oidc.local',
         'authenticationEnabled': False,
         'publicKey': 'test-public-key-2',
         'score': 0,
@@ -153,7 +147,6 @@ def mock_ddl_config_1():
         description='This is a test instance',
         url='https://test-node.example.com',
         client_id='dedi-link',
-        idp='https://mock-oidc.local',
         allow_non_client_authenticated=True,
         auto_user_registration=True,
         anonymous_access=True,
@@ -171,6 +164,7 @@ def mock_network_message_header_1():
         network_id=NETWORK_IDS[0],
         server_signature='server_signature',
         access_token='access_token',
+        idp_iss='https://mock-oidc.local',
         user_id='19a80cb0-7861-42c9-9212-c2e0cbe8dcfb',
         delivered=True,
     )
@@ -183,6 +177,7 @@ def mock_network_message_header_dict_1():
         'X-Node-ID': NODE_IDS[0],
         'X-Network-ID': NETWORK_IDS[0],
         'X-Server-Signature': 'server_signature',
+        'X-Issuer': 'https://mock-oidc.local',
         'Authorization': 'Bearer access_token',
         'X-User-ID': '19a80cb0-7861-42c9-9212-c2e0cbe8dcfb',
         'X-Delivered': 'true',
@@ -616,7 +611,7 @@ fhSasRii99jo/Tnxg0kBDZCs/InKsba7SxyO1ZYqqH9OAazzlKa79lv8p5o=
 
 
 @pytest.fixture
-def mock_oidc_driver():
+def mock_oidc_registry():
     mock_driver = MagicMock()
 
     mock_driver.introspect_token.return_value = {
@@ -624,7 +619,10 @@ def mock_oidc_driver():
         'client_id': 'test_client_id',
         'sub': '19a80cb0-7861-42c9-9212-c2e0cbe8dcfb',
     }
-
     mock_driver.exchange_token.return_value = 'new_access_token'
+    mock_driver.driver_id = 'https://mock-oidc.local'
 
-    return mock_driver
+    mock_registry = OidcRegistry()
+    mock_registry.register_driver(mock_driver)
+
+    return mock_registry

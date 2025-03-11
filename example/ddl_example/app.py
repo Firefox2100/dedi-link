@@ -1,5 +1,5 @@
 from flask import Flask
-from dedi_link.model import DdlConfig, OidcDriver
+from dedi_link.model import DdlConfig, OidcDriver, OidcRegistry
 
 from ddl_example.models import BaseModel
 from ddl_example.views import network_blueprint, user_blueprint, federation_blueprint
@@ -7,7 +7,7 @@ from ddl_example.views import network_blueprint, user_blueprint, federation_blue
 
 def create_app(database_file: str = None,
                ddl_config: DdlConfig = None,
-               oidc: OidcDriver = None
+               oidc_registry: OidcRegistry = None
                ):
     BaseModel.db.load_from_file(
         database_file=database_file,
@@ -17,16 +17,20 @@ def create_app(database_file: str = None,
 
     if ddl_config is None:
         ddl_config = DdlConfig()
-    if oidc is None:
-        oidc = OidcDriver(
+    if oidc_registry is None:
+        oidc_driver = OidcDriver(
+            driver_id='http://localhost:5556',
             client_id='node1',
             client_secret='secret1',
             discovery_url='http://localhost:5556/.well-known/openid-configuration',
         )
 
+        oidc_registry = OidcRegistry()
+        oidc_registry.register_driver(oidc_driver)
+
     BaseModel.init_config(
         config=ddl_config,
-        oidc=oidc,
+        oidc=oidc_registry,
     )
 
     app.register_blueprint(network_blueprint, url_prefix='/network')

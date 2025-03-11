@@ -13,7 +13,6 @@ class TestNode:
             url='https://node1.example.com',
             description='This is a test node',
             client_id='a04ffd6a-b93c-46d5-ac0e-54d59b32abb9',
-            idp='https://mock-oidc.local',
             authentication_enabled=True,
             user_mapping=UserMapping(),
             public_key='test-public-key',
@@ -26,7 +25,6 @@ class TestNode:
         assert node.url == 'https://node1.example.com'
         assert node.description == 'This is a test node'
         assert node.client_id == 'a04ffd6a-b93c-46d5-ac0e-54d59b32abb9'
-        assert node.idp == 'https://mock-oidc.local'
         assert node.authentication_enabled == True
         assert node.user_mapping == UserMapping()
         assert node.public_key == 'test-public-key'
@@ -43,7 +41,6 @@ class TestNode:
             url='https://node1.example.com',
             description='This is a test node',
             client_id='a04ffd6a-b93c-46d5-ac0e-54d59b32abb9',
-            idp='https://mock-oidc.local',
             authentication_enabled=True,
             user_mapping=UserMapping(),
             public_key='test-public-key',
@@ -65,7 +62,6 @@ class TestNode:
             url='https://node1.example.com',
             description='This is a test node',
             client_id='a04ffd6a-b93c-46d5-ac0e-54d59b32abb9',
-            idp='https://mock-oidc.local',
             authentication_enabled=True,
             user_mapping=UserMapping(),
             public_key='test-public-key',

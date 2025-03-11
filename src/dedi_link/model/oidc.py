@@ -11,6 +11,7 @@ class OidcDriver:
     OIDC integrated driver for access token management and validation
     """
     def __init__(self,
+                 driver_id: str,
                  client_id: str,
                  client_secret: str,
                  discovery_url: str,
@@ -22,6 +23,8 @@ class OidcDriver:
         :param client_secret: Client secret
         :param discovery_url: OIDC discovery URL
         """
+        self.driver_id = driver_id
+
         with Client() as client:
             response = client.get(discovery_url)
             response.raise_for_status()
@@ -48,26 +51,6 @@ class OidcDriver:
 
         return token_response['access_token']
 
-    def exchange_token(self,
-                       external_token: str,
-                       ):
-        """
-        Exchange a token from external IdP for a token from this IdP
-
-        :param external_token: An access token from an external IdP.
-        The external IdP must be configured in the IdP's trust relationships
-        for identity brokering.
-        :return: A token from this IdP
-        """
-        exchange_response = self.oauth.fetch_token(
-            url=self._discovery_document['token_endpoint'],
-            grant_type='urn:ietf:params:oauth:grant-type:token-exchange',
-            subject_token=external_token,
-            subject_token_type='urn:ietf:params:oauth:token-type:access_token',
-        )
-
-        return exchange_response['access_token']
-
     def introspect_token(self, token: str):
         """
         Introspect an access token
@@ -81,3 +64,67 @@ class OidcDriver:
         )
 
         return introspect_response.json()
+
+
+class OidcRegistry:
+    """
+    OIDC driver registry
+    """
+    def __init__(self):
+        self._drivers = {}
+        self._default_driver = None
+
+    def __getitem__(self, item) -> OidcDriver:
+        return self._drivers[item]
+
+    @property
+    def default_driver(self) -> OidcDriver:
+        if self._default_driver is None:
+            raise RuntimeError('OIDC registry is empty')
+
+        return self._default_driver
+
+    @property
+    def service_token(self):
+        """
+        Get access token for service account with client credentials grant type
+
+        :return:
+        """
+        return self._default_driver.service_token
+
+    def register_driver(self,
+                        driver: OidcDriver,
+                        is_default: bool = False,
+                        ):
+        """
+        Register an OIDC driver
+
+        :param driver: OIDC driver
+        :param is_default: Whether to set this driver as the default driver
+        """
+        self._drivers[driver.driver_id] = driver
+
+        if self._default_driver is None or is_default:
+            self._default_driver = driver
+
+    def introspect_token(self,
+                         token: str,
+                         driver_id: str = None,
+                         ) -> dict:
+        """
+        Introspect an access token
+
+        :param driver_id: Driver ID
+        :param token: Access token to introspect
+        """
+        if driver_id is None:
+            if self._default_driver is None:
+                raise RuntimeError('OIDC registry is empty')
+
+            return self._default_driver.introspect_token(token)
+
+        try:
+            return self._drivers[driver_id].introspect_token(token)
+        except KeyError:
+            raise ValueError(f'Driver {driver_id} not found in registry')

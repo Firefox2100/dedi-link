@@ -7,7 +7,7 @@ from typing import Type, TypeVar, Callable
 
 from dedi_link.etc.exceptions import BaseModelNotImplemented
 from .config import DdlConfig
-from .oidc import OidcDriver
+from .oidc import OidcRegistry
 
 
 SyncDataInterfaceT = TypeVar('SyncDataInterfaceT', bound='SyncDataInterface')
@@ -95,12 +95,12 @@ class BaseModel:
     This class defines a uniform interface for all models to implement
     """
     config = DdlConfig()
-    oidc: OidcDriver = None     # Requires initialisation. If your config is lazy loaded, you can do it here
+    oidc: OidcRegistry = None     # Requires initialisation. If your config is lazy loaded, you can do it here
 
     @classmethod
     def init_config(cls,
                     config: DdlConfig,
-                    oidc: OidcDriver,
+                    oidc: OidcRegistry,
                     ):
         """
         Initialise the configuration for the model

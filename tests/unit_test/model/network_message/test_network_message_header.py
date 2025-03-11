@@ -27,6 +27,7 @@ class TestNetworkMessageHeader:
             node_id='f3bb816f-608b-4dd7-ac74-8e0d0a0979ad',
             network_id='62d13013-d80c-4539-adc1-61862bdd65cb',
             server_signature='server_signature',
+            idp_iss='https://mock-oidc.local',
             access_token='access_token',
             user_id='19a80cb0-7861-42c9-9212-c2e0cbe8dcfb',
             delivered=True,

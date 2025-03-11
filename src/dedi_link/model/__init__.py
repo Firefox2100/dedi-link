@@ -9,6 +9,6 @@ from .network import Network, NetworkT
 from .network_message import NetworkMessage, NetworkMessageT
 from .network_interface import Session, SessionT, NetworkInterface, NetworkInterfaceT
 from .node import Node, NodeT
-from .oidc import OidcDriver
+from .oidc import OidcDriver, OidcRegistry
 from .user import User, UserT
 from .user_mapping import UserMapping, UserMappingT

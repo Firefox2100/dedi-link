@@ -22,6 +22,7 @@ class NetworkMessageHeader:
                  node_id: str | None = None,
                  network_id: str | None = None,
                  server_signature: str | None = None,
+                 idp_iss: str | None = None,
                  access_token: str | None = None,
                  user_id: str | None = None,
                  delivered: bool = False,
@@ -29,6 +30,7 @@ class NetworkMessageHeader:
         self.node_id = node_id
         self.network_id = network_id
         self.server_signature = server_signature
+        self.idp_iss = idp_iss
         self.access_token = access_token
         self.user_id = user_id
         self.delivered = delivered
@@ -41,6 +43,7 @@ class NetworkMessageHeader:
             self.node_id == other.node_id,
             self.network_id == other.network_id,
             self.server_signature == other.server_signature,
+            self.idp_iss == other.idp_iss,
             self.access_token == other.access_token,
             self.user_id == other.user_id,
             self.delivered == other.delivered,
@@ -51,6 +54,7 @@ class NetworkMessageHeader:
             self.node_id,
             self.network_id,
             self.server_signature,
+            self.idp_iss,
             self.access_token,
             self.user_id,
             self.delivered,
@@ -73,6 +77,7 @@ class NetworkMessageHeader:
         if self.server_signature is not None:
             headers['X-Server-Signature'] = self.server_signature
         if self.access_token is not None:
+            headers['X-Issuer'] = self.idp_iss
             headers['Authorization'] = f'Bearer {self.access_token}'
         if self.user_id is not None:
             headers['X-User-ID'] = self.user_id
@@ -90,6 +95,7 @@ class NetworkMessageHeader:
         :return: A NetworkMessageHeader object
         """
         access_token = headers.get('Authorization', None)
+        idp_iss = headers.get('X-Issuer', None)
         if access_token is not None:
             access_token = access_token.split(' ')[1]
 
@@ -102,6 +108,7 @@ class NetworkMessageHeader:
             node_id=headers.get('X-Node-ID', None),
             network_id=headers.get('X-Network-ID', None),
             server_signature=headers.get('X-Server-Signature', None),
+            idp_iss=idp_iss,
             access_token=access_token,
             user_id=headers.get('X-User-ID', None),
             delivered=delivered,
