@@ -4,5 +4,10 @@
       "secret": "node_secret_1"
     }
   },
-  "users": {}
+  "users": {
+    "user1": {
+      "username": "MockUser1",
+      "password": "mock_password_1"
+    }
+  }
 }
