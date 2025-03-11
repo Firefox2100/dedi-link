@@ -14,4 +14,5 @@ Contents
 
     about
     design/index
+    model/index
     appendix/index
