@@ -507,7 +507,6 @@ class NetworkInterface(NetworkInterfaceBase[
 
     def check_connectivity(self,
                            url: str | None = None,
-                           path: str = '/api'
                            ) -> bool:
         """
         Check whether the URL is reachable from the current machine.

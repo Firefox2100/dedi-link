@@ -6,7 +6,7 @@
   },
   "users": {
     "user1": {
-      "username": "MockUser1",
+      "username": "user1@example.com",
       "password": "mock_password_1"
     }
   }

@@ -18,14 +18,27 @@ from ..network import Network, NetworkT
 from ..node import Node, NodeT
 from ..network_message import NetworkMessage, NetworkMessageT, NetworkMessageHeader, NetworkMessageHeaderT, \
                               NetworkRelayMessage, NetworkRelayMessageT, RelayTarget, RelayTargetT
-from .session import Session, SessionT
+from .session import Session
 
 
 NetworkInterfaceT = TypeVar('NetworkInterfaceT', bound='NetworkInterface')
 
 
-class NetworkInterface(NetworkInterfaceBase[SessionT, NetworkT, NodeT, RelayTargetT, NetworkRelayMessageT, DataIndexT, UserMappingT],
-                       Generic[SessionT, NetworkT, NodeT, RelayTargetT, NetworkRelayMessageT, DataIndexT, UserMappingT],
+class NetworkInterface(NetworkInterfaceBase[
+                           NetworkT,
+                           NodeT,
+                           NetworkMessageHeaderT,
+                           DataIndexT,
+                           UserMappingT
+                       ],
+                       Generic[
+                           NetworkT,
+                           NodeT,
+                           NetworkMessageHeaderT,
+                           NetworkRelayMessageT,
+                           DataIndexT,
+                           UserMappingT
+                       ],
                        ):
     SESSION_CLASS = Session[NetworkMessageT, NetworkMessageHeaderT]
     NETWORK_CLASS = Network[DataIndexT, UserMappingT, NodeT]
@@ -37,19 +50,17 @@ class NetworkInterface(NetworkInterfaceBase[SessionT, NetworkT, NodeT, RelayTarg
     def __init__(self,
                  network_id: str,
                  instance_id: str,
-                 config: DdlConfig,
-                 session: SessionT | None = None,
+                 session: Session | None = None,
                  ):
         super().__init__(
             network_id=network_id,
             instance_id=instance_id,
-            config=config,
         )
 
         if session is not None:
-            self.session: SessionT = session
+            self.session: Session = session
         else:
-            self.session: SessionT = self.SESSION_CLASS()
+            self.session: Session = self.SESSION_CLASS()
 
     async def __aenter__(self):
         return self
@@ -79,12 +90,10 @@ class NetworkInterface(NetworkInterfaceBase[SessionT, NetworkT, NodeT, RelayTarg
             network_id=interface.network_id,
             instance_id=interface.instance_id,
             session=interface.session,
-            config=interface.config,
         )
 
     async def check_connectivity(self,
                                  url: str | None = None,
-                                 path: str = '/api'
                                  ) -> bool:
         """
         Check whether the URL is reachable from the current machine.
@@ -101,7 +110,6 @@ class NetworkInterface(NetworkInterfaceBase[SessionT, NetworkT, NodeT, RelayTarg
         """
         url = self._check_connectivity_url(
             url=url,
-            path=path,
         )
 
         if url is None:
@@ -154,39 +162,17 @@ class NetworkInterface(NetworkInterfaceBase[SessionT, NetworkT, NodeT, RelayTarg
 
         # Validate the access token
         if validate_access_token:
-            decoded_token = jwt.decode(
-                jwt=headers.access_token,
-                options={
-                    'verify_signature': False,  # Disable verification for now
-                }
-            )
-            issuer_url = decoded_token['iss']
-            issuer_well_known = issuer_url + '/.well-known/openid-configuration'
-
-            well_known = await self.session.get(issuer_well_known)
-            jwks_uri = well_known['jwks_uri']
-
-            jwks = await self.session.get(jwks_uri)
-            signature_key = None
-
-            for key in jwks['keys']:
-                if key['use'] == 'sig':
-                    signature_key = key
-                    break
-
-            if signature_key is None:
-                raise MessageAccessTokenInvalid('No signature key found in JWKS')
-
             user_id = self._validate_access_token(
                 node_client_id=node.client_id,
+                request_idp=headers.idp_iss,
                 access_token=headers.access_token,
-                signature_key=signature_key,
-                user_mapping=node.user_mapping,
             )
 
         if user_id is None:
             if node.authentication_enabled:
-                raise NodeAuthenticationStatusInvalid('Authentication enabled but validation failed')
+                raise NodeAuthenticationStatusInvalid(
+                    'Authentication enabled but validation failed'
+                )
 
             # Access token authentication skipped, remap the user
             user_id = node.user_mapping.map()

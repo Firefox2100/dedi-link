@@ -193,7 +193,7 @@ def introspect_endpoint():
                 'aud': [
                     client_id,
                 ],
-                'email': db.tokens[refresh_token]['sub'] if db.tokens[refresh_token]['sub'] != client_id else None,
+                'email': db.users[db.tokens[refresh_token]['sub']]['username'] if db.tokens[refresh_token]['sub'] != client_id else None,
                 'username': db.users[db.tokens[refresh_token]['sub']]['username'],
             }
 

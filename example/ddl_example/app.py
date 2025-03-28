@@ -21,7 +21,7 @@ def create_app(database_file: str = None,
         oidc_driver = OidcDriver(
             driver_id='http://localhost:5556',
             client_id='node1',
-            client_secret='secret1',
+            client_secret='node_secret_1',
             discovery_url='http://localhost:5556/.well-known/openid-configuration',
         )
 

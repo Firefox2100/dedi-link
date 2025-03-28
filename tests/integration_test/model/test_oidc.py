@@ -34,7 +34,7 @@ class TestOidcDriver:
         assert service_token
 
     def test_introspect_token(self, mock_oidc_driver):
-        username = 'MockUser1'
+        username = 'user1@example.com'
         password = 'mock_password_1'
 
         # Direct access grant to get the token
@@ -53,3 +53,14 @@ class TestOidcDriver:
             token = response.json()['access_token']
 
         introspection_result = mock_oidc_driver.introspect_token(token)
+
+        assert introspection_result['active'] is True
+        assert introspection_result['sub'] == 'user1'
+        assert introspection_result['client_id'] == 'node1'
+        assert introspection_result['token_type'] == 'bearer'
+        assert introspection_result['scope'] == 'openid profile email'
+        assert introspection_result['exp'] is not None
+        assert introspection_result['iat'] is not None
+        assert 'node1' in introspection_result['aud']
+        assert introspection_result['email'] == 'user1@example.com'
+        assert introspection_result['username'] == 'user1@example.com'
