@@ -12,6 +12,7 @@ from ...network import Network, NetworkT
 from ...data_index import DataIndexT
 from ...user_mapping import UserMappingT
 from ..network_message_header import NetworkMessageHeaderT
+from .network_auth_message import NetworkAuthMessage
 from .auth_request import AuthRequestBase, AuthRequest
 
 
@@ -144,6 +145,7 @@ class AuthInviteBase(AuthRequestBase[
         )
 
 
+@NetworkAuthMessage.register_child(AuthMessageType.INVITE)
 class AuthInvite(AuthInviteBase[
                      NetworkMessageHeaderT,
                      NetworkT,

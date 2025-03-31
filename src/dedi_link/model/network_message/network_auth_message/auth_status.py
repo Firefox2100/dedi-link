@@ -104,6 +104,7 @@ class AuthStatusBase(NetworkAuthMessageBase[
         )
 
 
+@NetworkAuthMessage.register_child(AuthMessageType.STATUS)
 class AuthStatus(AuthStatusBase[
                      NetworkMessageHeaderT,
                      NetworkT,

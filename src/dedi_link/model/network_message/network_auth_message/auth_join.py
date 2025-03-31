@@ -99,6 +99,7 @@ class AuthJoinBase(NetworkAuthMessageBase[
         )
 
 
+@NetworkAuthMessage.register_child(AuthMessageType.JOIN)
 class AuthJoin(AuthJoinBase[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
                NetworkAuthMessage[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
                Generic[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]

@@ -6,15 +6,14 @@ import uuid
 import time
 import json
 import base64
-from enum import Enum
-from typing import TypeVar, Type, Callable, Generic
+from typing import TypeVar, Type, Generic
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.backends import default_backend
 
 from dedi_link.etc.consts import MESSAGE_ATTRIBUTES
-from dedi_link.etc.enums import MessageType, AuthMessageType, DataMessageType
+from dedi_link.etc.enums import MessageType
 from dedi_link.etc.exceptions import NetworkMessageNotImplemented
 from ..base_model import BaseModel, SyncDataInterface
 from ..network import Network, NetworkT
@@ -78,27 +77,6 @@ class NetworkMessageBase(BaseModel,
             self.node_id,
             self.timestamp
         ))
-
-    @classmethod
-    def _child_mapping(cls) -> dict[Enum,tuple[Type[NetworkMessageT],
-                                    Callable[[dict], Enum] | None]]:
-        from .network_auth_message import NetworkAuthMessage
-        from .network_sync_message import NetworkSyncMessage
-        from .network_data_message import NetworkDataMessage
-        from .network_relay_message import NetworkRelayMessage
-
-        return {
-            MessageType.AUTH_MESSAGE: (
-                NetworkAuthMessage,
-                lambda payload: AuthMessageType(payload['messageAttributes']['authType'])
-            ),
-            MessageType.SYNC_MESSAGE: (NetworkSyncMessage, None),
-            MessageType.DATA_MESSAGE: (
-                NetworkDataMessage,
-                lambda payload: DataMessageType(payload['messageAttributes']['dataType'])
-            ),
-            MessageType.RELAY_MESSAGE: (NetworkRelayMessage, None),
-        }
 
     def to_dict(self) -> dict:
         payload = {

@@ -225,6 +225,7 @@ class NetworkRelayMessageBase(NetworkMessageBase[
         )
 
 
+@NetworkMessage.register_child(MessageType.RELAY_MESSAGE)
 class NetworkRelayMessage(NetworkRelayMessageBase[
                               NetworkMessageHeaderT,
                               NetworkT,

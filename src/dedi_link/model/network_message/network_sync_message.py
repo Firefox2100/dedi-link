@@ -136,6 +136,7 @@ class NetworkSyncMessageBase(NetworkMessageBase[
         )
 
 
+@NetworkMessage.register_child(MessageType.SYNC_MESSAGE)
 class NetworkSyncMessage(NetworkSyncMessageBase[
                              NetworkMessageHeaderT,
                              NetworkT,

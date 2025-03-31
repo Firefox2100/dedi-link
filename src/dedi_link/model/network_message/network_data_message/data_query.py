@@ -53,6 +53,7 @@ class DataQueryB(NetworkDataMessageBase[NetworkMessageHeaderT, NetworkT, DataInd
         )
 
 
+@NetworkDataMessage.register_child(DataMessageType.QUERY)
 class DataQuery(DataQueryB[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
                 NetworkDataMessage[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
                 Generic[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]

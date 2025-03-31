@@ -172,6 +172,7 @@ class AuthRequestBase(NetworkAuthMessageBase[
         return challenge
 
 
+@NetworkAuthMessage.register_child(AuthMessageType.REQUEST)
 class AuthRequest(AuthRequestBase[
                       NetworkMessageHeaderT,
                       NetworkT,

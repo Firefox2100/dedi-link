@@ -155,6 +155,7 @@ class AuthResponseBase(NetworkAuthMessageBase[
         )
 
 
+@NetworkAuthMessage.register_child(AuthMessageType.RESPONSE)
 class AuthResponse(AuthResponseBase[
                        NetworkMessageHeaderT,
                        NetworkT,

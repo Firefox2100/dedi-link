@@ -5,8 +5,7 @@ These messages are used to send data between nodes in a network.
 """
 
 import uuid
-from enum import Enum
-from typing import TypeVar, Type, Callable, Generic
+from typing import TypeVar, Type, Generic
 
 from dedi_link.etc.consts import MESSAGE_ATTRIBUTES
 from dedi_link.etc.enums import DataMessageType, MessageType
@@ -62,17 +61,6 @@ class NetworkDataMessageBase(NetworkMessageBase[
         self.should_relay = should_relay
 
     @classmethod
-    def _child_mapping(cls) -> dict[Enum, tuple[Type[NetworkDataMessageBaseT],
-                                    Callable[[dict], Enum] | None]]:
-        from .data_query import DataQuery
-        from .data_response import DataResponse
-
-        return {
-            DataMessageType.QUERY: (DataQuery, None),
-            DataMessageType.RESPONSE: (DataResponse, None),
-        }
-
-    @classmethod
     def factory(cls: Type[NetworkDataMessageBaseT], payload: dict) -> NetworkDataMessageBaseT:
         id_var = DataMessageType(payload[MESSAGE_ATTRIBUTES]['dataType'])
 
@@ -113,6 +101,10 @@ class NetworkDataMessageBase(NetworkMessageBase[
         )
 
 
+@NetworkMessage.register_child(
+    MessageType.DATA_MESSAGE,
+    lambda payload: DataMessageType(payload['messageAttributes']['dataType'])
+)
 class NetworkDataMessage(NetworkDataMessageBase[
                              NetworkMessageHeaderT,
                              NetworkT,

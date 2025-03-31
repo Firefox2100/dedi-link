@@ -95,7 +95,23 @@ class BaseModel:
     This class defines a uniform interface for all models to implement
     """
     config = DdlConfig()
-    oidc: Optional[OidcRegistry] = None     # Requires initialisation. If your config is lazy loaded, you can do it here
+    oidc: Optional[OidcRegistry] = None     # Requires initialisation.
+                                            # If your config is lazy loaded, you can do it here
+
+    child_registry: Optional[dict[Enum,
+                             tuple[Type[BaseModelT], Callable[[dict], Enum] | None]]
+                            ] = None
+
+    def __init_subclass__(cls, **kwargs):
+        """
+        This method is called when a subclass is created
+
+        It allows for the registration of the child class in the registry
+        """
+        super().__init_subclass__(**kwargs)
+
+        if cls.child_registry is None:
+            cls.child_registry = {}
 
     @classmethod
     def init_config(cls,
@@ -125,17 +141,24 @@ class BaseModel:
         return self.oidc.service_token
 
     @classmethod
-    def _child_mapping(cls) -> dict[Enum, tuple[Type[BaseModelT], Callable[[dict], Enum] | None]]:
+    def register_child(cls,
+                       id_var: Enum,
+                       mapping_function: Callable[[dict], Enum] = None,
+                       ):
         """
-        Mapping of the child classes to the enum values
+        Register a child class
 
-        This is used to facilitate the factory method, and also allows for lazy
-        importing within a method to avoid circular imports
-
-        :return: A dictionary mapping the enum values to the child classes, and potentially a
-                 function to further identify the child class
+        :param id_var: The enum value to use for the mapping
+        :param mapping_function: A function to map the payload to the enum value
         """
-        return {}
+        def decorator(child_class: Type[BaseModelT]):
+            if cls.child_registry is None:
+                cls.child_registry = {}
+
+            cls.child_registry[id_var] = (child_class, mapping_function)
+            return child_class
+
+        return decorator
 
     def to_dict(self) -> dict:
         """
@@ -170,14 +193,14 @@ class BaseModel:
         :param id_var:
         :return:
         """
-        if not cls._child_mapping():
+        if not cls.child_registry:
             # No known mapping, just create the class itself
             return cls.from_dict(payload)
 
-        if id_var not in cls._child_mapping():
+        if id_var not in cls.child_registry:
             raise ValueError(f'{id_var} not found in the defined mapping')
 
-        mapping_target = cls._child_mapping()[id_var]
+        mapping_target = cls.child_registry[id_var]
 
         if mapping_target[1] is None:
             # Basic mapping, create the object by calling the from_dict method

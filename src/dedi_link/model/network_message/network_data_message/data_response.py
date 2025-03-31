@@ -127,6 +127,7 @@ class DataResponseB(NetworkDataMessageBase[NetworkMessageHeaderT, NetworkT, Data
         return decrypted_responses
 
 
+@NetworkDataMessage.register_child(DataMessageType.RESPONSE)
 class DataResponse(DataResponseB[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
                    NetworkDataMessage[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT],
                    Generic[NetworkMessageHeaderT, NetworkT, DataIndexT, UserMappingT, NodeT]

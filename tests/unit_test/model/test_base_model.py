@@ -53,20 +53,21 @@ class TestBaseModel:
         with pytest.raises(BaseModelNotImplemented):
             BaseModel.factory_from_id({}, TestEnum.TEST)
 
-    def test_factory_from_id_mapping_not_exist(self):
+    def test_factory_from_id(self):
         class TestEnum(Enum):
-            TEST = 'test'
-            ANOTHER_TEST = 'another_test'
+            PARENT = 'parent'
+            CHILD = 'child'
 
-        class TestModel(BaseModel):
+        class TestParent(BaseModel):
+            ...
+
+        @TestParent.register_child(TestEnum.CHILD)
+        class TestChild(TestParent):
             @classmethod
-            def _child_mapping(cls):
-                return {
-                    TestEnum.TEST: (TestModel, None),
-                }
+            def from_dict(cls, payload):
+                pass
 
-        with pytest.raises(ValueError):
-            TestModel.factory_from_id({}, TestEnum.ANOTHER_TEST)
+        _ = TestParent.factory_from_id({}, TestEnum.CHILD)
 
     def test_factory(self):
         with pytest.raises(BaseModelNotImplemented):

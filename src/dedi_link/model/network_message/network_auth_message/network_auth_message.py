@@ -7,8 +7,7 @@ related operations.
 """
 
 import uuid
-from enum import Enum
-from typing import Type, TypeVar, Callable, Generic
+from typing import Type, TypeVar, Generic
 
 from dedi_link.etc.consts import MESSAGE_ATTRIBUTES
 from dedi_link.etc.enums import MessageType, AuthMessageType
@@ -82,25 +81,6 @@ class NetworkAuthMessageBase(NetworkMessageBase[
         return hash((super().__hash__(), self.auth_type))
 
     @classmethod
-    def _child_mapping(cls) -> dict[Enum, tuple[Type[NetworkAuthMessageT],
-                                    Callable[[dict], Enum] | None]]:
-        from .auth_request import AuthRequest
-        from .auth_invite import AuthInvite
-        from .auth_response import AuthResponse
-        from .auth_join import AuthJoin
-        from .auth_leave import AuthLeave
-        from .auth_status import AuthStatus
-
-        return {
-            AuthMessageType.REQUEST: (AuthRequest, None),
-            AuthMessageType.INVITE: (AuthInvite, None),
-            AuthMessageType.RESPONSE: (AuthResponse, None),
-            AuthMessageType.JOIN: (AuthJoin, None),
-            AuthMessageType.LEAVE: (AuthLeave, None),
-            AuthMessageType.STATUS: (AuthStatus, None),
-        }
-
-    @classmethod
     def factory(cls: Type[NetworkAuthMessageBaseT], payload: dict) -> NetworkAuthMessageBaseT:
         id_var = AuthMessageType(payload[MESSAGE_ATTRIBUTES]['authType'])
 
@@ -117,6 +97,10 @@ class NetworkAuthMessageBase(NetworkMessageBase[
         return payload
 
 
+@NetworkMessage.register_child(
+    MessageType.AUTH_MESSAGE,
+    lambda payload: AuthMessageType(payload['messageAttributes']['authType'])
+)
 class NetworkAuthMessage(NetworkAuthMessageBase[
                              NetworkMessageHeaderT,
                              NetworkT,

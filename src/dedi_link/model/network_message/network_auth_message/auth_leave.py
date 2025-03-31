@@ -69,6 +69,7 @@ class AuthLeaveBase(NetworkAuthMessageBase[
         )
 
 
+@NetworkAuthMessage.register_child(AuthMessageType.LEAVE)
 class AuthLeave(AuthLeaveBase[
                     NetworkMessageHeaderT,
                     NetworkT,
