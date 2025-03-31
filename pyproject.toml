@@ -49,7 +49,7 @@ Issues = "https://github.com/Firefox2100/dedi-link/issues"
 version = {attr = "dedi_link.__version__"}
 
 [tool.setuptools.package-data]
-cv3_bioterms = ["data/*"]
+dedi_link = ["data/*"]
 
 [tool.pylint.main]
 clear-cache-post-run = true
