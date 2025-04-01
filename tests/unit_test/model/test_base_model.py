@@ -50,7 +50,7 @@ class TestBaseModel:
             TEST = 'test'
             ANOTHER_TEST = 'another_test'
 
-        with pytest.raises(BaseModelNotImplemented):
+        with pytest.raises(AttributeError):
             BaseModel.factory_from_id({}, TestEnum.TEST)
 
     def test_factory_from_id(self):
@@ -59,7 +59,7 @@ class TestBaseModel:
             CHILD = 'child'
 
         class TestParent(BaseModel):
-            ...
+            child_registry = {}
 
         @TestParent.register_child(TestEnum.CHILD)
         class TestChild(TestParent):

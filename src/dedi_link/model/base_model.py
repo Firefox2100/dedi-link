@@ -100,18 +100,7 @@ class BaseModel:
 
     child_registry: Optional[dict[Enum,
                              tuple[Type[BaseModelT], Callable[[dict], Enum] | None]]
-                            ] = None
-
-    def __init_subclass__(cls, **kwargs):
-        """
-        This method is called when a subclass is created
-
-        It allows for the registration of the child class in the registry
-        """
-        super().__init_subclass__(**kwargs)
-
-        if cls.child_registry is None:
-            cls.child_registry = {}
+                            ]
 
     @classmethod
     def init_config(cls,
@@ -152,8 +141,10 @@ class BaseModel:
         :param mapping_function: A function to map the payload to the enum value
         """
         def decorator(child_class: Type[BaseModelT]):
-            if cls.child_registry is None:
-                cls.child_registry = {}
+            if not hasattr(cls, 'child_registry'):
+                raise ValueError(
+                    'Parent class does not implement child registry. Is it a base model?'
+                )
 
             cls.child_registry[id_var] = (child_class, mapping_function)
             return child_class

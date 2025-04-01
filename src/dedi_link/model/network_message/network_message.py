@@ -160,6 +160,8 @@ class NetworkMessage(NetworkMessageBase[
     clearly who it's from, who it's intended for, what it does, and have all
     the data needed to perform the action.
     """
+    child_registry = {}
+
     @property
     def signature(self) -> str:
         """
