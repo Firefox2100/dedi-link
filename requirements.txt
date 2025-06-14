@@ -3,7 +3,7 @@ cryptography==44.0.2
 deepdiff==8.3.0
 httpx==0.28.1
 networkx==3.4.2
-requests==2.32.3
+requests==2.32.4
 
 # Test dependencies
 pytest==8.3.5
