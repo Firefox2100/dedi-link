@@ -43,7 +43,7 @@ jobs:
           build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} \
             gcc -shared -fPIC \
             -o ./src/dedi_link/data/bin/libpow.ci.so \
-            ./src/dedi_link/etc/powlib/pow_solver.c \
+            ./src/dedi_link/etc/libpow/pow_solver.c \
             -lcrypto
 
       - name: Run tests with coverage
