@@ -4,7 +4,7 @@ A module defining the User model.
 
 
 from uuid import uuid4
-from pydantic import Field, ConfigDict
+from pydantic import Field, ConfigDict, UUID4
 
 from .base import JsonModel
 
@@ -20,8 +20,9 @@ class User(JsonModel):
         validate_by_alias=True,
     )
 
-    user_id: str = Field(
-        default_factory=lambda: str(uuid4()),
+    user_id: UUID4 = Field(
+        default_factory=lambda: uuid4(),
         alias='userId',
-        description='Unique user ID (UUID4)'
+        description='Unique user ID in UUID4 format',
+        examples=['5a639534-d547-4242-b53d-43e7bd77b138']
     )

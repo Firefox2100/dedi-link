@@ -3,7 +3,7 @@ Module defining the Network model for representing a network of nodes sharing da
 """
 
 from uuid import uuid4
-from pydantic import Field, ConfigDict
+from pydantic import Field, ConfigDict, UUID4
 
 from .base import JsonModel
 
@@ -20,7 +20,7 @@ class Network(JsonModel):
         serialize_by_alias=True,
     )
 
-    network_id: str = Field(
+    network_id: UUID4 = Field(
         default_factory=lambda: str(uuid4()),
         alias='networkId',
         description='The unique ID of the network'
@@ -34,7 +34,7 @@ class Network(JsonModel):
         default='',
         description='A description of the network'
     )
-    node_ids: list[str] = Field(
+    node_ids: list[UUID4] = Field(
         default_factory=list,
         alias='nodeIds',
         description='The IDs of the nodes in the network'
@@ -52,7 +52,7 @@ class Network(JsonModel):
         alias='instanceId',
         description='The unique ID of the network instance'
     )
-    central_node: str | None = Field(
+    central_node: UUID4 | None = Field(
         default=None,
         alias='centralNode',
         description='The ID of the central node for permission and identity management. '
