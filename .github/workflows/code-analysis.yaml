@@ -30,7 +30,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install Build Wrapper
-        uses: SonarSource/sonarqube-scan-action/install-build-wrapper@v5
+        uses: SonarSource/sonarqube-scan-action/install-build-wrapper@v6
 
       - name: Install dependencies
         run: |
