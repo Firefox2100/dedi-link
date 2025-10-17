@@ -4,7 +4,7 @@ Metadata for a message in the Decentralised Discovery Gateway network protocol.
 
 import time
 from uuid import uuid4
-from pydantic import Field, ConfigDict
+from pydantic import Field, ConfigDict, UUID4
 
 from ..base import JsonModel
 
@@ -13,22 +13,24 @@ class MessageMetadata(JsonModel):
     """
     Metadata for a message in the Decentralised Discovery Gateway network protocol.
     """
+
     model_config = ConfigDict(
         extra='forbid',
         serialize_by_alias=True,
     )
-    network_id: str = Field(
+
+    network_id: UUID4 = Field(
         ...,
         description="The unique ID of the network",
         alias='networkId'
     )
-    node_id: str = Field(
+    node_id: UUID4 = Field(
         ...,
         description="The unique ID of the node that sent the message",
         alias='nodeId'
     )
-    message_id: str = Field(
-        default_factory=lambda: str(uuid4()),
+    message_id: UUID4 = Field(
+        default_factory=uuid4,
         description="The unique ID of the message",
         alias='messageId'
     )

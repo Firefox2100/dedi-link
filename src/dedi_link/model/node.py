@@ -4,8 +4,7 @@ Node Model
 
 from uuid import uuid4
 from typing import Optional
-from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicKey
-from pydantic import Field, ConfigDict, UUID4, field_validator, field_serializer
+from pydantic import Field, ConfigDict, UUID4
 
 from .base import JsonModel
 from .crypto_key import Ec384PublicKey
@@ -25,7 +24,7 @@ class Node(JsonModel):
     )
 
     node_id: UUID4 = Field(
-        default_factory=lambda: uuid4(),
+        default_factory=uuid4,
         alias='nodeId',
         description='The unique ID of the node',
         examples=['a2342b55-c062-48f2-b047-c0ff3797dbc2']

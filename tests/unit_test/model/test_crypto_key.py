@@ -3,7 +3,7 @@ from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.asymmetric import rsa
 import pytest
 
-from dedi_link.model.crypto_key import Ec384PublicKey
+from dedi_link.model.crypto_key import Ec384PublicKey, Ec384PrivateKey
 
 
 class TestEc384PublicKey:
@@ -86,3 +86,79 @@ class TestEc384PublicKey:
 
         with pytest.raises(TypeError, match='Value must be an ECDSA public key.'):
             Ec384PublicKey._try_serialise(invalid_value)
+
+
+class TestEc384PrivateKey:
+    def test_init(self):
+        private_key = ec.generate_private_key(
+            curve=ec.SECP384R1(),
+        )
+
+        ec_key = Ec384PrivateKey(private_key)
+        assert ec_key.private_key.private_numbers() == private_key.private_numbers()
+
+    def test_try_parse_valid_key(self):
+        private_key = ec.generate_private_key(
+            curve=ec.SECP384R1(),
+        )
+        pem_private_key = private_key.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.TraditionalOpenSSL,
+            encryption_algorithm=serialization.NoEncryption(),
+        ).decode()
+
+        ec_key = Ec384PrivateKey._try_parse(pem_private_key)
+        assert ec_key.private_key.private_numbers() == private_key.private_numbers()
+
+    def test_try_parse_invalid_key(self):
+        invalid_pem = "-----BEGIN PRIVATE KEY-----\nINVALIDKEY\n-----END PRIVATE KEY-----"
+
+        with pytest.raises(ValueError, match='Invalid private key format.'):
+            Ec384PrivateKey._try_parse(invalid_pem)
+
+    def test_try_parse_non_ecdsa_key(self):
+        private_key = rsa.generate_private_key(
+            public_exponent=65537,
+            key_size=2048,
+        )
+        pem_private_key = private_key.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.TraditionalOpenSSL,
+            encryption_algorithm=serialization.NoEncryption(),
+        ).decode()
+
+        with pytest.raises(ValueError, match='The provided key is not an ECDSA private key.'):
+            Ec384PrivateKey._try_parse(pem_private_key)
+
+    def test_try_parse_wrong_curve(self):
+        private_key = ec.generate_private_key(
+            curve=ec.SECP256R1(),
+        )
+        pem_private_key = private_key.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.TraditionalOpenSSL,
+            encryption_algorithm=serialization.NoEncryption(),
+        ).decode()
+
+        with pytest.raises(ValueError, match='The ECDSA private key must use the NIST P-384 curve.'):
+            Ec384PrivateKey._try_parse(pem_private_key)
+
+    def test_try_serialise(self):
+        private_key = ec.generate_private_key(
+            curve=ec.SECP384R1(),
+        )
+        pem_private_key = private_key.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.TraditionalOpenSSL,
+            encryption_algorithm=serialization.NoEncryption(),
+        ).decode()
+
+        ec_key = Ec384PrivateKey(private_key)
+        serialized_pem = Ec384PrivateKey._try_serialise(ec_key)
+        assert serialized_pem == pem_private_key
+
+    def test_try_serialise_invalid_value(self):
+        invalid_value = 'NotAnEc384PrivateKey'
+
+        with pytest.raises(TypeError, match='Value must be an ECDSA private key.'):
+            Ec384PrivateKey._try_serialise(invalid_value)

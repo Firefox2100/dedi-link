@@ -1,7 +1,10 @@
+"""
+Module for cryptographic key representation and validation.
+"""
+
 from typing import Any
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives import serialization
-from pydantic import GetCoreSchemaHandler, GetJsonSchemaHandler
 from pydantic_core import core_schema
 
 
@@ -18,7 +21,8 @@ class Ec384PublicKey:
     @classmethod
     def _try_parse(cls, value: Any) -> 'Ec384PublicKey':
         """
-        Parse and validate that the provided value is a valid ECDSA public key using NIST P-384 curve.
+        Parse and validate that the provided value is a valid ECDSA public key
+        using NIST P-384 curve.
         :param value: The public key in PEM format.
         :return: The ECDSA public key object.
         """
@@ -60,7 +64,76 @@ class Ec384PublicKey:
         return pem.decode()
 
     @classmethod
-    def __get_pydantic_core_schema__(cls, source: Any, handler: GetJsonSchemaHandler):
+    def __get_pydantic_core_schema__(cls, _, __):
+        return core_schema.no_info_after_validator_function(
+            cls._try_parse,
+            core_schema.any_schema(),
+            serialization=core_schema.plain_serializer_function_ser_schema(
+                cls._try_serialise,
+                when_used='json-unless-none',
+            )
+        )
+
+
+class Ec384PrivateKey:
+    """
+    A type representing an ECDSA private key using the NIST P-384 curve,
+    """
+
+    __slots__ = ('private_key',)
+
+    def __init__(self, private_key: ec.EllipticCurvePrivateKey):
+        self.private_key = private_key
+
+    @classmethod
+    def _try_parse(cls, value: Any) -> 'Ec384PrivateKey':
+        """
+        Parse and validate that the provided value is a valid ECDSA private key
+        using NIST P-384 curve.
+        :param value: The private key in PEM format.
+        :return: The ECDSA private key object.
+        """
+        if isinstance(value, Ec384PrivateKey):
+            return value
+
+        if not isinstance(value, str):
+            raise TypeError('Private key must be a string in PEM format.')
+
+        try:
+            private_key = serialization.load_pem_private_key(
+                value.encode(),
+                password=None
+            )
+        except Exception as e:
+            raise ValueError('Invalid private key format.') from e
+
+        if not isinstance(private_key, ec.EllipticCurvePrivateKey):
+            raise ValueError('The provided key is not an ECDSA private key.')
+
+        if not isinstance(private_key.curve, ec.SECP384R1):
+            raise ValueError('The ECDSA private key must use the NIST P-384 curve.')
+
+        return cls(private_key)
+
+    @classmethod
+    def _try_serialise(cls, value: Any):
+        """
+        Serialize the ECDSA private key to PEM format.
+        :param value: The ECDSA private key object.
+        :return: The private key in PEM format as a string.
+        """
+        if not isinstance(value, Ec384PrivateKey):
+            raise TypeError('Value must be an ECDSA private key.')
+
+        pem = value.private_key.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.TraditionalOpenSSL,
+            encryption_algorithm=serialization.NoEncryption()
+        )
+        return pem.decode()
+
+    @classmethod
+    def __get_pydantic_core_schema__(cls, _, __):
         return core_schema.no_info_after_validator_function(
             cls._try_parse,
             core_schema.any_schema(),
