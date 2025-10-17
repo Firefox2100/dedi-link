@@ -1,50 +1,30 @@
+"""
+A message to request another node to synchronise its data.
+"""
+
+from typing import Literal
+from pydantic import Field, ConfigDict
+
 from dedi_link.etc.enums import MessageType, SyncRequestType
-from ..network_message import NetworkMessage, MessageMetadata
+from ..network_message import NetworkMessage
 
 
-@NetworkMessage.register_child(MessageType.SYNC_REQUEST)
 class SyncRequest(NetworkMessage):
     """
     A message to request another node to synchronise its data.
     """
-    message_type: MessageType = MessageType.SYNC_REQUEST
 
-    def __init__(self,
-                 metadata: MessageMetadata,
-                 target: SyncRequestType,
-                 ):
-        """
-        A message to request another node to synchronise its data.
-        :param metadata: The metadata for this message
-        :param target: What data is being requested from the node.
-        """
-        super().__init__(
-            metadata=metadata
-        )
-        self.target = target
+    model_config = ConfigDict(
+        extra='forbid',
+        serialize_by_alias=True,
+    )
 
-    def to_dict(self) -> dict:
-        """
-        Convert the SyncRequest to a dictionary.
-        :return: A dictionary representation of the SyncRequest
-        """
-        payload = super().to_dict()
-        payload.update({
-            'target': self.target.value,
-        })
-        return payload
-
-    @classmethod
-    def from_dict(cls, payload: dict) -> 'SyncRequest':
-        """
-        Create a SyncRequest instance from a dictionary.
-        :param payload: A dictionary containing the message metadata
-        :return: An instance of SyncRequest
-        """
-        metadata = MessageMetadata.from_dict(payload['metadata'])
-        target = SyncRequestType(payload['target'])
-
-        return cls(
-            metadata=metadata,
-            target=target,
-        )
+    message_type: Literal[MessageType.SYNC_REQUEST] = Field(
+        default=MessageType.SYNC_REQUEST,
+        description='The type of the network message, indicating it is a sync request message.',
+        alias='messageType'
+    )
+    target: SyncRequestType = Field(
+        ...,
+        description='The type of data being requested from the node.'
+    )

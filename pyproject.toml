@@ -20,18 +20,21 @@ classifiers = [
 ]
 license = "MIT"
 license-files = ["LICENSE"]
-dependencies = [ ]
+dependencies = [
+    "cffi~=2.0.0",
+    "pydantic~=2.11.9",
+]
 dynamic = [
     "version"
 ]
 
 [project.optional-dependencies]
 test = [
-    "deepdiff~=8.5.0",
-    "pytest~=8.4.1",
-    "pytest-asyncio~=1.0.0",
-    "pytest-cov~=6.2.1",
-    "pylint~=3.3.7",
+    "deepdiff~=8.6.1",
+    "pytest~=8.4.2",
+    "pytest-asyncio~=1.2.0",
+    "pytest-cov~=7.0.0",
+    "pylint~=4.0.1",
 ]
 
 [project.urls]
@@ -42,6 +45,9 @@ Issues = "https://github.com/Firefox2100/dedi-link/issues"
 [tool.setuptools.dynamic]
 version = {attr = "dedi_link.__version__"}
 
+[tool.setuptools.package-data]
+dedi_link = ["data/**/*"]
+
 [tool.pylint.main]
 clear-cache-post-run = true
 exit-zero = true
@@ -51,8 +57,7 @@ jobs = 0
 persistent = true
 py-version = "3.11"
 recursive = true
-source-roots = ["src", "tests"]
-suggestion-mode = true
+source-roots = ["src"]
 
 [tool.pylint.basic]
 argument-naming-style = "snake_case"

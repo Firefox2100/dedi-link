@@ -43,7 +43,6 @@ class SyncRequestType(Enum):
     What data is being requested from the sync target
     """
     INSTANCE = 'instance'
-    DATA_INDEX = 'dataIndex'
 
 
 class MessageType(Enum):

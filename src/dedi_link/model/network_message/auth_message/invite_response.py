@@ -1,66 +1,38 @@
+"""
+A response message to an invitation to join a network.
+"""
+
+from typing import Literal, Optional
+from pydantic import Field, ConfigDict
+
 from dedi_link.etc.enums import MessageType
 from dedi_link.model.node import Node
-from ..message_metadata import MessageMetadata
 from ..network_message import NetworkMessage
 
 
-@NetworkMessage.register_child(MessageType.AUTH_INVITE_RESPONSE)
 class AuthInviteResponse(NetworkMessage):
     """
     A message responding to an invitation to join a network.
     """
-    message_type = MessageType.AUTH_INVITE_RESPONSE
+    model_config = ConfigDict(
+        extra='forbid',
+        serialize_by_alias=True,
+    )
 
-    def __init__(self,
-                 metadata: MessageMetadata,
-                 approved: bool,
-                 node: Node = None,
-                 justification: str = '',
-                 ):
-        """
-        A message responding to an invitation to join a network.
-        :param metadata: The metadata for the message
-        :param approved: Whether the invitation is accepted or not
-        :param node: The node representing the responder, if accepted
-        :param justification: The reason for the response
-        """
-        super().__init__(
-            metadata=metadata,
-        )
-        self.approved = approved
-        self.node = node
-        self.justification = justification
-
-    def to_dict(self) -> dict:
-        """
-        Convert the AuthInviteResponse to a dictionary.
-        :return: A dictionary representation of the AuthInviteResponse
-        """
-        payload = super().to_dict()
-        payload.update({
-            'approved': self.approved,
-            'justification': self.justification,
-        })
-        if self.approved:
-            payload['node'] = self.node.to_dict() if self.node else None
-
-        return payload
-
-    @classmethod
-    def from_dict(cls, payload: dict) -> 'AuthInviteResponse':
-        """
-        Create an AuthInviteResponse from a dictionary.
-        :param payload: The dictionary containing the message data
-        :return: An AuthInviteResponse instance
-        """
-        metadata = MessageMetadata.from_dict(payload['metadata'])
-        approved = payload['approved']
-        node = Node.from_dict(payload['node']) if 'node' in payload else None
-        justification = payload.get('justification', '')
-
-        return cls(
-            metadata=metadata,
-            approved=approved,
-            node=node,
-            justification=justification,
-        )
+    message_type: Literal[MessageType.AUTH_INVITE_RESPONSE] = Field(
+        MessageType.AUTH_INVITE_RESPONSE,
+        description='The type of the network message',
+        alias='messageType'
+    )
+    approved: bool = Field(
+        ...,
+        description='Whether the invitation is accepted or not',
+    )
+    node: Optional[Node] = Field(
+        None,
+        description='The node representing the responder, if accepted',
+    )
+    justification: str = Field(
+        default='',
+        description='The reason for the response',
+    )

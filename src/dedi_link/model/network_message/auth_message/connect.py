@@ -1,10 +1,25 @@
+"""
+A message used to authenticate with another node and initiate a connection.
+"""
+
+from typing import Literal
+from pydantic import Field, ConfigDict
+
 from dedi_link.etc.enums import MessageType
 from ..network_message import NetworkMessage
 
 
-@NetworkMessage.register_child(MessageType.AUTH_CONNECT)
 class AuthConnect(NetworkMessage):
     """
-    A message to authenticate a connection between nodes.
+    A message responding to an invitation to join a network.
     """
-    message_type: MessageType = MessageType.AUTH_CONNECT
+    model_config = ConfigDict(
+        extra='forbid',
+        serialize_by_alias=True,
+    )
+
+    message_type: Literal[MessageType.AUTH_CONNECT] = Field(
+        MessageType.AUTH_CONNECT,
+        description='The type of the network message',
+        alias='messageType'
+    )

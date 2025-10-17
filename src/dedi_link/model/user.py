@@ -1,36 +1,23 @@
-from typing import Mapping, Any
+from uuid import uuid4
+from typing import List, Optional
+from pydantic import Field, ConfigDict
 
-from .base_model import BaseModel
+from .base import JsonModel
 
 
-class User(BaseModel):
-    def __init__(self,
-                 user_id: str,
-                 public_key: str,
-                 ):
-        self.user_id = user_id
-        self.public_key = public_key
+class User(JsonModel):
+    """
+    A class representing a user in the system.
+    """
 
-    def to_dict(self) -> dict[str, Any]:
-        """
-        Convert the User to a dictionary representation.
+    model_config = ConfigDict(
+        serialize_by_alias=True,
+        validate_by_name=True,
+        validate_by_alias=True,
+    )
 
-        :return: Dictionary representation of the User.
-        """
-        return {
-            'userId': self.user_id,
-            'publicKey': self.public_key,
-        }
-
-    @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> 'User':
-        """
-        Create a User instance from a dictionary.
-
-        :param data: Dictionary containing 'userId' and 'identities'.
-        :return: User instance.
-        """
-        return cls(
-            user_id=data['userId'],
-            public_key=data['publicKey'],
-        )
+    user_id: str = Field(
+        default_factory=lambda: str(uuid4()),
+        alias='userId',
+        description='Unique user ID (UUID4)'
+    )
