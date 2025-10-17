@@ -1,3 +1,11 @@
+"""
+Module for network message models and their union type.
+
+This union is a discriminated union of all pre-defined network message types.
+When extending it, it's recommended to re-define the union in your own codebase to
+include your custom message types, instead of reusing this union directly.
+"""
+
 from typing import Union, Annotated
 from pydantic import Field
 

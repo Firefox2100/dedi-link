@@ -1,3 +1,9 @@
+"""
+DeDi-Link Model Package
+
+This package defines the core data models used in the DeDi-Link protocol.
+"""
+
 from .base import BaseModel
 from .network import Network
 from .node import Node

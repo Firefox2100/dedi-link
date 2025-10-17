@@ -1,3 +1,7 @@
+"""
+Network Message Model
+"""
+
 from pydantic import Field, ConfigDict
 
 from dedi_link.etc.enums import MessageType

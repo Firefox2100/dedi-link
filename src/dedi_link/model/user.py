@@ -1,5 +1,9 @@
+"""
+A module defining the User model.
+"""
+
+
 from uuid import uuid4
-from typing import List, Optional
 from pydantic import Field, ConfigDict
 
 from .base import JsonModel

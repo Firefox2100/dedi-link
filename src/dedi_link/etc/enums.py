@@ -1,3 +1,7 @@
+"""
+Enumeration types used throughout the dedi_link codebase
+"""
+
 from enum import Enum
 
 

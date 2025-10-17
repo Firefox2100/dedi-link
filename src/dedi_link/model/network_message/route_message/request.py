@@ -8,7 +8,7 @@ viable route to a specific node in the network.
 from typing import Literal
 from pydantic import Field, ConfigDict
 
-from cafe_variome.etc.enums import NetworkMessageType
+from dedi_link.etc.enums import MessageType
 from ..network_message import NetworkMessage
 
 
@@ -22,8 +22,8 @@ class RouteRequest(NetworkMessage):
         serialize_by_alias=True,
     )
 
-    message_type: Literal[NetworkMessageType.ROUTE_REQUEST] = Field(
-        NetworkMessageType.ROUTE_REQUEST,
+    message_type: Literal[MessageType.ROUTE_REQUEST] = Field(
+        MessageType.ROUTE_REQUEST,
         description='The type of the network message',
         alias='messageType',
     )

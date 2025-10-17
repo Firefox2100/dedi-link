@@ -1,3 +1,7 @@
+"""
+Base model definition with JSON serialization.
+"""
+
 from typing import Any
 from pydantic import BaseModel
 

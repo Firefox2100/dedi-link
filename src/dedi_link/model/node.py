@@ -1,3 +1,7 @@
+"""
+Node Model
+"""
+
 from uuid import uuid4
 from typing import Optional
 from pydantic import Field, ConfigDict

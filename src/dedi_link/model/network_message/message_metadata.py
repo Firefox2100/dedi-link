@@ -1,3 +1,7 @@
+"""
+Metadata for a message in the Decentralised Discovery Gateway network protocol.
+"""
+
 import time
 from uuid import uuid4
 from pydantic import Field, ConfigDict

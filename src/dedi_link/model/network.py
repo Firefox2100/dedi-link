@@ -1,3 +1,7 @@
+"""
+Module defining the Network model for representing a network of nodes sharing data.
+"""
+
 from uuid import uuid4
 from pydantic import Field, ConfigDict
 
