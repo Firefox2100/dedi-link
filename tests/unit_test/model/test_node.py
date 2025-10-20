@@ -9,19 +9,19 @@ from dedi_link.model.crypto_key import Ec384PublicKey
 
 
 class TestNode:
-    def test_init(self):
-        node_id = uuid4()
-        private_key = ec.generate_private_key(
-            curve=ec.SECP384R1(),
-        )
-        public_key = private_key.public_key()
+    def test_init(self,
+                  node_id,
+                  ecdsa_p384_key_pair,
+                  public_key,
+                  ):
+        _, p_key = ecdsa_p384_key_pair
 
         node = Node(
             nodeId=node_id,
             nodeName='Test Node',
             url='https://testnode.example.com/api/.well-known/discovery-gateway',
             description='A test node for unit testing.',
-            publicKey=Ec384PublicKey(public_key),
+            publicKey=public_key,
             approved=True,
         )
 
@@ -29,7 +29,7 @@ class TestNode:
         assert node.node_name == 'Test Node'
         assert node.url == 'https://testnode.example.com/api/.well-known/discovery-gateway'
         assert node.description == 'A test node for unit testing.'
-        assert node.public_key.public_key.public_numbers() == public_key.public_numbers()
+        assert node.public_key.public_key.public_numbers() == p_key.public_numbers()
         assert node.approved is True
 
         node = Node(
@@ -42,13 +42,12 @@ class TestNode:
         assert node.public_key is None
         assert node.approved is False
 
-    def test_model_validate(self):
-        node_id = uuid4()
-        private_key = ec.generate_private_key(
-            curve=ec.SECP384R1(),
-        )
-        public_key = private_key.public_key()
-        pem_public_key = public_key.public_bytes(
+    def test_model_validate(self,
+                            node_id,
+                            ecdsa_p384_key_pair,
+                            ):
+        _, p_key = ecdsa_p384_key_pair
+        pem_public_key = p_key.public_bytes(
             encoding=serialization.Encoding.PEM,
             format=serialization.PublicFormat.SubjectPublicKeyInfo
         ).decode()
@@ -68,7 +67,7 @@ class TestNode:
         assert node.node_name == 'Test Node'
         assert node.url == 'https://testnode.example.com/api/.well-known/discovery-gateway'
         assert node.description == 'A test node for unit testing.'
-        assert node.public_key.public_key.public_numbers() == public_key.public_numbers()
+        assert node.public_key.public_key.public_numbers() == p_key.public_numbers()
         assert node.approved is True
 
         # Test invalid public key
@@ -77,13 +76,13 @@ class TestNode:
             Node.model_validate(node_dict)
         assert 'Invalid public key format.' in str(exc_info.value)
 
-    def test_model_dump(self):
-        node_id = uuid4()
-        private_key = ec.generate_private_key(
-            curve=ec.SECP384R1(),
-        )
-        public_key = private_key.public_key()
-        pem_public_key = public_key.public_bytes(
+    def test_model_dump(self,
+                        node_id,
+                        ecdsa_p384_key_pair,
+                        public_key,
+                        ):
+        _, p_key = ecdsa_p384_key_pair
+        pem_public_key = p_key.public_bytes(
             encoding=serialization.Encoding.PEM,
             format=serialization.PublicFormat.SubjectPublicKeyInfo
         ).decode()
@@ -93,7 +92,7 @@ class TestNode:
             nodeName='Test Node',
             url='https://testnode.example.com/api/.well-known/discovery-gateway',
             description='A test node for unit testing.',
-            publicKey=Ec384PublicKey(public_key),
+            publicKey=public_key,
             approved=True,
         )
 
@@ -107,13 +106,13 @@ class TestNode:
             'approved': True,
         }
 
-    def test_model_dump_json(self):
-        node_id = uuid4()
-        private_key = ec.generate_private_key(
-            curve=ec.SECP384R1(),
-        )
-        public_key = private_key.public_key()
-        pem_public_key = public_key.public_bytes(
+    def test_model_dump_json(self,
+                             node_id,
+                             ecdsa_p384_key_pair,
+                             public_key,
+                             ):
+        _, p_key = ecdsa_p384_key_pair
+        pem_public_key = p_key.public_bytes(
             encoding=serialization.Encoding.PEM,
             format=serialization.PublicFormat.SubjectPublicKeyInfo
         ).decode().replace('\n', '\\n')
@@ -123,7 +122,7 @@ class TestNode:
             nodeName='Test Node',
             url='https://testnode.example.com/api/.well-known/discovery-gateway',
             description='A test node for unit testing.',
-            publicKey=Ec384PublicKey(public_key),
+            publicKey=public_key,
             approved=True,
         )
 

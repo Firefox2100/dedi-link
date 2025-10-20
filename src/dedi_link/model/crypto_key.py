@@ -2,13 +2,38 @@
 Module for cryptographic key representation and validation.
 """
 
+from abc import ABC, abstractmethod
 from typing import Any
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives import serialization
 from pydantic_core import core_schema
 
 
-class Ec384PublicKey:
+class CryptoKey(ABC):
+    """
+    Base class for cryptographic keys.
+    """
+
+    __slots__ = ()
+
+    @abstractmethod
+    def _identity_bytes(self) -> bytes:
+        """
+        Get the identity bytes of the key for comparison and hashing.
+        :return: The identity bytes.
+        """
+
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, CryptoKey):
+            return NotImplemented
+
+        return self._identity_bytes() == other._identity_bytes()
+
+    def __hash__(self) -> int:
+        return hash(self._identity_bytes())
+
+
+class Ec384PublicKey(CryptoKey):
     """
     A type representing an ECDSA public key using the NIST P-384 curve,
     """
@@ -17,6 +42,12 @@ class Ec384PublicKey:
 
     def __init__(self, public_key: ec.EllipticCurvePublicKey):
         self.public_key = public_key
+
+    def _identity_bytes(self) -> bytes:
+        return self.public_key.public_bytes(
+            encoding=serialization.Encoding.DER,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo,
+        )
 
     @classmethod
     def _try_parse(cls, value: Any) -> 'Ec384PublicKey':
@@ -75,7 +106,7 @@ class Ec384PublicKey:
         )
 
 
-class Ec384PrivateKey:
+class Ec384PrivateKey(CryptoKey):
     """
     A type representing an ECDSA private key using the NIST P-384 curve,
     """
@@ -84,6 +115,13 @@ class Ec384PrivateKey:
 
     def __init__(self, private_key: ec.EllipticCurvePrivateKey):
         self.private_key = private_key
+
+    def _identity_bytes(self) -> bytes:
+        return self.private_key.private_bytes(
+            encoding=serialization.Encoding.DER,
+            format=serialization.PrivateFormat.TraditionalOpenSSL,
+            encryption_algorithm=serialization.NoEncryption()
+        )
 
     @classmethod
     def _try_parse(cls, value: Any) -> 'Ec384PrivateKey':

@@ -1,4 +1,4 @@
-from uuid import uuid4, UUID
+from uuid import UUID
 from pydantic import ValidationError
 import pytest
 
@@ -6,12 +6,12 @@ from dedi_link.model.network import Network
 
 
 class TestNetwork:
-    def test_init(self):
-        network_id = uuid4()
-        node_id = uuid4()
-        instance_id = uuid4()
-        central_node = uuid4()
-
+    def test_init(self,
+                  network_id,
+                  node_id,
+                  instance_id,
+                  central_node,
+                  ):
         network = Network(
             networkId=network_id,
             networkName='Test Network',
@@ -44,12 +44,12 @@ class TestNetwork:
         assert isinstance(network.instance_id, UUID)
         assert network.central_node is None
 
-    def test_model_validate(self):
-        network_id = uuid4()
-        node_id = uuid4()
-        instance_id = uuid4()
-        central_node = uuid4()
-
+    def test_model_validate(self,
+                            network_id,
+                            node_id,
+                            instance_id,
+                            central_node,
+                            ):
         network_dict = {
             'networkId': str(network_id),
             'networkName': 'Test Network',
@@ -81,24 +81,14 @@ class TestNetwork:
         with pytest.raises(ValidationError):
             Network.model_validate(network_dict)
 
-    def test_model_dump(self):
-        network_id = uuid4()
-        node_id = uuid4()
-        instance_id = uuid4()
-        central_node = uuid4()
-
-        network = Network(
-            networkId=network_id,
-            networkName='Test Network',
-            description='A test network for unit testing.',
-            nodeIds=[node_id],
-            visible=True,
-            registered=True,
-            instanceId=instance_id,
-            centralNode=central_node,
-        )
-
-        network_dict = network.model_dump()
+    def test_model_dump(self,
+                        network_id,
+                        node_id,
+                        instance_id,
+                        central_node,
+                        sample_network,
+                        ):
+        network_dict = sample_network.model_dump()
 
         assert network_dict == {
             'networkId': str(network_id),
@@ -111,24 +101,14 @@ class TestNetwork:
             'centralNode': str(central_node),
         }
 
-    def test_model_dump_json(self):
-        network_id = uuid4()
-        node_id = uuid4()
-        instance_id = uuid4()
-        central_node = uuid4()
-
-        network = Network(
-            networkId=network_id,
-            networkName='Test Network',
-            description='A test network for unit testing.',
-            nodeIds=[node_id],
-            visible=True,
-            registered=True,
-            instanceId=instance_id,
-            centralNode=central_node,
-        )
-
-        network_json = network.model_dump_json()
+    def test_model_dump_json(self,
+                             network_id,
+                             node_id,
+                             instance_id,
+                             central_node,
+                             sample_network,
+                             ):
+        network_json = sample_network.model_dump_json()
 
         expected_json = (
             f'{{"networkId":"{str(network_id)}",'
