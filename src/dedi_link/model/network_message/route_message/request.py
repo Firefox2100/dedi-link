@@ -6,7 +6,7 @@ viable route to a specific node in the network.
 """
 
 from typing import Literal
-from pydantic import Field, ConfigDict
+from pydantic import Field, ConfigDict, UUID4
 
 from dedi_link.etc.enums import MessageType
 from ..network_message import NetworkMessage
@@ -27,7 +27,7 @@ class RouteRequest(NetworkMessage):
         description='The type of the network message',
         alias='messageType',
     )
-    target_node: str = Field(
+    target_node: UUID4 = Field(
         ...,
         description='The ID of the target node to route to',
         alias='targetNode',
