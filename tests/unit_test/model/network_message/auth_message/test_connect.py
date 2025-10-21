@@ -1,4 +1,3 @@
-from uuid import uuid4
 from pydantic import ValidationError
 import pytest
 
@@ -8,10 +7,10 @@ from dedi_link.model.network_message.auth_message.connect import AuthConnect
 
 
 class TestAuthConnect:
-    def test_init(self):
-        network_id = uuid4()
-        node_id = uuid4()
-
+    def test_init(self,
+                  network_id,
+                  node_id,
+                  ):
         metadata = MessageMetadata(
             networkId=network_id,
             nodeId=node_id,
@@ -25,10 +24,10 @@ class TestAuthConnect:
         assert auth_connect.metadata.node_id == node_id
         assert auth_connect.message_type == MessageType.AUTH_CONNECT
 
-    def test_model_validate(self):
-        network_id = uuid4()
-        node_id = uuid4()
-
+    def test_model_validate(self,
+                            network_id,
+                            node_id,
+                            ):
         metadata_dict = {
             'networkId': str(network_id),
             'nodeId': str(node_id),
@@ -45,10 +44,10 @@ class TestAuthConnect:
         assert auth_connect.metadata.node_id == node_id
         assert auth_connect.message_type == MessageType.AUTH_CONNECT
 
-    def test_model_validate_invalid_message_type(self):
-        network_id = uuid4()
-        node_id = uuid4()
-
+    def test_model_validate_invalid_message_type(self,
+                                                 network_id,
+                                                 node_id,
+                                                 ):
         metadata_dict = {
             'networkId': str(network_id),
             'nodeId': str(node_id),
@@ -62,11 +61,13 @@ class TestAuthConnect:
         with pytest.raises(ValidationError):
             AuthConnect.model_validate(auth_connect_dict)
 
-    def test_model_validate_invalid_metadata(self):
+    def test_model_validate_invalid_metadata(self,
+                                             node_id,
+                                             ):
         auth_connect_dict = {
             'metadata': {
                 'networkId': 'invalid-uuid',
-                'nodeId': str(uuid4()),
+                'nodeId': str(node_id),
             },
             'messageType': MessageType.AUTH_CONNECT,
         }
@@ -74,10 +75,10 @@ class TestAuthConnect:
         with pytest.raises(ValidationError):
             AuthConnect.model_validate(auth_connect_dict)
 
-    def test_model_dump(self):
-        network_id = uuid4()
-        node_id = uuid4()
-
+    def test_model_dump(self,
+                        network_id,
+                        node_id,
+                        ):
         metadata = MessageMetadata(
             networkId=network_id,
             nodeId=node_id,
@@ -93,13 +94,17 @@ class TestAuthConnect:
         assert auth_connect_dict['metadata']['nodeId'] == str(node_id)
         assert auth_connect_dict['messageType'] == 'uk.co.firefox2100.ddg.auth.connect'
 
-    def test_model_dump_json(self):
-        network_id = uuid4()
-        node_id = uuid4()
-
+    def test_model_dump_json(self,
+                             network_id,
+                             node_id,
+                             message_id,
+                             timestamp,
+                             ):
         metadata = MessageMetadata(
             networkId=network_id,
             nodeId=node_id,
+            messageId=message_id,
+            timestamp=timestamp,
         )
 
         auth_connect = AuthConnect(
@@ -108,15 +113,8 @@ class TestAuthConnect:
 
         auth_connect_json = auth_connect.model_dump_json(by_alias=True)
 
-        expected_dict = {
-            'metadata': {
-                'networkId': str(network_id),
-                'nodeId': str(node_id),
-                'messageId': str(auth_connect.metadata.message_id),
-                'timestamp': auth_connect.metadata.timestamp,
-            },
-            'messageType': 'uk.co.firefox2100.ddg.auth.connect'
-        }
+        expected_json = f'''{{"metadata":{{"networkId":"{network_id}","nodeId":"{node_id}",\
+"messageId":"{message_id}","timestamp":{timestamp}}},"messageType":"uk.co.firefox2100.ddg.auth.connect"\
+}}'''
 
-        import json
-        assert json.loads(auth_connect_json) == expected_dict
+        assert auth_connect_json == expected_json

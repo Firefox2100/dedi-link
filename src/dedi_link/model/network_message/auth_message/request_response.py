@@ -30,7 +30,7 @@ class AuthRequestResponse(AuthInviteResponse):
         description='The network the requester is being invited to join, if accepted',
     )
     management_key: Optional[NetworkManagementKey] = Field(
-        ...,
+        None,
         description='The management key for the network. If the network is decentralised, '
                     'this will be both the public and private keys; otherwise it will '
                     'just be the public key.',

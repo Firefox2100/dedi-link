@@ -5,7 +5,7 @@ to authorisation and authentication.
 """
 
 from typing import Literal
-from pydantic import Field, ConfigDict
+from pydantic import Field, ConfigDict, UUID4
 
 from dedi_link.etc.enums import MessageType, AuthNotificationType
 from ..network_message import NetworkMessage
@@ -31,7 +31,7 @@ class AuthNotification(NetworkMessage):
         ...,
         description='The reason for the notification',
     )
-    affected_node_id: str = Field(
+    affected_node_id: UUID4 = Field(
         ...,
         description='The ID of the node that triggered the notification',
         alias='affectedNodeId'

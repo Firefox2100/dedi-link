@@ -1,4 +1,3 @@
-from uuid import uuid4
 from pydantic import ValidationError
 import pytest
 
@@ -59,9 +58,9 @@ class TestAuthInvite:
         auth_invite_dict = {
             'metadata': metadata_dict,
             'messageType': MessageType.AUTH_INVITE,
-            'network': sample_network.model_dump(by_alias=True),
-            'node': sample_node.model_dump(by_alias=True),
-            'managementKey': sample_management_key.model_dump(by_alias=True),
+            'network': sample_network.model_dump(),
+            'node': sample_node.model_dump(),
+            'managementKey': sample_management_key.model_dump(),
             'challengeNonce': challenge_nonce,
             'challengeSolution': challenge_solution,
         }
@@ -95,9 +94,9 @@ class TestAuthInvite:
         auth_invite_dict = {
             'metadata': metadata_dict,
             'messageType': 'INVALID_TYPE',
-            'network': sample_network.model_dump(by_alias=True),
-            'node': sample_node.model_dump(by_alias=True),
-            'managementKey': sample_management_key.model_dump(by_alias=True),
+            'network': sample_network.model_dump(),
+            'node': sample_node.model_dump(),
+            'managementKey': sample_management_key.model_dump(),
             'challengeNonce': challenge_nonce,
             'challengeSolution': challenge_solution,
         }
@@ -129,13 +128,13 @@ class TestAuthInvite:
             challengeSolution=challenge_solution,
         )
 
-        auth_invite_dict = auth_invite.model_dump(by_alias=True)
+        auth_invite_dict = auth_invite.model_dump()
 
-        assert auth_invite_dict['metadata'] == metadata.model_dump(by_alias=True)
+        assert auth_invite_dict['metadata'] == metadata.model_dump()
         assert auth_invite_dict['messageType'] == 'uk.co.firefox2100.ddg.auth.invite'
-        assert auth_invite_dict['network'] == sample_network.model_dump(by_alias=True)
-        assert auth_invite_dict['node'] == sample_node.model_dump(by_alias=True)
-        assert auth_invite_dict['managementKey'] == sample_management_key.model_dump(by_alias=True)
+        assert auth_invite_dict['network'] == sample_network.model_dump()
+        assert auth_invite_dict['node'] == sample_node.model_dump()
+        assert auth_invite_dict['managementKey'] == sample_management_key.model_dump()
         assert auth_invite_dict['challengeNonce'] == challenge_nonce
         assert auth_invite_dict['challengeSolution'] == challenge_solution
 
@@ -167,7 +166,7 @@ class TestAuthInvite:
             challengeSolution=challenge_solution,
         )
 
-        auth_invite_json = auth_invite.model_dump_json(by_alias=True)
+        auth_invite_json = auth_invite.model_dump_json()
 
         expected_json = f'''{{"metadata":{{"networkId":"{network_id}","nodeId":"{node_id}",\
 "messageId":"{message_id}","timestamp":{timestamp}}},\
@@ -199,9 +198,9 @@ class TestAuthInvite:
         auth_invite_dict = {
             'metadata': metadata_dict,
             'messageType': MessageType.AUTH_INVITE,
-            'network': sample_network.model_dump(by_alias=True),
-            'node': sample_node.model_dump(by_alias=True),
-            'managementKey': sample_management_key.model_dump(by_alias=True),
+            'network': sample_network.model_dump(),
+            'node': sample_node.model_dump(),
+            'managementKey': sample_management_key.model_dump(),
             'challengeNonce': challenge_nonce,
             'challengeSolution': challenge_solution,
             'extraField': 'should not be here',
