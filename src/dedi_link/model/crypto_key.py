@@ -3,10 +3,13 @@ Module for cryptographic key representation and validation.
 """
 
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, TypeVar
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives import serialization
 from pydantic_core import core_schema
+
+
+CryptoKeyT = TypeVar('CryptoKeyT', bound='CryptoKey')
 
 
 class CryptoKey(ABC):
@@ -31,6 +34,42 @@ class CryptoKey(ABC):
 
     def __hash__(self) -> int:
         return hash(self._identity_bytes())
+
+    @classmethod
+    @abstractmethod
+    def _try_parse(cls: CryptoKeyT, value: Any) -> CryptoKeyT:
+        """
+        Parse and validate that the provided value is a valid cryptographic key
+        of the expected type.
+        :param value: The public key in PEM format.
+        :return: The cryptographic key object.
+        """
+
+    @classmethod
+    @abstractmethod
+    def _try_serialise(cls: CryptoKeyT, value: Any) -> str:
+        """
+        Serialize the cryptographic key to PEM format.
+        :param value: The cryptographic key object.
+        :return: The cryptographic key in PEM format as a string.
+        """
+
+    @classmethod
+    def load_pem(cls: CryptoKeyT, pem_key: str) -> CryptoKeyT:
+        """
+        Load a cryptographic key from PEM format.
+        :param pem_key: The key in PEM format.
+        :return: The cryptographic key object.
+        """
+        return cls._try_parse(pem_key)
+
+    @property
+    def pem(self) -> str:
+        """
+        Get the PEM representation of the cryptographic key.
+        :return: The key in PEM format as a string.
+        """
+        return self._try_serialise(self)
 
 
 class Ec384PublicKey(CryptoKey):
